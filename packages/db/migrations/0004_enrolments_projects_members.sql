@@ -47,6 +47,13 @@ create table public.project_members (
 );
 create index project_members_user_idx on public.project_members (user_id);
 
+-- Hosted Supabase installs pgcrypto in the `extensions` schema; plain Postgres puts it in `public`.
+-- Resolve gen_random_bytes through a wrapper with both on its search_path.
+create or replace function eduai.random_token(p_bytes integer default 24) returns text
+language sql volatile set search_path = public, extensions as $$
+  select encode(gen_random_bytes(p_bytes), 'hex')
+$$;
+
 create table public.invites (
   id               uuid primary key default gen_random_uuid(),
   org_id           uuid not null references public.orgs (id) on delete cascade,
@@ -56,7 +63,7 @@ create table public.invites (
   cohort_id        uuid,
   project_id       uuid,
   project_role     public.project_role,
-  token            text not null unique default encode(gen_random_bytes(24), 'hex'),
+  token            text not null unique default eduai.random_token(24),
   invited_by       uuid references public.users (id),
   expires_at       timestamptz not null default now() + interval '14 days',
   accepted_at      timestamptz,
