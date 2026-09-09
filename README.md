@@ -10,13 +10,13 @@ eduai/
 ├── apps/web/                 placeholder — Next.js from P1-03
 ├── services/orchestrator/    placeholder — FastAPI from P1-10
 ├── packages/db/
-│   ├── migrations/           0001–0014 schema, 0100 RLS enable, 0101 RLS policies (generated)
+│   ├── migrations/           → ../../supabase/migrations (0001–0014 schema, 0100 RLS enable, 0101 policies, generated)
 │   ├── policies/             one RLS file per table → 0101
 │   └── seed/                 registry: models.csv · model_versions.csv + schemas/ · deployment_profiles.csv + profiles/
 │                             → models.sql (generated); seed.sql = demo org
 ├── infra/                    placeholder — render.yaml, Cloudflare webhook inbox, R2 lifecycle
 ├── scripts/                  build-policies.sh · build-models-seed.mjs · check-rls.sql · db-test.sh · test/
-├── supabase/                 config.toml; migrations → symlink to packages/db/migrations
+├── supabase/                 config.toml + migrations/ (native layout; packages/db/migrations symlinks here)
 └── .github/workflows/ci.yml  generated-files check · migrations+RLS+smoke on postgres:17 · web/orchestrator (skip until scaffolded)
 ```
 

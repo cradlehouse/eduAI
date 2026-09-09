@@ -6,7 +6,7 @@
 set -euo pipefail
 export LC_ALL=${LC_ALL:-C}   # macOS: postgres refuses to start under an unset/odd locale
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
-MIG="$ROOT/packages/db/migrations"
+MIG="$ROOT/supabase/migrations"
 SEED="$ROOT/packages/db/seed"
 
 if [[ -z "${DATABASE_URL:-}" ]]; then

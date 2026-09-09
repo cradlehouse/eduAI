@@ -1,4 +1,5 @@
-# Supabase CLI config. Migrations live in packages/db/migrations; supabase/migrations is a symlink to them.
+# Supabase CLI config. Migrations live here in supabase/migrations (native layout, same as ercotcron);
+# packages/db/migrations is a symlink kept for the handoffs layout.
 project_id = "eduai"
 
 [api]
