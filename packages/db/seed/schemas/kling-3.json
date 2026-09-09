@@ -1,0 +1,7 @@
+{ "input_schema": { "type": "object", "required": ["image", "prompt"], "properties": {
+    "image": { "type": "string", "format": "asset-ref", "title": "Start frame", "x-ui": { "accept": "image" } },
+    "prompt": { "type": "string", "maxLength": 2000, "x-ui": { "widget": "textarea" } },
+    "negative_prompt": { "type": "string", "maxLength": 500 },
+    "duration_s": { "type": "integer", "enum": [5, 10], "default": 5 },
+    "camera_motion": { "type": "string", "x-ui": { "widget": "camera-motion" } } } },
+  "safety": { "output_moderation": true, "prompt_gate": "required" } }

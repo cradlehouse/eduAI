@@ -1,0 +1,7 @@
+slug,display_name,modality,creative_guidance
+kling,Kling,image_to_video,Final-quality motion from a still. Use when the frame is already right and you need dependable movement.
+ltx,LTX,text_to_video,Fast video experiments with camera and reference control. Open weights; the Control lane's home.
+veo,Veo,text_to_video,Release-quality text-to-video with optional audio. Expensive; save for the finish.
+flux,FLUX,text_to_image,Stills: storyboards, references, start frames. Each version has its own licence.
+chatterbox,Chatterbox,text_to_speech,Scratch dialogue and permitted voice work. Voice cloning is locked behind consent.
+stable-audio,Stable Audio,sound_effects,Foley, ambience and sound-design iterations. Licensed training data.

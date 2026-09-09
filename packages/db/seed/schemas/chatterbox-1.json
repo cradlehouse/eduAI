@@ -1,0 +1,5 @@
+{ "input_schema": { "type": "object", "required": ["text"], "properties": {
+    "text": { "type": "string", "maxLength": 3000, "x-ui": { "widget": "textarea" } },
+    "voice_reference": { "type": "string", "format": "asset-ref", "title": "Voice reference (consented)", "x-ui": { "accept": "audio", "requires_consent": true } },
+    "exaggeration": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.5 } } },
+  "safety": { "output_moderation": false, "prompt_gate": "required" } }

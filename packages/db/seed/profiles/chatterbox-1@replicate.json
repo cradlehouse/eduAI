@@ -1,0 +1,2 @@
+{ "cost_model": { "kind": "per_1k_chars", "cents": 2, "text_field": "text", "verified": false },
+  "retention": { "vendor_retains_inputs": false, "vendor_retention_days": 1, "platform_input_days": 30, "platform_output_days": 365 } }

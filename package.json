@@ -1,0 +1,16 @@
+{
+  "name": "eduai",
+  "private": true,
+  "packageManager": "pnpm@11.15.0",
+  "scripts": {
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "db:types": "supabase gen types typescript --local > apps/web/lib/db/types.ts",
+    "db:test": "scripts/db-test.sh",
+    "policies:build": "scripts/build-policies.sh",
+    "policies:check": "scripts/build-policies.sh --check",
+    "seed:build": "node scripts/build-models-seed.mjs",
+    "seed:check": "node scripts/build-models-seed.mjs --check",
+    "check": "pnpm policies:check && pnpm seed:check && pnpm db:test"
+  }
+}

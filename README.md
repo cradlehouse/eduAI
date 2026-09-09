@@ -1,0 +1,83 @@
+# eduai
+
+Working name for the AI film platform. Trimmed from `ai-film-platform-code-handoff.md`; the spec
+(`ai-film-platform-build-spec.md`) is the *why*, the handoff is the *how*, this file is *what exists*.
+
+## What exists (P1-01, P1-02)
+
+```
+eduai/
+├── apps/web/                 placeholder — Next.js from P1-03
+├── services/orchestrator/    placeholder — FastAPI from P1-10
+├── packages/db/
+│   ├── migrations/           0001–0014 schema, 0100 RLS enable, 0101 RLS policies (generated)
+│   ├── policies/             one RLS file per table → 0101
+│   └── seed/                 registry: models.csv · model_versions.csv + schemas/ · deployment_profiles.csv + profiles/
+│                             → models.sql (generated); seed.sql = demo org
+├── infra/                    placeholder — render.yaml, Cloudflare webhook inbox, R2 lifecycle
+├── scripts/                  build-policies.sh · build-models-seed.mjs · check-rls.sql · db-test.sh · test/
+├── supabase/                 config.toml; migrations → symlink to packages/db/migrations
+└── .github/workflows/ci.yml  generated-files check · migrations+RLS+smoke on postgres:17 · web/orchestrator (skip until scaffolded)
+```
+
+## Run it
+
+```bash
+pnpm check            # policies in sync + seed in sync + full db-test on a throwaway Postgres
+pnpm db:test          # just the database: shim → migrations → seed → check-rls → smoke
+```
+`db-test` needs `initdb`/`pg_ctl`/`psql` on PATH (Homebrew `postgresql@16` or newer). With `DATABASE_URL`
+set it uses that database instead (must be empty) — that is what CI does.
+
+With the Supabase CLI + Docker:
+```bash
+npx supabase start && npx supabase db reset      # applies migrations + both seeds
+npx supabase gen types typescript --local > apps/web/lib/db/types.ts
+```
+
+## Editing the schema
+
+- **New table** → new numbered migration, `org_id uuid not null` + composite FK to its parent
+  (`foreign key (org_id, parent_id) references parent (org_id, id)`), then a policy file in
+  `packages/db/policies/<table>.sql`, then `pnpm policies:build`. `check-rls.sql` fails CI otherwise.
+- **New model** → three rows, not one: a family in `models.csv`, a version in `model_versions.csv`
+  (+ `schemas/<version>.json` for its input schema) and a route in `deployment_profiles.csv`
+  (+ `profiles/<version>@<route>.json` for cost + retention), then `pnpm seed:build`. A version or
+  profile is selectable only when `approval_status = approved`, inside its approval window, AND an org
+  has allowlisted it for a lane in `org_model_profiles`. Nothing in code names a model.
+- **Changing a used version/profile** — anything except approval/health/notes — is refused by a
+  trigger once a job references it. Make a new slug instead; old jobs keep their receipt.
+- **Never edit** `0101_rls_policies.sql` or `seed/models.sql` by hand; both are generated and CI diffs them.
+
+Details: [packages/db/README.md](packages/db/README.md).
+
+## Demo data
+
+`seed.sql` creates org `demo` (Demo Film School), a six-module course, cohort *Autumn 2026*, project
+*SC/Warehouse* with a $600 budget, and three invites. The registry holds six families but only the
+three Phase 1 routes are approved and allowlisted (time-bounded to 31 Dec 2026, review 15 Nov):
+
+| profile | lanes | role |
+|---|---|---|
+| `veo-3.1-lite@fal` | finish | the managed visual model; instructor-gated for release |
+| `ltx-2.5@fal` | explore, control | open-weight experimentation route (managed API now, self-hosted profile is Phase 4) |
+| `stable-audio-3@fal` | explore | SFX route |
+
+`kling-3@fal`, `flux-2-dev@fal` (non-commercial licence) and `chatterbox-1@replicate` (voice, Phase 2)
+are `draft`: visible in the registry, never selectable.
+
+| token | email | becomes |
+|---|---|---|
+| `demo-instructor-token` | demo-instructor@example.com | instructor on the cohort |
+| `demo-student-1-token`  | demo-student-1@example.com  | student, director on Warehouse |
+| `demo-student-2-token`  | demo-student-2@example.com  | student, DP on Warehouse |
+
+No auth users are seeded. Sign in by magic link with one of those addresses, then `/invite/[token]`
+(P1-03) calls `eduai.accept_invite(token, user_id)` under the service role.
+
+## Not done here, on purpose
+
+Everything from P1-03 onward. Endpoints, cents and licence links in the registry CSVs are marked
+**UNVERIFIED** in their notes; confirm against vendor docs before P1-10. `adapter_tested_at` on the
+three approved profiles is a placeholder date — the approval check requires it, and P1-10 should
+overwrite it with the real test run.

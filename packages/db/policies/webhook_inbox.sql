@@ -1,0 +1,1 @@
+-- intentionally no policies: service role only (Cloudflare Worker writes, orchestrator drains)

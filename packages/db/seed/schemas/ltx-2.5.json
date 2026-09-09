@@ -1,0 +1,8 @@
+{ "input_schema": { "type": "object", "required": ["prompt"], "properties": {
+    "prompt": { "type": "string", "maxLength": 2000, "x-ui": { "widget": "textarea" } },
+    "image": { "type": "string", "format": "asset-ref", "title": "Reference frame (optional)", "x-ui": { "accept": "image" } },
+    "duration_s": { "type": "integer", "enum": [5, 8], "default": 5 },
+    "aspect_ratio": { "type": "string", "enum": ["16:9", "9:16", "1:1"], "default": "16:9" },
+    "camera_motion": { "type": "string", "x-ui": { "widget": "camera-motion" } },
+    "seed": { "type": "integer", "minimum": 0 } } },
+  "safety": { "output_moderation": false, "prompt_gate": "required" } }

@@ -1,0 +1,7 @@
+slug,version_slug,kind,provider,endpoint,region,credential_policy,lanes,health_status,adapter_tested_at,approval_status,approval_owner,approved_at,approved_until,enabled,notes
+veo-3.1-lite@fal,veo-3.1-lite,managed_api,fal,fal-ai/veo3.1/lite/text-to-video,us,either,finish,untested,2026-09-09,approved,programme-lead,2026-09-09,2026-12-31,true,UNVERIFIED endpoint + cost — confirm against fal docs before P1-10. adapter_tested_at is a placeholder until P1-10 lands.
+ltx-2.5@fal,ltx-2.5,managed_api,fal,fal-ai/ltx-2.5/text-to-video,us,either,explore|control,untested,2026-09-09,approved,programme-lead,2026-09-09,2026-12-31,true,UNVERIFIED endpoint + cost. Managed route; self-hosted profile ltx-2.5@school is Phase 4.
+stable-audio-3@fal,stable-audio-3,managed_api,fal,fal-ai/stable-audio-3/sfx,us,either,explore,untested,2026-09-09,approved,programme-lead,2026-09-09,2026-12-31,true,UNVERIFIED endpoint + cost.
+kling-3@fal,kling-3,managed_api,fal,fal-ai/kling-video/v3/standard/image-to-video,cn,platform,finish,untested,,draft,,,,false,Draft: not selectable.
+flux-2-dev@fal,flux-2-dev,managed_api,fal,fal-ai/flux-2/dev,us,platform,explore,untested,,draft,,,,false,Draft: licence non-commercial.
+chatterbox-1@replicate,chatterbox-1,managed_api,replicate,resemble-ai/chatterbox,us,platform,voice_likeness,untested,,draft,,,,false,Draft: Phase 2.
