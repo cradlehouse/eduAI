@@ -27,7 +27,9 @@ jobs:
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+      # ubuntu-24.04 runners ship psql; only fall back to apt if it's missing (apt update flakes on
+      # third-party repos in the image, so never run it unconditionally).
+      - run: command -v psql >/dev/null || (sudo apt-get update -qq -o Acquire::Retries=3 && sudo apt-get install -y -qq postgresql-client)
       - run: scripts/db-test.sh
         env:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
