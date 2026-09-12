@@ -5,6 +5,7 @@ import { getAdminOrg } from "@/lib/auth/org";
 const NAV = [
   { href: "/org", label: "Organisation" },
   { href: "/org/people", label: "People" },
+  { href: "/org/cohorts", label: "Cohorts" },
   { href: "/org/courses", label: "Courses", soon: true },
   { href: "/org/models", label: "Models", soon: true },
   { href: "/org/credentials", label: "Credentials", soon: true },

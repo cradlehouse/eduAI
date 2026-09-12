@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAdminOrg } from "@/lib/auth/org";
 import { createClient } from "@/lib/supabase/server";
 import { setTokenRate } from "./actions";
