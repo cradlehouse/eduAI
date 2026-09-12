@@ -13,45 +13,38 @@ function Brief({ text }: { text: string }) {
   );
 }
 
-const STATE_LABEL = { open: "Open", upcoming: "Upcoming", locked: "Locked", closed: "Closed" } as const;
+const fmt = (d: string) => new Date(d).toLocaleDateString();
 
-export default async function ModulePage({ params, searchParams }: { params: Promise<{ projectId: string }>; searchParams: Promise<{ m?: string }> }) {
+// The Brief is what the crew is working on right now. The full schedule lives on the cohort's
+// Schedule page (instructors) and the phases live in the sidebar — no second menu here.
+export default async function BriefPage({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  const { m } = await searchParams;
   const data = await getProject(projectId);
   if (!data) notFound();
   const mods = await getModules(data.project.cohort_id, data.project.id);
-  const selected = (m && mods.find((x) => x.id === m)) || currentModule(mods);
+  const current = currentModule(mods);
+  const next = current ? mods.find((m) => m.module.position > current.module.position) : null;
+  const done = mods.filter((m) => m.state === "closed").length;
+
+  if (!current) return <p className="text-sm opacity-60">Nothing scheduled for this cohort yet.</p>;
 
   return (
-    <div className="grid max-w-4xl gap-8 md:grid-cols-[220px_1fr]">
-      <nav>
-        <div className="mb-2 label">Modules</div>
-        <ol className="flex flex-col gap-1 text-sm">
-          {mods.map((x) => (
-            <li key={x.id}>
-              <a href={`?m=${x.id}`} className={`block rounded-full px-3 py-1 hover:bg-card ${selected?.id === x.id ? "bg-sand" : ""}`}>
-                <span className="opacity-60">{x.module.position}.</span> {x.module.title}
-                <span className={`ml-1 text-xs ${x.state === "open" ? "text-money" : "opacity-50"}`}>{STATE_LABEL[x.state]}</span>
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-      <article>
-        {selected ? (
-          <>
-            <div className="label">Module {selected.module.position}</div>
-            <h1 className="mb-1 display text-2xl">{selected.module.title}</h1>
-            <p className="mb-4 text-xs opacity-70">
-              {selected.opens_at ? `Opens ${new Date(selected.opens_at).toLocaleDateString()}` : "No open date"}
-              {selected.due_at ? ` · due ${new Date(selected.due_at).toLocaleDateString()}` : ""}
-            </p>
-            {selected.reason && <div className="mb-4"><GateNotice reason={selected.reason} /></div>}
-            {selected.module.brief ? <Brief text={selected.module.brief} /> : <p className="text-sm opacity-60">No brief written for this module yet.</p>}
-          </>
-        ) : <p className="text-sm opacity-60">No modules scheduled.</p>}
-      </article>
-    </div>
+    <article className="max-w-2xl">
+      <div className="label">This week · brief {current.module.position} of {mods.length}</div>
+      <h1 className="mb-1 display text-2xl">{current.module.title}</h1>
+      <p className="mb-4 text-xs opacity-70">
+        {current.state === "closed" ? "Closed" : current.opens_at ? `Opens ${fmt(current.opens_at)}` : "Open"}
+        {current.due_at ? ` · due ${fmt(current.due_at)}` : ""}
+      </p>
+      {current.reason && <div className="mb-4"><GateNotice reason={current.reason} /></div>}
+      {current.module.brief ? <Brief text={current.module.brief} /> : <p className="text-sm opacity-60">No brief written for this week yet.</p>}
+
+      {(next || done > 0) && (
+        <p className="mt-8 border-t border-line pt-4 text-xs text-muted">
+          {done > 0 && <>{done} brief{done === 1 ? "" : "s"} done. </>}
+          {next && <>Next up: {next.module.title}{next.opens_at ? ` from ${fmt(next.opens_at)}` : ""}.</>}
+        </p>
+      )}
+    </article>
   );
 }
