@@ -4,7 +4,6 @@ import { getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
 import { NavGroup, NavItem, NavSoon } from "@/components/NavItem";
-import { BudgetRing } from "@/components/BudgetRing";
 
 const SECTIONS = { "": "Brief", brief: "Brief", bible: "Bible", scenes: "Storyboard", shoot: "Shoot", shots: "Shoot", members: "Members" };
 
@@ -28,6 +27,7 @@ export default async function ProjectLayout({ children, params }: { children: Re
       crumbs={[{ label: nav.org?.name ?? "eduai", href: "/home" }, { label: cohortName, href: `/c/${project.cohort_id}` },
                { label: project.title, href: base, siblings: (sib ?? []).map((p) => ({ id: p.id, label: p.title, href: `/p/${p.id}` })) }]}
       base={base} sections={SECTIONS} sidebarTitle={project.title}
+      budget={budget ? { spent: budget.spent_tokens ?? 0, total: budget.total_tokens ?? 0, scope: budget.scope } : null}
       sidebar={<>
         <NavItem href={`/c/${project.cohort_id}`} exact>‹ {cohortName}</NavItem>
         <NavGroup title="Pre-production">
@@ -46,7 +46,6 @@ export default async function ProjectLayout({ children, params }: { children: Re
           <NavItem href={`${base}/members`} mark={manage ? "instructor" : undefined}>Members</NavItem>
           {manage && <NavSoon label="Settings" when="soon" />}
         </NavGroup>
-        {budget && <div className="mt-4 px-3"><BudgetRing spent={budget.spent_tokens ?? 0} total={budget.total_tokens ?? 0} scope={budget.scope} /></div>}
         {!isMember && <div className="mt-3 px-3 text-[11px] text-muted">You&apos;re not on this crew; you&apos;re here as {manage ? "an instructor" : "a viewer"}.</div>}
       </>}>
       {children}

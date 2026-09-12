@@ -13,7 +13,10 @@ export default async function CohortLayout({ children, params }: { children: Rea
   const me = nav.cohorts.find((c) => c.id === cohortId);
   if (!me) notFound();
   const supabase = await createClient();
-  const { data: cohort } = await supabase.from("cohorts").select("id, name").eq("id", cohortId).maybeSingle();
+  const [{ data: cohort }, { data: personal }] = await Promise.all([
+    supabase.from("cohorts").select("id, name").eq("id", cohortId).maybeSingle(),
+    supabase.from("personal_tokens").select("total_tokens, spent_tokens").eq("cohort_id", cohortId).eq("user_id", nav.userId).maybeSingle(),
+  ]);
   if (!cohort) notFound();
   const mine = nav.myProjects.filter((p) => p.cohort_id === cohortId);
   const base = `/c/${cohortId}`;
@@ -23,6 +26,7 @@ export default async function CohortLayout({ children, params }: { children: Rea
     <Shell nav={nav}
       crumbs={[{ label: nav.org?.name ?? "eduai", href: "/home" }, { label: cohort.name, href: base, siblings }]}
       base={base} sections={SECTIONS} sidebarTitle={cohort.name}
+      budget={personal ? { spent: personal.spent_tokens ?? 0, total: personal.total_tokens ?? 0, scope: "personal" } : null}
       sidebar={<>
         <NavGroup title="Cohort">
           <NavItem href={base} exact>Home</NavItem>
