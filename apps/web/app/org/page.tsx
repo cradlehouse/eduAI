@@ -1,15 +1,24 @@
-import { Card } from "@/components/Card";
+import { getAdminOrg } from "@/lib/auth/org";
 import { createClient } from "@/lib/supabase/server";
 
-export default async function OrgStub() {
+export default async function OrgPage() {
+  const org = (await getAdminOrg())!;
   const supabase = await createClient();
-  const { data: orgs } = await supabase.from("memberships").select("role, orgs(name, content_tier)").in("role", ["admin", "owner"]);
+  const [{ count: members }, { count: pending }, { count: cohorts }] = await Promise.all([
+    supabase.from("memberships").select("id", { count: "exact", head: true }).eq("org_id", org.id),
+    supabase.from("invites").select("id", { count: "exact", head: true }).eq("org_id", org.id).is("accepted_at", null),
+    supabase.from("cohorts").select("id", { count: "exact", head: true }).eq("org_id", org.id),
+  ]);
   return (
-    <Card title="Organisation">
-      {(orgs ?? []).map((m, i) => (
-        <p key={i} className="text-sm">{m.orgs?.name} · tier {m.orgs?.content_tier} · you are {m.role}</p>
-      ))}
-      <p className="mt-4 text-xs opacity-60">People and invite flow arrive in P1-04.</p>
-    </Card>
+    <div className="max-w-2xl">
+      <h1 className="mb-1 text-2xl font-semibold">{org.name}</h1>
+      <p className="mb-6 text-sm opacity-70">/{org.slug} · content tier {org.content_tier} · {org.has_minors ? "has minors" : "no minors flagged"} · you are {org.role}</p>
+      <dl className="grid grid-cols-3 gap-4 text-sm">
+        <div className="rounded-lg border border-ink/10 p-4 dark:border-paper/15"><dt className="opacity-60">Members</dt><dd className="text-2xl">{members ?? 0}</dd></div>
+        <div className="rounded-lg border border-ink/10 p-4 dark:border-paper/15"><dt className="opacity-60">Pending invites</dt><dd className="text-2xl">{pending ?? 0}</dd></div>
+        <div className="rounded-lg border border-ink/10 p-4 dark:border-paper/15"><dt className="opacity-60">Cohorts</dt><dd className="text-2xl">{cohorts ?? 0}</dd></div>
+      </dl>
+      <p className="mt-8 text-xs opacity-60">Tiers, flags and courses become editable in later tickets.</p>
+    </div>
   );
 }

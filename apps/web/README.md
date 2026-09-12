@@ -13,7 +13,9 @@ as the signed-in user (RLS) and calls three user-scoped RPCs from migration 0103
 | `/auth/callback` | exchanges `?code=` (PKCE) or `?token_hash=`; redirects to sanitised `?next=` |
 | `/invite/[token]` | preview → sign in with the invited email → accept (one transaction) → land |
 | `/welcome` | signed in, no cohort/project yet |
-| `/p/[projectId]`, `/c/[cohortId]`, `/org` | stubs; the real shells are P1-05 / Phase 2 / P1-04 |
+| `/org` | admin overview (counts) inside the admin rail |
+| `/org/people` | paste emails → invites (link to copy each; Resend later); revoke; member roles, minor flag, remove |
+| `/p/[projectId]`, `/c/[cohortId]` | stubs; the real shells are P1-05 / Phase 2 |
 
 `pnpm dev` for Next dev, `pnpm cf:preview` to run the Worker bundle in workerd, `pnpm cf:deploy` to ship.
 Types: `pnpm db:types` at the repo root after any migration.

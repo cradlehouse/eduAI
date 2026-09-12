@@ -86,7 +86,7 @@ Deploys are explicit; CI never deploys.
 
 ## Not done here, on purpose
 
-Everything from P1-04 onward. Endpoints, cents and licence links in the registry CSVs are marked
+Everything from P1-05 onward. Invite emails are not sent yet (links are copied from /org/people); Resend is on the platform list. Endpoints, cents and licence links in the registry CSVs are marked
 **UNVERIFIED** in their notes; confirm against vendor docs before P1-10. `adapter_tested_at` on the
 three approved profiles is a placeholder date — the approval check requires it, and P1-10 should
 overwrite it with the real test run.
