@@ -9,9 +9,12 @@ export type AdminOrg = { id: string; name: string; slug: string; content_tier: "
 // when someone actually has two orgs. Returns null when they administer nothing.
 export async function getAdminOrg(): Promise<AdminOrg | null> {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
   const { data } = await supabase
     .from("memberships")
     .select("role, orgs(id, name, slug, content_tier, has_minors, tokens_per_dollar)")
+    .eq("user_id", user.id)
     .in("role", ["admin", "owner"])
     .order("created_at")
     .limit(1)

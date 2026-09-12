@@ -6,8 +6,8 @@ export default async function Welcome() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const [{ data: memberships }, { data: enrolments }] = await Promise.all([
-    supabase.from("memberships").select("role, orgs(name)"),
-    supabase.from("enrolments").select("cohorts(name)"),
+    supabase.from("memberships").select("role, orgs(name)").eq("user_id", user?.id ?? ""),
+    supabase.from("enrolments").select("cohorts(name)").eq("user_id", user?.id ?? ""),
   ]);
   return (
     <Card title="You're signed in">

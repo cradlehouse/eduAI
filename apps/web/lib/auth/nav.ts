@@ -7,10 +7,12 @@ export async function getNav() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
+  // Always filter by user_id: members can read each other's membership rows under RLS, so an
+  // unfiltered query would give every member the admin's menu.
   const [{ data: memberships }, { data: instructing }, { data: enrolled }, { data: projects }] = await Promise.all([
-    supabase.from("memberships").select("role, orgs(id, name)"),
-    supabase.from("cohort_instructors").select("cohorts(id, name)"),
-    supabase.from("enrolments").select("cohorts(id, name)"),
+    supabase.from("memberships").select("role, orgs(id, name)").eq("user_id", user.id),
+    supabase.from("cohort_instructors").select("cohorts(id, name)").eq("user_id", user.id),
+    supabase.from("enrolments").select("cohorts(id, name)").eq("user_id", user.id),
     supabase.from("projects").select("id, title, cohort_id").order("created_at"),
   ]);
   const isAdmin = (memberships ?? []).some((m) => m.role === "admin" || m.role === "owner");
