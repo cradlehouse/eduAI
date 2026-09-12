@@ -7,7 +7,7 @@ the handoff and build spec are history, this file is current.
 
 | Layer | Choice | Why | Status |
 |---|---|---|---|
-| Database, auth, realtime, secrets | **Supabase** (Postgres 17, Auth magic-link, Realtime, Vault) | One contract between web and orchestrator; RLS does the tenancy; Vault holds org-supplied keys | Live: project `eduAI`, ref `zhltmlguysknjeueabyy`, us-west-2 |
+| Database, auth, realtime, secrets | **Supabase** (Postgres 17, Auth magic-link, Realtime, Vault), **pinned to AWS us-west-2 (Oregon)** | One contract between web and orchestrator; RLS does the tenancy; Vault holds org-supplied keys. Oregon is a carbon-neutral AWS region, a verifiable claim (see RESOURCE_NEUTRALITY.md) | Live: project `eduAI`, ref `zhltmlguysknjeueabyy`, us-west-2 |
 | Migrations | **Supabase CLI**, native layout `supabase/migrations`, numbered `0001…`, applied with `supabase db push` | Same convention as ercotcron; CI replays them on plain Postgres | Live, 16 applied |
 | Web app | **Next.js 15** App Router, TypeScript, Tailwind, pnpm | Thin UI: CRUD + Realtime, no vendor calls | P1-03 |
 | Web hosting | **Cloudflare Pages** via OpenNext adapter | Cloudflare is already required (R2, Worker); no per-push deploy cost; **not Vercel** | P1-03 |
@@ -16,7 +16,8 @@ the handoff and build spec are history, this file is current.
 | Object storage | **Cloudflare R2**, bucket `eduai-assets`, content-addressed keys `<org>/<sha2>/<sha256>.<ext>` | Cheap egress; immutable assets | P1-10 |
 | Webhook inbox | **Cloudflare Worker** → verify signature → insert `webhook_inbox` → 200 | Vendors never point at Render; replay-safe by `(provider, dedupe_key)` | P1-11 |
 | Media processing | **ffmpeg** in the render worker; **OTIO** for timelines; FCP7 XML / FCPXML / EDL writers | Export formats editors actually open | Phase 3 |
-| Model vendors | **fal.ai** (Veo 3.1 Lite, LTX 2.5, Stable Audio 3); Replicate (Chatterbox, Phase 2); self-hosted LTX (Phase 4) | Registry-driven; a vendor is a row, never code | fal at P1-10 |
+| Model vendors | **fal.ai** (Veo 3.1 Lite, LTX 2.5, Stable Audio 3); Replicate (Chatterbox, Phase 2) | Registry-driven; a vendor is a row, never code | fal at P1-10 |
+| Self-hosted compute | **Crusoe Cloud** (stranded-energy + renewable GPUs) for the Phase 4 open-weight profiles | The only tier where energy is measurable; the sustainability differentiator vs CoreWeave/Lambda/RunPod | Phase 4, draft profile `ltx-2.5@crusoe` |
 | Prompt gate + assistants | **Anthropic Claude** | Content-tier prompt gate first (P1-14), seven assistants later | P1-14 |
 | Publishing | **Ayrshare** | One API for YouTube/TikTok/Instagram; org and personal profiles | Phase 3 |
 | Errors | **Sentry**, two projects (web, orchestrator) | | P1-15 |
@@ -53,6 +54,8 @@ GPU platform before the Phase 4 self-hosted LTX profile.
 - Versions and profiles used by any job are immutable except for approval/health/notes; changes are new slugs.
 - Phase 1 routes: one managed visual model (Veo), one open-weight experimentation route (LTX), one SFX route (Stable Audio). Kling, FLUX.2 dev and Chatterbox stay draft.
 - Every cost and endpoint in the seed is flagged `verified: false` / UNVERIFIED until checked against vendor docs.
+- Resource neutrality is the fifth integrity axis: disclosure tier A/B/C per version, energy profile + resource model per deployment profile, estimate frozen into every receipt. Never a fabricated kWh for a closed model. Details in RESOURCE_NEUTRALITY.md.
+- Pricing unit is generated minutes, not seats; cohort film vs individual films are both supported by project vs personal budgets. Details in PRICING.md.
 
 **People and safety**
 - Auth is magic-link only. No passwords. Invites carry role, cohort, project and project role; acceptance is one transaction.

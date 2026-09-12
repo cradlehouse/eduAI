@@ -1,0 +1,28 @@
+{
+  "cost_model": {
+    "kind": "quota",
+    "unit": "gpu_seconds",
+    "verified": false
+  },
+  "retention": {
+    "vendor_retains_inputs": false,
+    "vendor_retention_days": 0,
+    "platform_input_days": 90,
+    "platform_output_days": 365
+  },
+  "quota": {
+    "gpu_seconds_per_day": 0,
+    "max_concurrent": 1
+  },
+  "energy_profile": {
+    "grid": "stranded_energy",
+    "region": "us",
+    "claim": "Crusoe Cloud runs on stranded/flared gas and renewables.",
+    "verifiable": true,
+    "source": "https://www.crusoe.ai/"
+  },
+  "resource_model": {
+    "basis": "third_party",
+    "note": "Replace with measured gpu_watts x generation time once running; that is what moves ltx-2.5 to tier A."
+  }
+}

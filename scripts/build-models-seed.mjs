@@ -56,11 +56,12 @@ const models = csv("models.csv").map(r => { need(r, mCols, "models.csv"); return
 const vScalar = ["slug", "model_slug", "version", "weights_status", "license_family", "license_version", "license_url",
   "commercial_eligibility", "training_data_disclosure", "output_rights_summary", "self_hostable", "voice_likeness_risk",
   "release_eligible", "integrity_rating", "indemnification", "min_content_tier", "limitations", "safety_pipeline_version",
-  "approval_status", "approval_owner", "approved_at", "approved_until", "notes"];
+  "approval_status", "approval_owner", "approved_at", "approved_until", "notes", "resource_disclosure", "resource_disclosure_source"];
 const vCols = ["slug", "model_id", "version", "weights_status", "license_family", "license_version", "license_url",
   "commercial_eligibility", "training_data_disclosure", "output_rights_summary", "self_hostable", "voice_likeness_risk",
   "release_eligible", "integrity_rating", "indemnification", "min_content_tier", "limitations", "safety_pipeline_version",
-  "approval_status", "approval_owner", "approved_at", "approved_until", "notes", "input_schema", "safety"];
+  "approval_status", "approval_owner", "approved_at", "approved_until", "notes", "input_schema", "safety",
+  "resource_disclosure", "resource_disclosure_source"];
 const versions = csv("model_versions.csv").map(r => {
   need(r, vScalar, "model_versions.csv");
   const s = json("schemas", r.slug);
@@ -72,15 +73,18 @@ const versions = csv("model_versions.csv").map(r => {
     bool(r.release_eligible), lit(r.integrity_rating), bool(r.indemnification), lit(r.min_content_tier), lit(r.limitations),
     lit(r.safety_pipeline_version), lit(r.approval_status), nullable(r.approval_owner), nullable(r.approved_at),
     nullable(r.approved_until), lit(r.notes), jb(s.input_schema), jb(s.safety ?? {}),
+    lit(r.resource_disclosure || "C"), lit(r.resource_disclosure_source),
   ].join(", ") + ")";
 });
 
 // profiles
 const pScalar = ["slug", "version_slug", "kind", "provider", "endpoint", "region", "credential_policy", "lanes",
-  "health_status", "adapter_tested_at", "approval_status", "approval_owner", "approved_at", "approved_until", "enabled", "notes"];
+  "health_status", "adapter_tested_at", "approval_status", "approval_owner", "approved_at", "approved_until", "enabled", "notes",
+  "compute_provider", "image_version", "model_checksum"];
 const pCols = ["slug", "model_version_id", "kind", "provider", "endpoint", "region", "credential_policy", "lanes",
   "health_status", "adapter_tested_at", "approval_status", "approval_owner", "approved_at", "approved_until", "enabled", "notes",
-  "cost_model", "retention", "quota", "safety_pipeline_version"];
+  "cost_model", "retention", "quota", "safety_pipeline_version",
+  "compute_provider", "image_version", "model_checksum", "energy_profile", "resource_model"];
 const profiles = csv("deployment_profiles.csv").map(r => {
   need(r, pScalar, "deployment_profiles.csv");
   const p = json("profiles", r.slug);
@@ -91,6 +95,8 @@ const profiles = csv("deployment_profiles.csv").map(r => {
     nullable(r.adapter_tested_at), lit(r.approval_status), nullable(r.approval_owner), nullable(r.approved_at),
     nullable(r.approved_until), bool(r.enabled), lit(r.notes), jb(p.cost_model), jb(p.retention ?? {}), jb(p.quota ?? {}),
     `(select safety_pipeline_version from public.model_versions where slug = ${lit(r.version_slug)})`,
+    lit(r.compute_provider), nullable(r.image_version), nullable(r.model_checksum),
+    jb(p.energy_profile ?? {}), jb(p.resource_model ?? {}),
   ].join(", ") + ")";
 });
 

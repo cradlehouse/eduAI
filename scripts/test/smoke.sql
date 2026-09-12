@@ -56,6 +56,9 @@ declare r record; demo uuid := '00000000-0000-4000-8000-000000000001'; stu uuid 
   flux uuid := (select id from public.deployment_profiles where slug = 'flux-2-dev@fal');
 begin
   assert (select count(*) from public.deployment_profiles where approval_status = 'approved') = 3, 'three approved Phase 1 profiles';
+  assert (select count(*) from public.deployment_profiles where kind = 'self_hosted' and compute_provider = 'crusoe' and approval_status = 'draft') = 1, 'crusoe draft profile';
+  assert (select resource_disclosure from public.model_versions where slug = 'kling-3') = 'C', 'closed vendor = C';
+  assert (select count(*) from public.model_versions where resource_disclosure = 'A') = 0, 'nobody is tier A yet';
   select * into r from eduai.model_allowed(demo, ltx, 'explore', stu);  assert r.allowed, 'ltx explore allowed';
   select * into r from eduai.model_allowed(demo, ltx, 'control', stu);  assert r.allowed, 'ltx control allowed';
   select * into r from eduai.model_allowed(demo, ltx, 'finish', stu);   assert r.reason = 'lane_not_supported', 'ltx has no finish lane: ' || r.reason;
@@ -155,6 +158,11 @@ begin
   exception when others then assert sqlerrm like 'registry_record_in_use:%', sqlerrm;
   end;
   update public.deployment_profiles set endpoint = 'fal-ai/other' where slug = 'kling-3@fal';                 -- unused: fine
+  -- resource assessments are operational: a measured figure may replace an estimate on a used profile
+  update public.deployment_profiles set resource_model = '{"basis":"measured","gpu_watts":300}' where slug = 'ltx-2.5@fal';
+  update public.model_versions set resource_disclosure = 'A' where slug = 'ltx-2.5';
+  assert (select resource_disclosure from public.model_versions where slug = 'ltx-2.5') = 'A', 'disclosure tier updatable on used version';
+  update public.model_versions set resource_disclosure = 'B' where slug = 'ltx-2.5';
   raise notice 'ok  registry immutability';
 end $$;
 
@@ -173,7 +181,7 @@ begin
   perform eduai.job_event('20000000-0000-4000-8000-000000000001', 'stored');
   perform eduai.job_event('20000000-0000-4000-8000-000000000001', 'policy_approved', '{"gate":"pg-1"}');
   assert eduai.settle_job('20000000-0000-4000-8000-000000000001', 1200,
-           '{"output_hashes":["abc"],"policy_decisions":{"prompt_gate":"pass"},"provenance":{"c2pa":"m1"}}'), 'settle 1200';
+           '{"output_hashes":["abc"],"policy_decisions":{"prompt_gate":"pass"},"provenance":{"c2pa":"m1"},"resource_estimate":{"basis":"undisclosed"}}'), 'settle 1200';
   assert not eduai.settle_job('20000000-0000-4000-8000-000000000001', 1200), 'replayed settle is a no-op';
   assert not eduai.settle_job('20000000-0000-4000-8000-000000000001', 9999), 'replayed settle with other amount is a no-op';
   select remaining_cents into v_remaining from public.project_budget_status where project_id = '00000000-0000-4000-8000-000000000030';
@@ -185,6 +193,8 @@ begin
   assert rc.model_version_id = (select id from public.model_versions where slug = 'ltx-2.5'), 'receipt pins version';
   assert rc.lane = 'explore' and rc.output_hashes = '{abc}' and rc.provenance ->> 'c2pa' = 'm1', 'receipt carries hashes + provenance';
   assert jsonb_array_length(rc.consent_basis) = 1 and rc.consent_basis -> 0 ->> 'state' = 'signed', 'receipt froze consent basis';
+  assert rc.resource_estimate ->> 'disclosure_tier' = 'B' and rc.resource_estimate ->> 'basis' = 'undisclosed',
+         'receipt carries the disclosure tier and no invented number: ' || rc.resource_estimate::text;
   assert (select array_agg(event order by at, id) from public.job_events where job_id = '20000000-0000-4000-8000-000000000001')
          = '{queued,claimed,submitted,running,output_received,stored,policy_approved,settled}'::public.job_event[], 'full lifecycle logged';
 
@@ -239,7 +249,7 @@ begin
   assert (select count(*) from public.job_receipts) = 0, 'outsider sees no demo receipts';
   assert (select count(*) from public.job_events where org_id = '00000000-0000-4000-8000-000000000001') = 0, 'outsider sees no demo events';
   assert (select count(*) from public.ledger) = 0, 'outsider sees no demo ledger';
-  assert (select count(*) from public.deployment_profiles) = 6, 'registry readable';
+  assert (select count(*) from public.deployment_profiles) = 7, 'registry readable';
   assert (select count(*) from public.org_model_profiles) = 1, 'sees own org allowlist only';
   assert (select count(*) from public.consent_releases) = 0, 'sees no demo releases';
   begin
