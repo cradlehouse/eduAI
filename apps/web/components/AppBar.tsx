@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Nav } from "@/lib/auth/nav";
-import { signOut } from "@/app/welcome/actions";
 
 export type Crumb = { href?: string; label: string };
 
@@ -38,13 +37,6 @@ export function AppBar({ nav, crumbs, area }: { nav: Nav; crumbs: Crumb[]; area:
             </div>
           </details>
         )}
-        <details className="relative">
-          <summary className="pill cursor-pointer list-none text-muted hover:bg-line">{nav.email} ▾</summary>
-          <div className="card absolute right-0 z-10 mt-1 flex min-w-48 flex-col p-2 text-xs">
-            <span className="px-2 py-1 text-muted">{nav.orgName}{nav.isAdmin ? " · admin" : nav.isInstructor ? " · instructor" : " · apprentice"}</span>
-            <form action={signOut}><button className="w-full rounded-full px-2 py-1 text-left hover:bg-sand" type="submit">Sign out</button></form>
-          </div>
-        </details>
       </div>
     </header>
   );

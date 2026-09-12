@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getAdminOrg } from "@/lib/auth/org";
 import { AppBar } from "@/components/AppBar";
 import { getNav } from "@/lib/auth/nav";
+import { MeUnit, RoleMenus } from "@/components/RailExtras";
 
 const NAV = [
   { href: "/org", label: "Organisation" },
@@ -20,7 +21,7 @@ export default async function OrgLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen flex-col">
       <AppBar nav={nav} area="admin" crumbs={[{ label: "Admin", href: "/org" }, { label: org.name }]} />
       <div className="flex flex-1">
-      <aside className="w-56 shrink-0 panel m-3 p-4">
+      <aside className="panel m-3 flex w-56 shrink-0 flex-col p-4">
         <div className="mb-6">
           <div className="label">Admin</div>
           <div className="font-semibold">{org.name}</div>
@@ -34,6 +35,8 @@ export default async function OrgLayout({ children }: { children: React.ReactNod
             ),
           )}
         </nav>
+        <RoleMenus nav={nav} hide="admin" />
+        <div className="mt-auto"><MeUnit nav={nav} /></div>
       </aside>
       <main className="flex-1 p-8">{children}</main>
     </div>

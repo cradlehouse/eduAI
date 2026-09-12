@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { AppBar } from "@/components/AppBar";
 import { getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
+import { MeUnit, RoleMenus } from "@/components/RailExtras";
 
 const NAV = [
   { seg: "", label: "Cohort" },
@@ -38,6 +39,8 @@ export default async function CohortLayout({ children, params }: { children: Rea
               ? <span key={n.seg} className="rounded-full px-3 py-1 opacity-40">{n.label} <span className="text-xs">{n.soon}</span></span>
               : <Link key={n.seg} href={`/c/${cohortId}${n.seg ? `/${n.seg}` : ""}`} className="rounded-full px-3 py-1 hover:bg-card">{n.label}</Link>)}
           </nav>
+          <RoleMenus nav={nav} cohortId={cohortId} hide="cohort" />
+          <div className="mt-auto"><MeUnit nav={nav} /></div>
         </aside>
         <main className="flex-1 p-8">{children}</main>
       </div>
