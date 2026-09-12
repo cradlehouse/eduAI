@@ -2823,6 +2823,10 @@ export type Database = {
         Args: { p_entry: string; p_lane: Database["public"]["Enums"]["lane"] }
         Returns: string
       }
+      estimate_tokens: {
+        Args: { p_inputs: Json; p_profile: string }
+        Returns: number
+      }
       invite_preview: {
         Args: { p_token: string }
         Returns: {
@@ -2832,6 +2836,30 @@ export type Database = {
           project_title: string
           role: Database["public"]["Enums"]["member_role"]
           status: string
+        }[]
+      }
+      model_options: {
+        Args: { p_lane: Database["public"]["Enums"]["lane"]; p_project: string }
+        Returns: {
+          allowed: boolean
+          commercial_eligibility: Database["public"]["Enums"]["commercial_eligibility"]
+          compute_provider: string
+          creative_guidance: string
+          display_name: string
+          input_schema: Json
+          integrity_rating: Database["public"]["Enums"]["integrity_rating"]
+          kind: Database["public"]["Enums"]["deployment_kind"]
+          lanes: Database["public"]["Enums"]["lane"][]
+          license_family: string
+          limitations: string
+          modality: Database["public"]["Enums"]["model_modality"]
+          profile_id: string
+          profile_slug: string
+          reason: string
+          release_eligible: boolean
+          resource_disclosure: Database["public"]["Enums"]["disclosure_tier"]
+          training_data_disclosure: Database["public"]["Enums"]["genesis_class"]
+          version_slug: string
         }[]
       }
       my_landing: { Args: never; Returns: string }
