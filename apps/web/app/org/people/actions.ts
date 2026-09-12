@@ -86,3 +86,22 @@ export async function removeMember(formData: FormData) {
   revalidatePath("/org/people");
   redirect("/org/people");
 }
+
+// Put an existing member on a project (instructor/admin only, via project_members RLS).
+export async function addToProject(formData: FormData) {
+  const org = await getAdminOrg();
+  if (!org) redirect("/");
+  const supabase = await createClient();
+  const userId = String(formData.get("user_id") ?? "");
+  const projectId = String(formData.get("project_id") ?? "");
+  const role = String(formData.get("project_role") ?? "director") as ProjectRole;
+  if (!userId || !projectId) redirect(`/org/people?error=${encodeURIComponent("Pick a project.")}`);
+  const { data: project } = await supabase.from("projects").select("cohort_id").eq("id", projectId).maybeSingle();
+  if (!project) redirect(`/org/people?error=${encodeURIComponent("Project not found.")}`);
+  // Enrol in the cohort too, so the student sees its schedule.
+  await supabase.from("enrolments").upsert({ org_id: org.id, cohort_id: project.cohort_id, user_id: userId }, { onConflict: "cohort_id,user_id", ignoreDuplicates: true });
+  const { error } = await supabase.from("project_members").upsert({ org_id: org.id, project_id: projectId, user_id: userId, role }, { onConflict: "project_id,user_id" });
+  if (error) redirect(`/org/people?error=${encodeURIComponent(error.message)}`);
+  revalidatePath("/org/people");
+  redirect(`/org/people?ok=${encodeURIComponent("Added to project.")}`);
+}

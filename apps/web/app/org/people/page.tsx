@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { getAdminOrg } from "@/lib/auth/org";
 import { createClient } from "@/lib/supabase/server";
 import { CopyButton } from "@/components/CopyButton";
-import { createInvites, removeMember, revokeInvite, setMemberMinor, setMemberRole } from "./actions";
+import { addToProject, createInvites, removeMember, revokeInvite, setMemberMinor, setMemberRole } from "./actions";
 
 const btn = "rounded border border-ink/20 px-2 py-0.5 text-xs hover:bg-ink/5 dark:border-paper/20 dark:hover:bg-paper/10";
 const input = "rounded border border-ink/20 bg-white px-2 py-1 text-sm text-ink dark:border-paper/20";
@@ -14,12 +14,14 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
   const h = await headers();
   const origin = `${h.get("x-forwarded-proto") ?? "https"}://${h.get("host")}`;
 
-  const [{ data: members }, { data: invites }, { data: cohorts }, { data: projects }] = await Promise.all([
-    supabase.from("memberships").select("id, role, is_minor, created_at, users(email, display_name)").eq("org_id", org.id).order("created_at"),
+  const [{ data: members }, { data: invites }, { data: cohorts }, { data: projects }, { data: pm }] = await Promise.all([
+    supabase.from("memberships").select("id, user_id, role, is_minor, created_at, users(email, display_name)").eq("org_id", org.id).order("created_at"),
     supabase.from("invites").select("id, email, role, is_minor, token, expires_at, accepted_at, cohorts(name), projects(title)").eq("org_id", org.id).order("created_at", { ascending: false }),
     supabase.from("cohorts").select("id, name").eq("org_id", org.id).order("starts_on", { ascending: false }),
     supabase.from("projects").select("id, title, cohort_id").eq("org_id", org.id).order("title"),
+    supabase.from("project_members").select("user_id, role, projects(title)").eq("org_id", org.id),
   ]);
+  const projectsOf = (userId: string) => (pm ?? []).filter((x) => x.user_id === userId);
   const pending = (invites ?? []).filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date());
   const canInviteAdmins = org.role === "owner";
 
@@ -91,7 +93,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
       <section>
         <h2 className="mb-2 font-medium">Members ({members?.length ?? 0})</h2>
         <table className="w-full text-sm">
-          <thead className="text-left text-xs uppercase opacity-60"><tr><th className="py-1">Person</th><th>Role</th><th>Minor</th><th></th></tr></thead>
+          <thead className="text-left text-xs uppercase opacity-60"><tr><th className="py-1">Person</th><th>Role</th><th>Projects</th><th>Minor</th><th></th></tr></thead>
           <tbody>
             {(members ?? []).map((m) => {
               const locked = m.role === "owner" || (m.role === "admin" && !canInviteAdmins);
@@ -110,6 +112,20 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
                         <button className={btn}>Save</button>
                       </form>
                     )}
+                  </td>
+                  <td>
+                    <ul className="text-xs">{projectsOf(m.user_id).map((x, i) => <li key={i}>{x.projects?.title} · {x.role}</li>)}</ul>
+                    <form action={addToProject} className="mt-1 flex items-center gap-1">
+                      <input type="hidden" name="user_id" value={m.user_id} />
+                      <select name="project_id" className={input} defaultValue="">
+                        <option value="">add to…</option>
+                        {(projects ?? []).map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
+                      </select>
+                      <select name="project_role" className={input} defaultValue="director">
+                        {["director", "dp", "sound", "editor", "producer"].map((r) => <option key={r} value={r}>{r}</option>)}
+                      </select>
+                      <button className={btn}>Add</button>
+                    </form>
                   </td>
                   <td>
                     <form action={setMemberMinor}>
