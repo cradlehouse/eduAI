@@ -15,7 +15,9 @@ as the signed-in user (RLS) and calls three user-scoped RPCs from migration 0103
 | `/welcome` | signed in, no cohort/project yet |
 | `/org` | admin overview (counts) inside the admin rail |
 | `/org/people` | paste emails → invites (link to copy each; Resend later); revoke; member roles, minor flag, remove |
-| `/p/[projectId]`, `/c/[cohortId]` | stubs; the real shells are P1-05 / Phase 2 |
+| `/p/[projectId]` | student shell: rail (project switcher, nav, budget ring from the budget views, me), dashboard (this week, crew, budget, recent jobs); instructors get a “viewing as instructor” banner |
+| `/p/[projectId]/module` | the cohort schedule with derived state per module (open / upcoming / locked + why / closed) and the brief |
+| `/c/[cohortId]` | stub; instructor shell is Phase 2 |
 
 `pnpm dev` for Next dev, `pnpm cf:preview` to run the Worker bundle in workerd, `pnpm cf:deploy` to ship.
 Types: `pnpm db:types` at the repo root after any migration.
