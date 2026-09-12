@@ -1,8 +1,12 @@
 // Public config. Both values are safe in the browser; RLS is the security boundary.
-function required(name: string): string {
-  const v = process.env[name];
-  if (!v) throw new Error(`${name} is not set. See apps/web/.env.example and wrangler.jsonc.`);
-  return v;
+// Referenced LITERALLY on purpose: Next.js only inlines NEXT_PUBLIC_* into browser bundles when the
+// full `process.env.NAME` expression appears in source. `process.env[name]` is undefined client-side.
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!url || !anon) {
+  throw new Error("NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY are not set. See apps/web/.env.example.");
 }
-export const SUPABASE_URL = required("NEXT_PUBLIC_SUPABASE_URL");
-export const SUPABASE_ANON_KEY = required("NEXT_PUBLIC_SUPABASE_ANON_KEY");
+
+export const SUPABASE_URL: string = url;
+export const SUPABASE_ANON_KEY: string = anon;
