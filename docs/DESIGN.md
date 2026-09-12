@@ -58,3 +58,20 @@ is a small setting rather than a fork. Candidates from the traditions research (
 Two things worth taking now, whatever the style: the e-conte's **seconds+frames** duration with a running
 total, and Halas & Batchelor's **tension chart** (emotion/music/colour strip above the cuts), which is a
 per-cut intensity field. Phase 4, once the first cohort has opinions.
+
+## Navigation (fixed; do not add menus elsewhere)
+
+One sidebar, `components/Sidebar.tsx`, on every signed-in page. Its sections are decided by the user's
+roles, never by the page, so nothing appears, disappears or reorders as you move:
+
+```
+eduai
+ADMIN               admins only:        Organisation · People · Cohorts · Models (soon) · Credentials (soon)
+COHORT [switcher]   instructors/admins: Overview · Schedule · Projects · Review queue · Budgets · Release · Integrity · Evidence
+PROJECT [switcher]  anyone on one:      Dashboard · Module brief · Bible · Storyboard · Takes · Compare · Timeline · Export · budget ring
+me · role · org · sign out              small, bottom-left
+```
+
+The item for the current page is highlighted (`NavLink`). The cohort and project shown are the ones in
+view; outside a cohort or project they default to the first one you can reach. There is no top bar and
+no second menu. New screens get a `NavLink` in the right section here and nowhere else.

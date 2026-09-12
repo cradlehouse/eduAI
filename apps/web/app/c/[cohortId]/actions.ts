@@ -15,10 +15,10 @@ export async function setModuleDates(formData: FormData) {
     due_at: due ? new Date(due).toISOString() : null,
     enabled: formData.get("enabled") === "on",
   }).eq("id", id).select("id");
-  if (error) redirect(`/c/${cohortId}?error=${encodeURIComponent(error.message)}`);
-  if (!data?.length) redirect(`/c/${cohortId}?error=${encodeURIComponent("Nothing changed: you need to be an instructor on this cohort or an admin. Check which account this window is signed in as.")}`);
+  if (error) redirect(`/c/${cohortId}/schedule?error=${encodeURIComponent(error.message)}`);
+  if (!data?.length) redirect(`/c/${cohortId}/schedule?error=${encodeURIComponent("Nothing changed: you need to be an instructor on this cohort or an admin. Check which account this window is signed in as.")}`);
   revalidatePath(`/c/${cohortId}`);
-  redirect(`/c/${cohortId}`);
+  redirect(`/c/${cohortId}/schedule`);
 }
 
 export async function openModuleNow(formData: FormData) {
@@ -30,8 +30,8 @@ export async function openModuleNow(formData: FormData) {
     opens_at: new Date().toISOString(), enabled: true,
     gate_unlocked_at: new Date().toISOString(), gate_unlocked_by: user?.id ?? null,
   }).eq("id", id).select("id, opens_at");
-  if (error) redirect(`/c/${cohortId}?error=${encodeURIComponent(error.message)}`);
-  if (!data?.length) redirect(`/c/${cohortId}?error=${encodeURIComponent(`Nothing changed: ${user?.email ?? "this account"} isn't an instructor on this cohort or an admin. Check which account this window is signed in as.`)}`);
+  if (error) redirect(`/c/${cohortId}/schedule?error=${encodeURIComponent(error.message)}`);
+  if (!data?.length) redirect(`/c/${cohortId}/schedule?error=${encodeURIComponent(`Nothing changed: ${user?.email ?? "this account"} isn't an instructor on this cohort or an admin. Check which account this window is signed in as.`)}`);
   revalidatePath(`/c/${cohortId}`);
-  redirect(`/c/${cohortId}?ok=${encodeURIComponent("Module opened.")}`);
+  redirect(`/c/${cohortId}/schedule?ok=${encodeURIComponent("Module opened.")}`);
 }
