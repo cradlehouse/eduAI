@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     replicate_api_token: str = ""
     sentry_dsn: str = ""
     job_kinds: str = Field(default="", description="comma list: generate, render. Empty ⇒ API only, no dispatcher")
+    webhook_url: str = Field(default="", description="inbox Worker base, e.g. https://eduai-webhook-inbox.<acct>.workers.dev; empty ⇒ poll only")
     worker_name: str = Field(default_factory=lambda: socket.gethostname())
     poll_interval_s: float = 3.0
     submit_timeout_min: int = 30

@@ -90,7 +90,7 @@ Deploys are explicit; CI never deploys.
 
 ## Not done here, on purpose
 
-P1-11 onward. The orchestrator (P1-10) is built and tested but not yet deployed on Render, so hosted jobs queue until it is. Invite emails are not sent yet (links are copied from /org/people); Resend is on the platform list. Endpoints, cents and licence links in the registry CSVs are marked
+P1-12 onward. The orchestrator (P1-10) and the webhook inbox Worker (P1-11, live) are built and tested; the orchestrator is not yet deployed on Render, so hosted jobs queue until it is. Invite emails are not sent yet (links are copied from /org/people); Resend is on the platform list. Endpoints, cents and licence links in the registry CSVs are marked
 **UNVERIFIED** in their notes; confirm against vendor docs before P1-10. `adapter_tested_at` on the
 three approved profiles is a placeholder date — the approval check requires it, and P1-10 should
 overwrite it with the real test run.

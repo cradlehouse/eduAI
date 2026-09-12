@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI):
     app.state.stop = asyncio.Event()
     app.state.task = None
     if app.state.db and settings.kinds:
-        app.state.dispatcher = Dispatcher(app.state.db, make_storage())
+        app.state.dispatcher = Dispatcher(app.state.db, make_storage(), webhook_url=f"{settings.webhook_url.rstrip('/')}/fal" if settings.webhook_url else None)
         app.state.task = asyncio.create_task(app.state.dispatcher.run_forever(app.state.stop))
     else:
         log.info("dispatcher off (DATABASE_URL=%s, JOB_KINDS=%r)", "set" if settings.database_url else "unset", settings.job_kinds)

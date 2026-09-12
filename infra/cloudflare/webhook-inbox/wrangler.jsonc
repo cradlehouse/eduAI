@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "eduai-webhook-inbox",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "observability": { "enabled": true },
+  // No secrets: the Worker verifies the vendor's signature and calls the anon-callable
+  // public.webhook_ingest RPC. The orchestrator re-polls the vendor, so the body is never trusted.
+  "vars": {
+    "SUPABASE_URL": "https://zhltmlguysknjeueabyy.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpobHRtbGd1eXNrbmpldWVhYnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NzQ3MTMsImV4cCI6MjEwNDU1MDcxM30.wvKmjZt--42BLaYdgOfqPCREmFD6OBXjt_EWSDSr-t0",
+    "FAL_JWKS_URL": "https://rest.fal.ai/.well-known/jwks.json"
+  }
+}

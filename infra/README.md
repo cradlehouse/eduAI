@@ -1,5 +1,5 @@
-# infra — placeholder
+# infra
 
-- `render.yaml` (orchestrator web + 2 workers) — P1-16
-- `cloudflare/webhook-inbox/` (Worker: verify signature → insert into `webhook_inbox` → 200) — P1-11
+- `render.yaml` — Render blueprint for the orchestrator web service (env group `eduai`). Deploy: Render → New → Blueprint → this repo. Set `WEBHOOK_URL` in the env group to the inbox Worker URL below.
+- `cloudflare/webhook-inbox/` — **live at https://eduai-webhook-inbox.long-night-f7d0.workers.dev** (deployed 2026-09-12). `POST /fal` verifies fal's Ed25519 signature against its JWKS, stores the delivery through the anon-callable `public.webhook_ingest` RPC (no secrets in the Worker), and answers 200; `GET /health`. The inbox is a nudge, not data: the orchestrator re-polls the vendor for every row, so a forged delivery can only make it check sooner. Deploy with `pnpm --filter eduai-webhook-inbox deploy`; tests `pnpm --filter eduai-webhook-inbox test`.
 - `r2-lifecycle.json` — applied to bucket `eduai-assets` (created 2026-09-12, location wnam): abort incomplete multipart uploads after 1 day; expire `tmp/` after 7 days. Content-addressed assets under `<org>/…` are never expired here; retention is enforced by the orchestrator per deployment profile. Re-apply with `wrangler r2 bucket lifecycle set eduai-assets --file infra/r2-lifecycle.json --force`.

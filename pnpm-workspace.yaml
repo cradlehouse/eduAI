@@ -1,6 +1,7 @@
 packages:
   - apps/*
   - packages/*
+  - infra/cloudflare/*
 # Native postinstall builds we trust (pnpm 11 blocks all by default).
 allowBuilds:
   esbuild: true

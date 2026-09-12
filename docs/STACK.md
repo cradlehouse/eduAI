@@ -27,7 +27,7 @@ cameras/lighting/audio/laptops/software, and has apprentices make both individua
 | Orchestrator | **Python 3.12, FastAPI, uv**; one web service + `generate` and `render` workers | Talks to vendors, R2 and Postgres; never renders HTML | Built + tested 2026-09-12 (services/orchestrator); Render deploy pending |
 | Orchestrator hosting | **Render**, workspace `waterfallai` (really Cradle House), project `eduai`, region **Oregon**; env group `eduai` holds every orchestrator secret; workers on paid instances | Same AWS region as the database; free tier sleeps and generation must not | Project + env group created 2026-09-12; services at P1-16 |
 | Object storage | **Cloudflare R2**, bucket `eduai-assets`, content-addressed keys `<org>/<sha2>/<sha256>.<ext>`. Web uploads/serves via the Worker's R2 **binding** (no keys); the orchestrator uses S3 keys on Render | Cheap egress; immutable assets | P1-10. Cloudflare account `300ea11f0166485a4c182f50ad32b524` (admin@cradle.house). **Bucket created 2026-09-12**, location wnam, lifecycle in infra/r2-lifecycle.json |
-| Webhook inbox | **Cloudflare Worker** → verify signature → insert `webhook_inbox` → 200 | Vendors never point at Render; replay-safe by `(provider, dedupe_key)` | P1-11 |
+| Webhook inbox | **Cloudflare Worker** → verify signature → insert `webhook_inbox` → 200 | Vendors never point at Render; replay-safe by `(provider, dedupe_key)`; no secrets in the Worker (anon RPC; the orchestrator re-polls, never trusts the body) | Live 2026-09-12: https://eduai-webhook-inbox.long-night-f7d0.workers.dev |
 | Media processing | **ffmpeg** in the render worker; **OTIO** for timelines; FCP7 XML / FCPXML / EDL writers | Export formats editors actually open | Phase 3 |
 | Model vendors | **fal.ai** (Veo 3.1 Lite, LTX 2.5, Stable Audio 3); Replicate (Chatterbox, Phase 2) | Registry-driven; a vendor is a row, never code | fal at P1-10 |
 | Self-hosted compute | **Crusoe Cloud** (stranded-energy + renewable GPUs) for the Phase 4 open-weight profiles | The only tier where energy is measurable; the sustainability differentiator vs CoreWeave/Lambda/RunPod | Phase 4, draft profile `ltx-2.5@crusoe` |
@@ -106,7 +106,8 @@ All orchestrator secrets live in the Render env group `eduai` (project eduai →
 | `DATABASE_URL` (Supavisor pooled, 6543) | Render | orchestrator |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | Render | orchestrator |
 | `FAL_KEY`, `REPLICATE_API_TOKEN`, `ANTHROPIC_API_KEY`, `AYRSHARE_API_KEY` | Render | orchestrator |
-| `WEBHOOK_SIGNING_SECRETS` (JSON) | Cloudflare Worker secret + Render | inbox verification |
+| `WEBHOOK_URL` | Render | orchestrator passes it to fal at submit; empty ⇒ poll only |
+| ~~`WEBHOOK_SIGNING_SECRETS`~~ | not needed: fal signs with Ed25519 against a public JWKS | — |
 | `SENTRY_DSN` | Render | orchestrator |
 | `SENTRY_DSN_WEB` | Render env group (parked) → `wrangler secret put SENTRY_DSN` at P1-15 | web |
 | `JOB_KINDS` | Render, per worker | `generate` or `render` |

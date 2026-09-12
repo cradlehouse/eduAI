@@ -219,15 +219,19 @@ class Dispatcher:
         for row in rows:
             err: str | None = None
             try:
+                # A delivery is only a nudge: we re-poll the vendor ourselves, so an unsigned or forged row
+                # can at most make us check sooner. The flag is recorded for visibility, not trusted.
                 rid = row.get("provider_request_id")
                 if not row.get("signature_ok"):
-                    err = "bad signature"
-                elif rid:
+                    err = "bad signature (checked the job anyway)"
+                if rid:
                     job = await self.db.job_by_request(row["provider"], rid)
                     if job and job["status"] in ("submitted", "running"):
                         await self.check_one(job)
                     elif not job:
                         err = "no job for request id"
+                else:
+                    err = "no request id"
             except Exception as e:  # noqa: BLE001
                 err = f"{type(e).__name__}: {e}"
             await self.db.inbox_done(str(row["id"]), err)

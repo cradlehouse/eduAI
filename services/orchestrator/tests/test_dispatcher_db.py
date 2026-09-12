@@ -131,3 +131,26 @@ async def test_timeout_releases():
 
 async def _queued():
     return VendorStatus("queued")
+
+
+async def test_inbox_delivery_completes_job_and_is_deduped():
+    db = await Db.connect(URL)
+    try:
+        fake = FakeFal()
+        d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg(), webhook_url="https://inbox.example/fal")
+        jid = await insert_job(db, {"prompt": "x", "duration_s": 5})
+        await d.submit_queued()
+        job = await db.job(jid)
+        rid = job["provider_request_id"]
+        # what the Worker does, twice (fal retry) — second insert is a no-op
+        for _ in range(2):
+            await db._exec("select public.webhook_ingest('fal', %s, %s, '{}'::jsonb, %s, true)", rid + ":1", rid, f'{{"request_id":"{rid}","status":"OK"}}')
+        assert (await db._one("select count(*)::int as n from public.webhook_inbox where provider_request_id = %s", rid))["n"] == 1
+        fake.polls = 1  # next status call reports completed
+        assert await d.drain_inbox() == 1
+        assert (await db.job(jid))["status"] == "succeeded"
+        row = await db._one("select processed_at, error from public.webhook_inbox where provider_request_id = %s", rid)
+        assert row["processed_at"] is not None and row["error"] is None
+        assert await d.drain_inbox() == 0
+    finally:
+        await db.close()
