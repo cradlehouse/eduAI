@@ -28,7 +28,7 @@ export function LoginForm({ next, initialEmail }: { next: string; initialEmail: 
   if (state === "sent") {
     return (
       <p className="text-sm">
-        Check <strong>{email}</strong> for a sign-in link. Open it on this device.
+        Check <strong>{email}</strong> for a sign-in link. It works on any device.
       </p>
     );
   }
