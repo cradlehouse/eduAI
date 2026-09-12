@@ -26,7 +26,7 @@ cameras/lighting/audio/laptops/software, and has apprentices make both individua
 | Web hosting | **Cloudflare Pages** via OpenNext adapter | Cloudflare is already required (R2, Worker); no per-push deploy cost; **not Vercel** | P1-03 |
 | Orchestrator | **Python 3.12, FastAPI, uv**; one web service + `generate` and `render` workers | Talks to vendors, R2 and Postgres; never renders HTML | P1-10 |
 | Orchestrator hosting | **Render** (blueprint in `infra/render.yaml`); workers on paid instances | Free tier sleeps; generation must not | P1-16 |
-| Object storage | **Cloudflare R2**, bucket `eduai-assets`, content-addressed keys `<org>/<sha2>/<sha256>.<ext>` | Cheap egress; immutable assets | P1-10 |
+| Object storage | **Cloudflare R2**, bucket `eduai-assets`, content-addressed keys `<org>/<sha2>/<sha256>.<ext>` | Cheap egress; immutable assets | P1-10. Cloudflare account `300ea11f0166485a4c182f50ad32b524` (admin@cradle.house); R2 needs enabling in the dashboard |
 | Webhook inbox | **Cloudflare Worker** → verify signature → insert `webhook_inbox` → 200 | Vendors never point at Render; replay-safe by `(provider, dedupe_key)` | P1-11 |
 | Media processing | **ffmpeg** in the render worker; **OTIO** for timelines; FCP7 XML / FCPXML / EDL writers | Export formats editors actually open | Phase 3 |
 | Model vendors | **fal.ai** (Veo 3.1 Lite, LTX 2.5, Stable Audio 3); Replicate (Chatterbox, Phase 2) | Registry-driven; a vendor is a row, never code | fal at P1-10 |
