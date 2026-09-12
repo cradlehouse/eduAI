@@ -1,0 +1,59 @@
+# Navigation
+
+Derived from a research pass (2026-09-12) over NN/g guidance (IA vs navigation, local vs global nav,
+breadcrumbs, duplicate links, universal navigation), design systems (Carbon UI Shell, Shopify app nav,
+Atlassian navigation system, GOV.UK breadcrumbs) and the navigation of Canvas LMS, Google Classroom,
+GitHub, Vercel, Stripe, Linear, Frame.io V4, Notion and Slack. Full brief with sources:
+`docs/NAVIGATION_RESEARCH.md`.
+
+## What the exemplars agree on
+
+1. **No role switcher.** Menus are additive: Canvas adds an "Admin" link, GitHub an org "Settings" tab,
+   Classroom a "Grades" tab. Nobody swaps the chrome by role. A user with several roles simply sees more.
+2. **Header = global and fixed; sidebar = the sections of the current scope.** Carbon: the left panel is
+   secondary navigation and never carries three tiers. Vercel: the scope lives in the header; sidebar labels
+   stay put. So our four-level tree (org → cohort → project → tools) is never rendered as one sidebar.
+3. **The breadcrumb is the scope switcher.** Each segment is a dropdown of its siblings (Vercel's scope
+   selector; NN/g "single canonical pathway"). The way back up sits top-left, next to the logo.
+4. **Hub and spoke for choosing containers.** Courses → course, Classes → class, workspace → project.
+   Cohorts and projects are chosen on a page, never in the sidebar.
+5. **Entering someone else's work is navigation, not a mode.** Classroom: class → People → student → work.
+   The instructor lands in the same project UI as the student, with more affordances. Canvas-style
+   "Student View" (bordered, escapable, logged) is a separate, later feature for verifying the student
+   experience, never a global toggle.
+6. **No duplicate links.** A project reachable from three sidebar entries is the anti-pattern we had.
+
+## The IA
+
+```
+GLOBAL HEADER (every page, fixed)
+  [eduai]  Demo Film School ▾ › Autumn 2026 ▾ › SC/Warehouse ▾ › Storyboard        [avatar ▾: profile · sign out]
+           └ org segment only when the user belongs to >1 org; each ▾ lists siblings the user can reach
+
+SIDEBAR = sections of the current scope only (two tiers max, Settings last, instructor-only items marked)
+  Home        (no scope)   Home  ·  Organisation (admin)
+  Org         (admin)      Overview · Cohorts · People · Courses · Models · Credentials · Settings
+  Cohort                   Overview · Projects · Students · Schedule · Review queue · Budgets · Release · Integrity · Evidence · Settings
+  Project                  Home · Module brief · Bible · Storyboard · Takes · Compare · Timeline · Export · Members · Settings
+                           (same list for every role; items a student cannot open show a visibility marker to instructors)
+
+HOME (hub page, by what you have, additive)
+  admin:      Organisation card  + the cohorts they instruct  + "needs review"
+  instructor: their cohorts as cards, each listing its projects  + "needs review"
+  apprentice: their project card(s); exactly one project ⇒ land straight in it
+
+LANDING
+  apprentice → their project Home;  instructor → Home, or straight into the cohort if they have exactly one;
+  admin → Home (Organisation card first)
+
+ENTERING A STUDENT'S PROJECT AND RETURNING
+  Cohort › Projects (or Students › name) → open → identical project UI.
+  Header reads Org › Cohort › Project; the Project ▾ lists the cohort's other projects, the Cohort segment is the way back.
+  No banner: the instructor is acting as themselves with their own permissions; the breadcrumb and avatar say who and where.
+```
+
+## Rules for adding screens
+
+- A new screen goes into exactly one scope's sidebar list above. It never appears in two.
+- Nothing in the sidebar opens a different scope. Scope changes happen in the header breadcrumb or on hub pages.
+- Every page renders the header breadcrumb: `Org › Cohort › Project › Section`, last segment unlinked.
