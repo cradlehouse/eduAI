@@ -84,6 +84,10 @@ pnpm --filter web cf:deploy    # build + deploy to https://eduai-web.long-night-
 ```
 Deploys are explicit; CI never deploys.
 
+## Known issues
+
+- Production (Workers) logs React #418 (hydration mismatch) once per signed-in page load; local `next dev` does not. Server/client text and tags match apart from the RSC script payload, and React recovers client-side, so it is cosmetic for now. Reproduce under workerd (`pnpm --filter web cf:preview`) and diff before changing anything.
+
 ## Not done here, on purpose
 
 Everything from P1-10 onward (the orchestrator). Jobs queue but nothing runs them yet. Invite emails are not sent yet (links are copied from /org/people); Resend is on the platform list. Endpoints, cents and licence links in the registry CSVs are marked

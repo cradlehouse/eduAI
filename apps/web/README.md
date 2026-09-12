@@ -25,7 +25,8 @@ as the signed-in user (RLS) and calls three user-scoped RPCs from migration 0103
 | `/p/[projectId]/scenes` | **Storyboard as e-conte**: one column of cuts per scene, picture + layer strips (bg / char / merged · dialogue / sfx), notes beside, timing right; add cut |
 | `/p/[projectId]/shots/[shotId]` | **the console**: layer tabs, lane toggle, route tiles with live token estimate and lock reasons (`model_options`, `estimate_tokens`), schema-driven inputs from `input_schema`, Generate → `jobs` row (server action re-checks readiness, allowlist and budget). Below: the cut's notes (objective, continuity, camera, dialogue), bible links, recent generations |
 | `/c/[cohortId]` | **instructor shell**: rail (Cohort, Projects, then Phase 2 items), cohort overview + module schedule with dates and “Open now” |
-| `/c/[cohortId]/projects` | the cohort's projects with crews; opens the student view with an instructor banner |
+| `/c/[cohortId]/projects` | create projects (title, logline, token budget), edit title/logline, set budget in tokens, add/remove crew from the cohort's enrolled apprentices, delete; Open project → student view |
+| `/org/cohorts` | create cohorts (course, name, dates, instructor) with the module schedule laid out weekly; assign instructors |
 | every signed-in page | one `Sidebar` (ADMIN / COHORT / PROJECT sections by role, me-unit bottom-left); see docs/DESIGN.md → Navigation |
 | `/c/[cohortId]/schedule` | module dates, on/off, “Open now” |
 

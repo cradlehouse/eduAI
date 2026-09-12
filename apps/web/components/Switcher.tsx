@@ -1,8 +1,9 @@
 "use client";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-// A section header that is also a switcher when there is more than one thing to switch to.
-// hrefBase, not a function: server components cannot pass functions to client components.
+// Section header: the current name is always a link to that section's root; with more than one
+// option it is also a switcher. hrefBase is a string because server components cannot pass functions.
 export function Switcher({ label, current, options, hrefBase }: { label: string; current: { id: string; name: string } | null; options: { id: string; name: string }[]; hrefBase: string }) {
   const router = useRouter();
   return (
@@ -13,9 +14,9 @@ export function Switcher({ label, current, options, hrefBase }: { label: string;
                 className="display max-w-[140px] truncate rounded-full border border-line bg-card px-2 py-0.5 text-xs">
           {options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
         </select>
-      ) : (
-        <span className="display truncate text-xs">{current?.name ?? ""}</span>
-      )}
+      ) : current ? (
+        <Link href={`${hrefBase}${current.id}`} className="display truncate text-xs hover:underline">{current.name}</Link>
+      ) : null}
     </div>
   );
 }
