@@ -7,7 +7,16 @@ import { safeNext } from "@/lib/auth/safe-next";
 // (?token_hash=&type=) so a link opened in a different browser still works.
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
-  const next = safeNext(url.searchParams.get("next"));
+  // ?next= directly (PKCE flow), or lifted out of ?redirect_to= (token_hash flow from the email template).
+  let nextParam = url.searchParams.get("next");
+  const redirectTo = url.searchParams.get("redirect_to");
+  if (!nextParam && redirectTo) {
+    try {
+      const rt = new URL(redirectTo);
+      if (rt.origin === url.origin) nextParam = rt.searchParams.get("next") ?? rt.pathname;
+    } catch { /* ignore malformed redirect_to */ }
+  }
+  const next = safeNext(nextParam);
   const supabase = await createClient();
 
   const code = url.searchParams.get("code");

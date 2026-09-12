@@ -1,2 +1,2 @@
 <h2>Confirm your email for eduai</h2>
-<p><a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=signup">Confirm and sign in</a></p>
+<p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=signup&redirect_to={{ .RedirectTo }}">Confirm and sign in</a></p>

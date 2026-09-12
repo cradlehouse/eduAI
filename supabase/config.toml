@@ -34,7 +34,7 @@ enabled = true
 [auth]
 enabled = true
 site_url = "https://eduai-web.long-night-f7d0.workers.dev"
-additional_redirect_urls = ["https://eduai-web.long-night-f7d0.workers.dev/auth/callback", "http://localhost:3000/auth/callback"]
+additional_redirect_urls = ["https://eduai-web.long-night-f7d0.workers.dev/**", "http://localhost:3000/**"]
 jwt_expiry = 3600
 enable_signup = true
 
@@ -45,7 +45,8 @@ enable_confirmations = false
 
 # Links carry token_hash straight to our /auth/callback (verifyOtp), not Supabase's PKCE ?code=
 # redirect: a link opened in a different browser than the one that requested it still works.
-# {{ .RedirectTo }} is our callback URL and already contains ?next=, hence the leading &.
+# The link starts from {{ .SiteURL }}; the original emailRedirectTo travels as redirect_to and the
+# callback lifts ?next= out of it (same-origin only).
 [auth.email.template.magic_link]
 subject = "Sign in to eduai"
 content_path = "./supabase/templates/magic_link.html"
