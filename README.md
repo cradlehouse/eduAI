@@ -7,7 +7,7 @@ Working name for the AI film platform. Trimmed from `ai-film-platform-code-hando
 
 ```
 eduai/
-├── apps/web/                 placeholder — Next.js from P1-03
+├── apps/web/                 Next.js 15 on Cloudflare Workers (OpenNext): login, /auth/callback, /invite/[token], role landing, shell stubs
 ├── services/orchestrator/    placeholder — FastAPI from P1-10
 ├── packages/db/
 │   ├── migrations/           → ../../supabase/migrations (0001–0014 schema, 0100 RLS enable, 0101 policies, generated)
@@ -75,9 +75,18 @@ are `draft`: visible in the registry, never selectable.
 No auth users are seeded. Sign in by magic link with one of those addresses, then `/invite/[token]`
 (P1-03) calls `eduai.accept_invite(token, user_id)` under the service role.
 
+## Web app
+
+```bash
+pnpm --filter web dev          # local Next dev on :3000 (copy apps/web/.env.example → .env.local)
+pnpm --filter web cf:preview   # run the real Worker bundle locally in workerd
+pnpm --filter web cf:deploy    # build + deploy to https://eduai-web.long-night-f7d0.workers.dev
+```
+Deploys are explicit; CI never deploys.
+
 ## Not done here, on purpose
 
-Everything from P1-03 onward. Endpoints, cents and licence links in the registry CSVs are marked
+Everything from P1-04 onward. Endpoints, cents and licence links in the registry CSVs are marked
 **UNVERIFIED** in their notes; confirm against vendor docs before P1-10. `adapter_tested_at` on the
 three approved profiles is a placeholder date — the approval check requires it, and P1-10 should
 overwrite it with the real test run.

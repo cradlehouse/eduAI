@@ -22,8 +22,8 @@ cameras/lighting/audio/laptops/software, and has apprentices make both individua
 |---|---|---|---|
 | Database, auth, realtime, secrets | **Supabase** (Postgres 17, Auth magic-link, Realtime, Vault), **pinned to AWS us-west-2 (Oregon)** | One contract between web and orchestrator; RLS does the tenancy; Vault holds org-supplied keys. Oregon is a carbon-neutral AWS region, a verifiable claim (see RESOURCE_NEUTRALITY.md) | Live: project `eduAI`, ref `zhltmlguysknjeueabyy`, us-west-2 |
 | Migrations | **Supabase CLI**, native layout `supabase/migrations`, numbered `0001…`, applied with `supabase db push` | Same convention as ercotcron; CI replays them on plain Postgres | Live, 16 applied |
-| Web app | **Next.js 15** App Router, TypeScript, Tailwind, pnpm | Thin UI: CRUD + Realtime, no vendor calls | P1-03 |
-| Web hosting | **Cloudflare Pages** via OpenNext adapter | Cloudflare is already required (R2, Worker); no per-push deploy cost; **not Vercel** | P1-03 |
+| Web app | **Next.js 15.5** App Router, TypeScript, Tailwind 4, pnpm 11 | Thin UI: CRUD + Realtime, no vendor calls. Holds **no secrets**: invite acceptance and landing are user-scoped RPCs (migration 0103) | P1-03 done |
+| Web hosting | **Cloudflare Workers** (static assets binding) via **OpenNext** (`@opennextjs/cloudflare`) | Cloudflare is already required (R2, Worker); no per-push deploy cost; **not Vercel**. Not Pages: Cloudflare has moved Next.js to Workers. Not vinext yet: Cloudflare's own README calls it not battle-tested and Next-16-only; revisit in Phase 4, the swap is build-tool only | **Live**: https://eduai-web.long-night-f7d0.workers.dev (Worker `eduai-web`) |
 | Orchestrator | **Python 3.12, FastAPI, uv**; one web service + `generate` and `render` workers | Talks to vendors, R2 and Postgres; never renders HTML | P1-10 |
 | Orchestrator hosting | **Render**, workspace `waterfallai` (really Cradle House), project `eduai`, region **Oregon**; env group `eduai` holds every orchestrator secret; workers on paid instances | Same AWS region as the database; free tier sleeps and generation must not | Project + env group created 2026-09-12; services at P1-16 |
 | Object storage | **Cloudflare R2**, bucket `eduai-assets`, content-addressed keys `<org>/<sha2>/<sha256>.<ext>` | Cheap egress; immutable assets | P1-10. Cloudflare account `300ea11f0166485a4c182f50ad32b524` (admin@cradle.house). **Bucket created 2026-09-12**, location wnam, lifecycle in infra/r2-lifecycle.json |
@@ -82,7 +82,9 @@ GPU platform before the Phase 4 self-hosted LTX profile.
 - Working name is **eduai**. "reel" was rejected: domains taken and an existing ReelAI app.
 - Supabase-native layout, like ercotcron. Seeds run with `supabase db push --include-seed`.
 - Local verification is `pnpm check` (generated files in sync + full db-test on a throwaway Postgres). Runs without Docker.
-- Commits use `admin@cradle.house`. Once Cloudflare Pages is connected, every push to `main` deploys, so batch pushes.
+- Commits use `admin@cradle.house`. **A push is never a deploy**: CI lints, typechecks and builds the web app but does not deploy; deploys are explicit `pnpm --filter web cf:deploy`.
+- Auth: magic link via `signInWithOtp`; callback handles both PKCE `?code=` and `?token_hash=`; `?next=` is sanitised to a same-site path. Middleware refreshes the session with `getUser()` (server-validated), never `getSession()`.
+- Supabase auth settings (site URL, redirect allowlist) are declared in `supabase/config.toml` and pushed with `supabase config push`.
 - Placeholders are labelled as such (`adapter_tested_at`, UNVERIFIED notes) rather than left looking real.
 
 ## Design tokens (from the handoff)
@@ -97,15 +99,15 @@ All orchestrator secrets live in the Render env group `eduai` (project eduai →
 
 | Variable | Lives on | Used by |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cloudflare Pages | web (browser + server) |
-| `SUPABASE_SERVICE_ROLE_KEY` | Cloudflare Pages (server only), Render | invite acceptance; orchestrator |
-| `ORCHESTRATOR_URL` | Cloudflare Pages | `/assist/*` proxy only |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | committed in `apps/web/.env.production` + `wrangler.jsonc` vars (public) | web (browser + server) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Render only | orchestrator. The web tier never has it |
+| `ORCHESTRATOR_URL` | Worker var | `/assist/*` proxy only |
 | `DATABASE_URL` (Supavisor pooled, 6543) | Render | orchestrator |
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | Render | orchestrator |
 | `FAL_KEY`, `REPLICATE_API_TOKEN`, `ANTHROPIC_API_KEY`, `AYRSHARE_API_KEY` | Render | orchestrator |
 | `WEBHOOK_SIGNING_SECRETS` (JSON) | Cloudflare Worker secret + Render | inbox verification |
 | `SENTRY_DSN` | Render | orchestrator |
-| `SENTRY_DSN_WEB` | Render env group (parked) → Cloudflare Pages at P1-03 | web |
+| `SENTRY_DSN_WEB` | Render env group (parked) → `wrangler secret put SENTRY_DSN` at P1-15 | web |
 | `JOB_KINDS` | Render, per worker | `generate` or `render` |
 | Org-supplied vendor keys | Supabase Vault only | orchestrator, via `org_credentials.secret_ref` |
 

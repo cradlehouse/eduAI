@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+/* Design tokens from the handoff. Light default; dark swaps ink/paper on the same tokens. */
+@theme {
+  --color-ink: #1b1f3b;
+  --color-paper: #fbf9f4;
+  --color-accent: #e0a030;
+  --color-money: #2e8b57;
+  --color-integrity: #3f7cac;
+  --color-danger: #c4453c;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+:root { color-scheme: light dark; }
+html { font-size: 16px; }
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+@media (prefers-color-scheme: dark) {
+  body { background: var(--color-ink); color: var(--color-paper); }
+}

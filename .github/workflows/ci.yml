@@ -35,21 +35,20 @@ jobs:
           DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
 
   web:
-    name: web lint + typecheck
+    name: web lint + typecheck + build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - id: probe
-        run: echo "present=$([ -f apps/web/package.json ] && echo 1 || echo 0)" >> "$GITHUB_OUTPUT"
-      - if: steps.probe.outputs.present == '1'
-        uses: pnpm/action-setup@v4
-      - if: steps.probe.outputs.present == '1'
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11 }
+      - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
-      - if: steps.probe.outputs.present == '1'
-        run: pnpm install --frozen-lockfile && pnpm --filter web lint && pnpm --filter web typecheck
-      - if: steps.probe.outputs.present == '0'
-        run: echo "apps/web not scaffolded yet (P1-03) — skipping"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web lint
+      - run: pnpm --filter web typecheck
+      # Builds against the committed public keys in apps/web/.env.production. No deploy from CI:
+      # deploys are explicit (`pnpm --filter web cf:deploy`) so a push is never a deploy.
+      - run: pnpm --filter web build
 
   orchestrator:
     name: orchestrator lint + tests

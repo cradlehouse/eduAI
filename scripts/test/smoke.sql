@@ -13,6 +13,8 @@ insert into auth.users (id, email) values
 select (eduai.accept_invite('demo-instructor-token', '10000000-0000-4000-8000-000000000001')).role;
 select (eduai.accept_invite('demo-student-1-token',  '10000000-0000-4000-8000-000000000002')).role;
 select (eduai.accept_invite('demo-student-2-token',  '10000000-0000-4000-8000-000000000003')).role;
+insert into public.invites (org_id, email, role, cohort_id, token, expires_at)
+values ('00000000-0000-4000-8000-000000000001', 'someone-else@example.com', 'student', '00000000-0000-4000-8000-000000000020', 'mismatch-token', '2027-12-31');
 
 do $$
 begin
@@ -239,6 +241,23 @@ begin
   raise notice 'ok  ledger + receipts + inbox';
 end $$;
 
+-- anon can preview an open invite but not accept
+set local role anon;
+set local request.jwt.claims to '';
+do $$
+declare r record;
+begin
+  select * into r from public.invite_preview('demo-student-1-token');
+  assert r.status = 'accepted', 'anon preview works';
+  begin
+    perform public.accept_invite('demo-student-1-token');
+    raise exception 'anon accept should fail';
+  exception when insufficient_privilege then null;
+  end;
+  raise notice 'ok  anon invite preview';
+end $$;
+reset role;
+
 -- RLS: outsider (member of "other" only)
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"10000000-0000-4000-8000-000000000004"}';
@@ -293,6 +312,23 @@ begin
   raise notice 'ok  rls student';
 end $$;
 
+-- web RPCs as the student: preview is public, accept runs as auth.uid(), landing resolves
+do $$
+declare r record;
+begin
+  select * into r from public.invite_preview('demo-student-1-token');
+  assert r.status = 'accepted' and r.org_name = 'Demo Film School' and r.email_masked = 'd•••@example.com', 'preview of accepted invite: ' || r.status;
+  select * into r from public.invite_preview('nope');
+  assert r.status = 'not_found', 'preview of unknown token';
+  assert public.my_landing() = '/p/00000000-0000-4000-8000-000000000030', 'student lands on their project: ' || public.my_landing();
+  begin
+    perform public.accept_invite('mismatch-token');   -- open invite, but for a different email
+    raise exception 'accepting someone else''s invite should fail';
+  exception when others then assert sqlerrm = 'invite_email_mismatch', sqlerrm;
+  end;
+  raise notice 'ok  web rpcs (student)';
+end $$;
+
 -- RLS: instructor sees the cohort's project without being a member, and can review
 set local request.jwt.claims to '{"sub":"10000000-0000-4000-8000-000000000001"}';
 do $$
@@ -306,6 +342,7 @@ begin
   assert (select total_cents from public.project_budgets) = 70000, 'instructor adjusted budget';
   update public.consent_releases set state = 'revoked', revoked_at = now(), revoked_reason = 'subject withdrew' where bible_entry_id = '50000000-0000-4000-8000-000000000001';
   assert (select state from public.consent_releases where bible_entry_id = '50000000-0000-4000-8000-000000000001') = 'revoked', 'instructor revoked';
+  assert public.my_landing() = '/c/00000000-0000-4000-8000-000000000020', 'instructor lands on cohort: ' || public.my_landing();
   raise notice 'ok  rls instructor';
 end $$;
 

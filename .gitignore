@@ -2,6 +2,8 @@ node_modules/
 .env
 .env.*
 !.env.example
+# public browser keys only (anon key + URL); nothing secret
+!apps/web/.env.production
 .DS_Store
 *.log
 .pnpm-store/
