@@ -11,7 +11,8 @@ as the signed-in user (RLS) and calls three user-scoped RPCs from migration 0103
 | Route | What |
 |---|---|
 | `/` | `my_landing()`: cohort, `/home`, or `/welcome` |
-| `/login`, `/auth/callback`, `/invite/[token]`, `/welcome` | auth and invite acceptance |
+| `/login`, `/login/reset`, `/auth/callback`, `/invite/[token]`, `/welcome` | sign-in (password / Google / link), reset, invite acceptance |
+| `/account` | display name; set or change password |
 | `/home` | hub: cohorts you can reach; Organisation card for admins |
 | `/org`, `/org/people`, `/org/cohorts` | organisation scope (admins) |
 | `/c/[cohortId]` | cohort Home: this week, team, my projects / all projects, open for sign-up / needs attention |
