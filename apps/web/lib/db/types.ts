@@ -2819,6 +2819,10 @@ export type Database = {
         Args: { p_token: string }
         Returns: Database["public"]["Enums"]["member_role"]
       }
+      bible_consent_state_for: {
+        Args: { p_entry: string; p_lane: Database["public"]["Enums"]["lane"] }
+        Returns: string
+      }
       invite_preview: {
         Args: { p_token: string }
         Returns: {

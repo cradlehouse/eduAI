@@ -8,7 +8,7 @@ import { signOut } from "@/app/welcome/actions";
 const NAV = [
   { seg: "", label: "Dashboard" },
   { seg: "module", label: "Module brief" },
-  { seg: "bible", label: "Bible", soon: "P1-06" },
+  { seg: "bible", label: "Bible" },
   { seg: "scenes", label: "Scenes", soon: "P1-07" },
   { seg: "takes", label: "Takes", soon: "P1-13" },
   { seg: "compare", label: "Compare", soon: "Phase 2" },

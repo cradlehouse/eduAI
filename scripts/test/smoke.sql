@@ -301,6 +301,8 @@ begin
   assert (select count(*) from public.project_budget_admin) = 0, 'student sees no admin money view';
   assert (select actual_tokens from public.job_tokens where job_id = '20000000-0000-4000-8000-000000000001') = 12000, 'job tokens ($12 x 1000)';
   assert (select count(*) from public.job_receipts) = 2, 'student sees project receipts';
+  assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'explore') = 'signed', 'lane-aware consent rpc (explore)';
+  assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'finish') = 'lane_not_permitted', 'lane-aware consent rpc (finish)';
   assert (select count(*) from public.invites) = 0, 'student cannot see invites';
   assert (select count(*) from public.org_credentials) = 0, 'student cannot see credentials';
   insert into public.jobs (project_id, shot_id, deployment_profile_id, lane, inputs)
