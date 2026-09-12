@@ -44,5 +44,17 @@ Schema: `jobs.layer`, `takes.layer`, `shots.plate_take_id` (migration 0108); `in
 ## Board styles (later)
 
 The storyboard is a view over the same cuts, notes and layers, so a per-org or per-cohort **board style**
-is a small setting rather than a fork: e-conte column (default, above), western horizontal panels, or a
-shot-list table for instructors who plan in spreadsheets. Phase 4, once the first cohort has opinions.
+is a small setting rather than a fork. Candidates from the traditions research (docs/STORYBOARD_TRADITIONS.md):
+
+| Style | Tradition | Fits our data today? |
+|---|---|---|
+| Conte (default) | Ghibli e-conte: vertical cuts, C#, picture, action, dialogue/SE, seconds+frames | yes |
+| Pitch Wall | Disney/Pixar: landscape panels in rows, beat boards, a recorded pitch play-through | needs beat-board tier, many panels per cut, recorded pitch |
+| Shot Deck | Hollywood live action: shot-list table, overhead diagram per scene, 3-panel pages | needs shot size/angle/lens fields, overhead canvas |
+| Six-Up | Aardman: six frames per page, shot#, frame count, notes | yes, plus a footnotes field |
+| Scroll | Webtoon + McCloud: gutter height encodes duration, transition type per cut | yes, plus a transition-type field |
+| Board-Driven | Adventure Time: dialogue authored on the board, exported to a script | needs a dialogue-is-source flag + script export |
+
+Two things worth taking now, whatever the style: the e-conte's **seconds+frames** duration with a running
+total, and Halas & Batchelor's **tension chart** (emotion/music/colour strip above the cuts), which is a
+per-cut intensity field. Phase 4, once the first cohort has opinions.
