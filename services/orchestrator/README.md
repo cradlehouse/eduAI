@@ -65,4 +65,4 @@ failure, and timeout.
 
 ## Deploy
 
-`infra/render.yaml` (Render blueprint, env group `eduai`). Not deployed yet — see the root README.
+`render.yaml` at the repo root (Render blueprint, env group `eduai`). Not deployed yet — see the root README.
