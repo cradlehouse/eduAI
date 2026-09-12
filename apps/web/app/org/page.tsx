@@ -29,7 +29,7 @@ export default async function OrgPage({ searchParams }: { searchParams: Promise<
       <dl className="mb-8 grid grid-cols-3 gap-4 text-sm">
         <div className="card p-4"><dt className="opacity-60">Members</dt><dd className="text-2xl">{members ?? 0}</dd></div>
         <div className="card p-4"><dt className="opacity-60">Pending invites</dt><dd className="text-2xl">{pending ?? 0}</dd></div>
-        <div className="card p-4"><dt className="opacity-60">Cohorts</dt><dd className="text-2xl">{cohorts ?? 0}</dd></div>
+        <Link href="/org/cohorts" className="card p-4 hover:bg-sand"><dt className="opacity-60">Cohorts</dt><dd className="text-2xl">{cohorts ?? 0}</dd></Link>
       </dl>
 
       <section className="mb-8 card p-4">
