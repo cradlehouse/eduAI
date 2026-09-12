@@ -2839,6 +2839,13 @@ export type Database = {
         Args: { p_project: string; p_tokens: number }
         Returns: number
       }
+      shot_ready_for: {
+        Args: { p_lane: Database["public"]["Enums"]["lane"]; p_shot: string }
+        Returns: {
+          missing: string[]
+          ready: boolean
+        }[]
+      }
     }
     Enums: {
       approval_status: "draft" | "approved" | "suspended" | "retired"

@@ -9,7 +9,7 @@ const NAV = [
   { seg: "", label: "Dashboard" },
   { seg: "module", label: "Module brief" },
   { seg: "bible", label: "Bible" },
-  { seg: "scenes", label: "Scenes", soon: "P1-07" },
+  { seg: "scenes", label: "Scenes" },
   { seg: "takes", label: "Takes", soon: "P1-13" },
   { seg: "compare", label: "Compare", soon: "Phase 2" },
   { seg: "timeline", label: "Timeline", soon: "Phase 3" },

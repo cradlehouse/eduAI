@@ -303,6 +303,8 @@ begin
   assert (select count(*) from public.job_receipts) = 2, 'student sees project receipts';
   assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'explore') = 'signed', 'lane-aware consent rpc (explore)';
   assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'finish') = 'lane_not_permitted', 'lane-aware consent rpc (finish)';
+  assert (select ready from public.shot_ready_for('40000000-0000-4000-8000-000000000001', 'explore')), 'shot_ready_for explore';
+  assert (select missing from public.shot_ready_for('40000000-0000-4000-8000-000000000001', 'finish')) = '{consent}', 'shot_ready_for finish blocked by consent';
   assert (select count(*) from public.invites) = 0, 'student cannot see invites';
   assert (select count(*) from public.org_credentials) = 0, 'student cannot see credentials';
   insert into public.jobs (project_id, shot_id, deployment_profile_id, lane, inputs)
