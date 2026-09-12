@@ -21,6 +21,7 @@ export default async function Welcome() {
       <p className="mb-3 text-sm opacity-80">
         You&apos;re not on a project yet. Your instructor or programme lead adds you to one; then this page becomes your project dashboard.
       </p>
+      <p className="mb-3 text-sm"><a className="underline" href="/account">Set a password</a> so you can sign in without an emailed link.</p>
       <form action={signOut}><button className="text-sm underline" type="submit">Sign out</button></form>
     </Card>
   );

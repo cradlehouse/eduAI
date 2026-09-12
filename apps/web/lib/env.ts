@@ -10,3 +10,6 @@ if (!url || !anon) {
 
 export const SUPABASE_URL: string = url;
 export const SUPABASE_ANON_KEY: string = anon;
+
+// "Continue with Google" shows only once the provider is configured in Supabase (docs/STACK.md → Auth).
+export const AUTH_GOOGLE: boolean = process.env.NEXT_PUBLIC_AUTH_GOOGLE === "1";

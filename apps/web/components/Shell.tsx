@@ -3,6 +3,7 @@ import type { Nav } from "@/lib/auth/nav";
 import { Crumb, type CrumbSeg } from "./Crumb";
 import { TokenBar, TokenRing, type Budget } from "./TokenMeter";
 import { signOut } from "@/app/welcome/actions";
+import { SessionGuard } from "./SessionGuard";
 
 // Global header (breadcrumb = scope switcher, avatar menu top right) + a sidebar: the token meter on top,
 // then the current scope's sections passed in by the layout.
@@ -14,6 +15,7 @@ export function Shell({ nav, crumbs, base, sections, sidebarTitle, sidebar, budg
   const name = nav.email.split("@")[0];
   return (
     <div className="flex min-h-screen flex-col">
+      <SessionGuard userId={nav.userId} />
       <header className="flex items-center gap-4 border-b border-line bg-card px-4 py-2">
         <Link href="/" className="display text-base">eduai</Link>
         <Crumb segs={crumbs} base={base} sections={sections} />
@@ -23,6 +25,7 @@ export function Shell({ nav, crumbs, base, sections, sidebarTitle, sidebar, budg
             <div className="px-2 py-1 text-xs text-muted">{nav.email}<br />{role} · {nav.org?.name}</div>
             <Link href="/home" className="rounded-full px-2 py-1 hover:bg-sand">Home</Link>
             {nav.isAdmin && <Link href="/org" className="rounded-full px-2 py-1 hover:bg-sand">Organisation</Link>}
+            <Link href="/account" className="rounded-full px-2 py-1 hover:bg-sand">Account</Link>
             <form action={signOut}><button className="w-full rounded-full px-2 py-1 text-left hover:bg-sand" type="submit">Sign out</button></form>
           </div>
         </details>

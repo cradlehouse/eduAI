@@ -4,7 +4,7 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL } from "@/lib/env";
 
 // Refreshes the Supabase session cookie on every request and gates the three shells.
 // Org resolution (which org the user is acting in) comes with the shells in P1-05.
-const PROTECTED = [/^\/p(\/|$)/, /^\/c(\/|$)/, /^\/org(\/|$)/, /^\/welcome$/];
+const PROTECTED = [/^\/p(\/|$)/, /^\/c(\/|$)/, /^\/org(\/|$)/, /^\/home(\/|$)/, /^\/account(\/|$)/, /^\/welcome$/];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });

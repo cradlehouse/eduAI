@@ -54,3 +54,16 @@ content_path = "./supabase/templates/magic_link.html"
 [auth.email.template.confirmation]
 subject = "Confirm your email for eduai"
 content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your eduai password"
+content_path = "./supabase/templates/recovery.html"
+
+# Google sign-in: create an OAuth client (Web) in Google Cloud with redirect URI
+# https://zhltmlguysknjeueabyy.supabase.co/auth/v1/callback, then either set these two env vars and
+# `supabase config push`, or paste them in Dashboard → Auth → Providers → Google. Then flip
+# NEXT_PUBLIC_AUTH_GOOGLE to "1" in apps/web/wrangler.jsonc + .env.production and redeploy the web app.
+# [auth.external.google]
+# enabled = true
+# client_id = "env(GOOGLE_CLIENT_ID)"
+# secret = "env(GOOGLE_CLIENT_SECRET)"
