@@ -38,7 +38,7 @@ export function Sidebar({ nav, ctx }: { nav: Nav; ctx: SidebarContext }) {
 
       {(nav.isAdmin || nav.isInstructor) && cohort && (
         <section className="mb-5">
-          <Switcher label="Cohort" current={cohort} options={nav.cohorts} hrefFor={(id) => `/c/${id}`} />
+          <Switcher label="Cohort" current={cohort} options={nav.cohorts} hrefBase="/c/" />
           <NavLink href={`/c/${cohort.id}`} exact>Overview</NavLink>
           <NavLink href={`/c/${cohort.id}/schedule`}>Schedule</NavLink>
           <NavLink href={`/c/${cohort.id}/projects`}>Projects</NavLink>
@@ -52,7 +52,7 @@ export function Sidebar({ nav, ctx }: { nav: Nav; ctx: SidebarContext }) {
 
       {project && (
         <section className="mb-5">
-          <Switcher label="Project" current={{ id: project.id, name: project.title }} options={projectPool.map((p) => ({ id: p.id, name: p.title }))} hrefFor={(id) => `/p/${id}`} />
+          <Switcher label="Project" current={{ id: project.id, name: project.title }} options={projectPool.map((p) => ({ id: p.id, name: p.title }))} hrefBase="/p/" />
           <NavLink href={`/p/${project.id}`} exact>Dashboard</NavLink>
           <NavLink href={`/p/${project.id}/module`}>Module brief</NavLink>
           <NavLink href={`/p/${project.id}/bible`}>Bible</NavLink>
