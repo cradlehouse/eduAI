@@ -19,5 +19,15 @@
   },
   "resource_model": {
     "basis": "undisclosed"
+  },
+  "adapter": {
+    "input_map": {
+      "duration_s": "seconds_total"
+    },
+    "outputs": [
+      "audio_file",
+      "audio"
+    ],
+    "verified": false
   }
 }

@@ -23,7 +23,7 @@ The database is the only shared contract between `apps/web` and `services/orches
 commercial eligibility, training-data disclosure, output rights, self-hostable, voice/likeness risk,
 release eligibility, approval owner + window, input schema, safety pipeline) → `deployment_profiles`
 (managed API or self-hosted: provider, endpoint, region, credential policy, lanes, cost model,
-retention, quota, health, adapter test date, approval window) → `org_model_profiles` (per-org
+retention, quota, health, adapter test date, approval window, `adapter` request/response mapping — 0110) → `org_model_profiles` (per-org
 allowlist: lanes, start/end, budget cap, release allowed, instructor gate, approver, review date).
 
 Lanes are the UX vocabulary: `explore`, `control`, `finish`, `voice_likeness`. A profile declares

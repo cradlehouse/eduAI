@@ -1,0 +1,21 @@
+# Render blueprint for the orchestrator (project eduai, region Oregon = same AWS region as Supabase).
+# Secrets come from the env group `eduai` (created 2026-09-12); nothing secret is in this file.
+# One web service answers /health and runs the `generate` dispatcher; add a second service with
+# JOB_KINDS=render when the render worker exists (Phase 3). Free tier sleeps: generation must not.
+services:
+  - type: web
+    name: eduai-orchestrator
+    runtime: python
+    region: oregon
+    plan: starter
+    rootDir: services/orchestrator
+    buildCommand: pip install uv && uv sync --frozen --no-dev
+    startCommand: uv run uvicorn orchestrator.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - fromGroup: eduai
+      - key: JOB_KINDS
+        value: generate
+      - key: PYTHON_VERSION
+        value: "3.12"

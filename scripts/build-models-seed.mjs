@@ -2,7 +2,7 @@
 // Registry seed generator.
 //   seed/models.csv               → public.models (families)
 //   seed/model_versions.csv       + schemas/<version_slug>.json ({input_schema, safety})   → public.model_versions
-//   seed/deployment_profiles.csv  + profiles/<profile_slug>.json ({cost_model, retention, quota?}) → public.deployment_profiles
+//   seed/deployment_profiles.csv  + profiles/<profile_slug>.json ({cost_model, retention, quota?, energy_profile?, resource_model?, adapter?}) → public.deployment_profiles
 // Output: seed/models.sql, idempotent upserts on slug. --check: exit 1 if stale.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -84,7 +84,7 @@ const pScalar = ["slug", "version_slug", "kind", "provider", "endpoint", "region
 const pCols = ["slug", "model_version_id", "kind", "provider", "endpoint", "region", "credential_policy", "lanes",
   "health_status", "adapter_tested_at", "approval_status", "approval_owner", "approved_at", "approved_until", "enabled", "notes",
   "cost_model", "retention", "quota", "safety_pipeline_version",
-  "compute_provider", "image_version", "model_checksum", "energy_profile", "resource_model"];
+  "compute_provider", "image_version", "model_checksum", "energy_profile", "resource_model", "adapter"];
 const profiles = csv("deployment_profiles.csv").map(r => {
   need(r, pScalar, "deployment_profiles.csv");
   const p = json("profiles", r.slug);
@@ -96,7 +96,7 @@ const profiles = csv("deployment_profiles.csv").map(r => {
     nullable(r.approved_until), bool(r.enabled), lit(r.notes), jb(p.cost_model), jb(p.retention ?? {}), jb(p.quota ?? {}),
     `(select safety_pipeline_version from public.model_versions where slug = ${lit(r.version_slug)})`,
     lit(r.compute_provider), nullable(r.image_version), nullable(r.model_checksum),
-    jb(p.energy_profile ?? {}), jb(p.resource_model ?? {}),
+    jb(p.energy_profile ?? {}), jb(p.resource_model ?? {}), jb(p.adapter ?? {}),
   ].join(", ") + ")";
 });
 

@@ -8,7 +8,7 @@ Working name for the AI film platform. Trimmed from `ai-film-platform-code-hando
 ```
 eduai/
 ├── apps/web/                 Next.js 15 on Cloudflare Workers (OpenNext): login, /auth/callback, /invite/[token], role landing, shell stubs
-├── services/orchestrator/    placeholder — FastAPI from P1-10
+├── services/orchestrator/    FastAPI + dispatcher (P1-10): claim → gate → reserve → fal → R2 → settle
 ├── packages/db/
 │   ├── migrations/           → ../../supabase/migrations (0001–0014 schema, 0100 RLS enable, 0101 policies, generated)
 │   ├── policies/             one RLS file per table → 0101
@@ -17,7 +17,7 @@ eduai/
 ├── infra/                    placeholder — render.yaml, Cloudflare webhook inbox, R2 lifecycle
 ├── scripts/                  build-policies.sh · build-models-seed.mjs · check-rls.sql · db-test.sh · test/
 ├── supabase/                 config.toml + migrations/ (native layout; packages/db/migrations symlinks here)
-└── .github/workflows/ci.yml  generated-files check · migrations+RLS+smoke on postgres:17 · web/orchestrator (skip until scaffolded)
+└── .github/workflows/ci.yml  generated-files check · migrations+RLS+smoke on postgres:17 · web lint+typecheck+build · orchestrator ruff+pytest
 ```
 
 ## Run it
@@ -90,7 +90,7 @@ Deploys are explicit; CI never deploys.
 
 ## Not done here, on purpose
 
-Everything from P1-10 onward (the orchestrator). Jobs queue but nothing runs them yet. Invite emails are not sent yet (links are copied from /org/people); Resend is on the platform list. Endpoints, cents and licence links in the registry CSVs are marked
+P1-11 onward. The orchestrator (P1-10) is built and tested but not yet deployed on Render, so hosted jobs queue until it is. Invite emails are not sent yet (links are copied from /org/people); Resend is on the platform list. Endpoints, cents and licence links in the registry CSVs are marked
 **UNVERIFIED** in their notes; confirm against vendor docs before P1-10. `adapter_tested_at` on the
 three approved profiles is a placeholder date — the approval check requires it, and P1-10 should
 overwrite it with the real test run.

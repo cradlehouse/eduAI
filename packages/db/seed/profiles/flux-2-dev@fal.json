@@ -20,5 +20,12 @@
   },
   "resource_model": {
     "basis": "undisclosed"
+  },
+  "adapter": {
+    "input_map": {},
+    "outputs": [
+      "images"
+    ],
+    "verified": false
   }
 }

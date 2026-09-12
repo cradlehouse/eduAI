@@ -20,5 +20,18 @@
   },
   "resource_model": {
     "basis": "undisclosed"
+  },
+  "adapter": {
+    "input_map": {
+      "image": "image_url",
+      "duration_s": {
+        "to": "duration",
+        "suffix": ""
+      }
+    },
+    "outputs": [
+      "video"
+    ],
+    "verified": false
   }
 }

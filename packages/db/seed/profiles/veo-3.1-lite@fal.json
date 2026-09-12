@@ -20,5 +20,17 @@
   },
   "resource_model": {
     "basis": "undisclosed"
+  },
+  "adapter": {
+    "input_map": {
+      "duration_s": {
+        "to": "duration",
+        "suffix": "s"
+      }
+    },
+    "outputs": [
+      "video"
+    ],
+    "verified": false
   }
 }
