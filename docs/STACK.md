@@ -3,6 +3,19 @@
 What we run, why, and the decisions already made. Update this when a decision changes;
 the handoff and build spec are history, this file is current.
 
+## Who it is for
+
+**Pegasus Media Project (PMP)**, Dallas. 501(c)(3) founded 2012 by Niloo Jalilvand (21 years teaching at
+Booker T. Washington HSPVA; launched the student-run Pegasus Film Festival there in 2015), incorporated as a
+nonprofit in 2021 with filmmaker Christian Vasquez. Runs the free Media Apprenticeship Program (MAP) and the
+Pegasus Film Festival, the largest youth-run film festival in the US, with outreach to women, BIPOC and
+LGBTQ+ young people. The handoff's "apprentice" (student role) and "Niloo's ops person" (admin role) are
+PMP. They are the design partner and the first org; the demo org becomes theirs. Minors are the norm here,
+so the conservative minors path is the default, not an edge case. MAP runs ~9 months in four frames (months 1–2 Trust,
+3–4 Self-Awareness, 5–8 Collaboration, 9 Entrepreneurship, then ongoing mentorship), is free to participants, supplies
+cameras/lighting/audio/laptops/software, and has apprentices make both individual and group films. Address:
+2904 Floyd St, Suite C, Dallas TX 75204. https://www.pegasusmediaproject.com
+
 ## The stack
 
 | Layer | Choice | Why | Status |

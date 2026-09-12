@@ -17,6 +17,15 @@ two parts:
    If students generate ten takes to keep one, a five-minute film is ~50 minutes of generation; the
    envelope is sized and priced on that, with the lane mix (explore is cheap, finish is not) in the estimate.
 
+## What Pegasus already does
+
+MAP apprentices make **both** individual and group films inside one nine-month programme, and the programme is
+free to them. So for the first org the answer is two plans of one product, not two products: a cohort
+envelope for the group film (the Collaboration frame, months 5–8) and a small personal envelope per
+apprentice for individual work (Self-Awareness frame, months 3–4). The payer is PMP and its funders, not the
+student, so the price is a programme fee sized on total generated minutes across both, not a per-seat
+subscription. The four MAP frames map naturally onto course modules.
+
 ## The database already models both
 
 - `project_budgets` = the shared cohort envelope.
@@ -35,5 +44,5 @@ towards shorter takes.
 ## Open
 
 - Actual numbers: seat fee, cents per finished minute per lane, take-to-keep assumption per module.
-- Whether the two modes are two products or two plans of one (affects the Pegasus outline).
+- Whether the two modes are two products or two plans of one (affects the outline for Pegasus Media Project, the design-partner org; MAP is free to students, so the payer is PMP/grants, not the apprentice).
 - Credit purchase (Model B) vs org-supplied keys (Model A) pass-through margin.
