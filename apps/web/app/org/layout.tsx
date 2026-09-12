@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAdminOrg } from "@/lib/auth/org";
+import { AppBar } from "@/components/AppBar";
+import { getNav } from "@/lib/auth/nav";
 
 const NAV = [
   { href: "/org", label: "Organisation" },
@@ -12,10 +14,12 @@ const NAV = [
 ];
 
 export default async function OrgLayout({ children }: { children: React.ReactNode }) {
-  const org = await getAdminOrg();
-  if (!org) redirect("/");
+  const [org, nav] = await Promise.all([getAdminOrg(), getNav()]);
+  if (!org || !nav) redirect("/");
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen flex-col">
+      <AppBar nav={nav} area="admin" crumbs={[{ label: "Admin", href: "/org" }, { label: org.name }]} />
+      <div className="flex flex-1">
       <aside className="w-56 shrink-0 panel m-3 p-4">
         <div className="mb-6">
           <div className="label">Admin</div>
@@ -32,6 +36,7 @@ export default async function OrgLayout({ children }: { children: React.ReactNod
         </nav>
       </aside>
       <main className="flex-1 p-8">{children}</main>
+    </div>
     </div>
   );
 }

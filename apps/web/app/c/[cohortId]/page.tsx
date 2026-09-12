@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { signOut } from "@/app/welcome/actions";
 import { openModuleNow, setModuleDates } from "./actions";
 
 const toLocal = (iso: string | null) => (iso ? new Date(iso).toISOString().slice(0, 16) : "");
@@ -10,9 +9,8 @@ export default async function CohortPage({ params, searchParams }: { params: Pro
   const { cohortId } = await params;
   const { ok, error } = await searchParams;
   const supabase = await createClient();
-  const [{ data: cohort }, { data: admin }, { data: mods }] = await Promise.all([
+  const [{ data: cohort }, { data: mods }] = await Promise.all([
     supabase.from("cohorts").select("name, starts_on, ends_on, projects(id, title, logline), enrolments(count)").eq("id", cohortId).maybeSingle(),
-    supabase.from("memberships").select("id").in("role", ["admin", "owner"]).limit(1).maybeSingle(),
     supabase.from("cohort_modules").select("id, opens_at, due_at, enabled, gate_unlocked_at, modules(position, title, gate_kind)").eq("cohort_id", cohortId),
   ]);
   if (!cohort) notFound();
@@ -21,7 +19,7 @@ export default async function CohortPage({ params, searchParams }: { params: Pro
   const now = Date.now();
 
   return (
-    <main className="mx-auto max-w-4xl p-8">
+    <div className="max-w-4xl">
       <div className="mb-1 label">Cohort</div>
       <h1 className="display text-2xl">{cohort.name}</h1>
       <p className="mb-6 text-sm text-muted">
@@ -81,11 +79,6 @@ export default async function CohortPage({ params, searchParams }: { params: Pro
         </table>
       </section>
 
-      <div className="flex items-center gap-4 text-xs">
-        {admin && <Link href="/org" className="underline">Admin</Link>}
-        <form action={signOut}><button className="underline" type="submit">Sign out</button></form>
-      </div>
-      <p className="mt-4 text-xs text-muted">The full instructor shell (cohort grid, review queue, budgets) arrives in Phase 2.</p>
-    </main>
+    </div>
   );
 }

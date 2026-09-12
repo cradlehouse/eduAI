@@ -24,7 +24,9 @@ as the signed-in user (RLS) and calls three user-scoped RPCs from migration 0103
 | `/api/assets/[id]` | streams an asset from R2 via the Worker binding after the RLS check on the assets row |
 | `/p/[projectId]/scenes` | **Storyboard as e-conte**: one column of cuts per scene, picture + layer strips (bg / char / merged · dialogue / sfx), notes beside, timing right; add cut |
 | `/p/[projectId]/shots/[shotId]` | **the console**: layer tabs, lane toggle, route tiles with live token estimate and lock reasons (`model_options`, `estimate_tokens`), schema-driven inputs from `input_schema`, Generate → `jobs` row (server action re-checks readiness, allowlist and budget). Below: the cut's notes (objective, continuity, camera, dialogue), bible links, recent generations |
-| `/c/[cohortId]` | stub; instructor shell is Phase 2 |
+| `/c/[cohortId]` | **instructor shell**: rail (Cohort, Projects, then Phase 2 items), cohort overview + module schedule with dates and “Open now” |
+| `/c/[cohortId]/projects` | the cohort's projects with crews; opens the student view with an instructor banner |
+| every shell | `AppBar` on top: breadcrumb + switcher between Admin, cohorts and projects the user can reach (`lib/auth/nav.ts`) |
 
 `pnpm dev` for Next dev, `pnpm cf:preview` to run the Worker bundle in workerd, `pnpm cf:deploy` to ship.
 Types: `pnpm db:types` at the repo root after any migration.
