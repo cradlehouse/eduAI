@@ -14,8 +14,8 @@ function intentComplete(intent: unknown): boolean {
 export function ShotCard({ projectId, shot }: { projectId: string; shot: ShotCardData }) {
   const ready = intentComplete(shot.intent);
   return (
-    <Link href={`/p/${projectId}/shots/${shot.id}`} className="block rounded-lg border border-ink/10 p-3 hover:bg-ink/5 dark:border-paper/15 dark:hover:bg-paper/10">
-      <div className="mb-2 flex h-24 items-center justify-center rounded bg-ink/5 text-xs opacity-60 dark:bg-paper/10">
+    <Link href={`/p/${projectId}/shots/${shot.id}`} className="block card p-3 hover:bg-sand">
+      <div className="mb-2 flex h-24 items-center justify-center rounded bg-ink/5 text-xs opacity-60">
         {shot.selected_take_id ? "selected take" : shot.takeCount > 0 ? `${shot.takeCount} take(s)` : "no takes yet"}
       </div>
       <div className="flex items-baseline justify-between">
@@ -24,8 +24,8 @@ export function ShotCard({ projectId, shot }: { projectId: string; shot: ShotCar
       </div>
       {shot.description && <p className="mt-1 line-clamp-2 text-xs opacity-70">{shot.description}</p>}
       <div className="mt-2 flex flex-wrap gap-1 text-[11px]">
-        <span className={`rounded px-1.5 py-0.5 ${ready ? "bg-money/15 text-money" : "bg-accent/20"}`}>{ready ? "intent set" : "intent incomplete"}</span>
-        <span className="rounded bg-ink/5 px-1.5 py-0.5 dark:bg-paper/10">{shot.bibleCount} bible</span>
+        <span className={`rounded px-1.5 py-0.5 ${ready ? "bg-control/15 text-control" : "bg-money/25"}`}>{ready ? "intent set" : "intent incomplete"}</span>
+        <span className="rounded bg-ink/5 px-1.5 py-0.5">{shot.bibleCount} bible</span>
       </div>
     </Link>
   );

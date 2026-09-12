@@ -22,8 +22,8 @@ as the signed-in user (RLS) and calls three user-scoped RPCs from migration 0103
 | `/p/[projectId]/bible` | entries by kind with consent state first on every card; add entry |
 | `/p/[projectId]/bible/[entryId]` | edit, reference image upload, per-lane consent state, releases (subject, rights holder, guardian/minor, lanes, distribution, expiry, signed document ⇒ signed), revoke (instructor/admin) |
 | `/api/assets/[id]` | streams an asset from R2 via the Worker binding after the RLS check on the assets row |
-| `/p/[projectId]/scenes` | scenes with inline edit; ShotCard grid per scene (intent status, bible count, takes); add shot |
-| `/p/[projectId]/shots/[shotId]` | shot intent (objective, continuity, camera language, duration, no-bible flag), bible links with consent chips, per-lane readiness via `shot_ready_for` (migration 0106). The generation console lands here at P1-08/09 |
+| `/p/[projectId]/scenes` | **Storyboard as e-conte**: one column of cuts per scene, picture + layer strips (bg / char / merged · dialogue / sfx), notes beside, timing right; add cut |
+| `/p/[projectId]/shots/[shotId]` | **the console**: layer tabs, lane toggle, route tiles with live token estimate and lock reasons (`model_options`, `estimate_tokens`), schema-driven inputs from `input_schema`, Generate → `jobs` row (server action re-checks readiness, allowlist and budget). Below: the cut's notes (objective, continuity, camera, dialogue), bible links, recent generations |
 | `/c/[cohortId]` | stub; instructor shell is Phase 2 |
 
 `pnpm dev` for Next dev, `pnpm cf:preview` to run the Worker bundle in workerd, `pnpm cf:deploy` to ship.

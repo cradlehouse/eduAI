@@ -20,37 +20,37 @@ export default async function OrgPage({ searchParams }: { searchParams: Promise<
 
   return (
     <div className="max-w-3xl">
-      <h1 className="mb-1 text-2xl font-semibold">{org.name}</h1>
+      <h1 className="mb-1 display text-2xl">{org.name}</h1>
       <p className="mb-6 text-sm opacity-70">/{org.slug} · content tier {org.content_tier} · {org.has_minors ? "has minors" : "no minors flagged"} · you are {org.role}</p>
-      {ok && <p className="mb-4 rounded bg-money/10 p-2 text-sm text-money">{ok}</p>}
-      {error && <p className="mb-4 rounded bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
+      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
 
       <dl className="mb-8 grid grid-cols-3 gap-4 text-sm">
-        <div className="rounded-lg border border-ink/10 p-4 dark:border-paper/15"><dt className="opacity-60">Members</dt><dd className="text-2xl">{members ?? 0}</dd></div>
-        <div className="rounded-lg border border-ink/10 p-4 dark:border-paper/15"><dt className="opacity-60">Pending invites</dt><dd className="text-2xl">{pending ?? 0}</dd></div>
-        <div className="rounded-lg border border-ink/10 p-4 dark:border-paper/15"><dt className="opacity-60">Cohorts</dt><dd className="text-2xl">{cohorts ?? 0}</dd></div>
+        <div className="card p-4"><dt className="opacity-60">Members</dt><dd className="text-2xl">{members ?? 0}</dd></div>
+        <div className="card p-4"><dt className="opacity-60">Pending invites</dt><dd className="text-2xl">{pending ?? 0}</dd></div>
+        <div className="card p-4"><dt className="opacity-60">Cohorts</dt><dd className="text-2xl">{cohorts ?? 0}</dd></div>
       </dl>
 
-      <section className="mb-8 rounded-lg border border-ink/10 p-4 dark:border-paper/15">
+      <section className="mb-8 card p-4">
         <h2 className="mb-1 font-medium">Token rate</h2>
         <p className="mb-3 text-xs opacity-70">Only admins see money. Everyone else sees tokens. Changing the rate rescales how existing budgets display; it does not move money.</p>
         <form action={setTokenRate} className="flex items-center gap-2 text-sm">
           $1 =
-          <input name="tokens_per_dollar" type="number" min={1} step={1} defaultValue={org.tokens_per_dollar} className="w-28 rounded border border-ink/20 bg-white px-2 py-1 text-ink dark:border-paper/20" />
+          <input name="tokens_per_dollar" type="number" min={1} step={1} defaultValue={org.tokens_per_dollar} className="w-28 rounded border border-ink/20 bg-white px-2 py-1 text-ink" />
           tokens
-          <button className="rounded border border-ink/20 px-2 py-1 text-xs hover:bg-ink/5 dark:border-paper/20 dark:hover:bg-paper/10">Save</button>
+          <button className="btn">Save</button>
         </form>
       </section>
 
-      <section className="rounded-lg border border-ink/10 p-4 dark:border-paper/15">
+      <section className="card p-4">
         <h2 className="mb-1 font-medium">Money</h2>
         <p className="mb-3 text-xs opacity-70">Real cost across project budgets: {money(totals.spent)} spent of {money(totals.total)} allocated.</p>
         {(budgets ?? []).length === 0 ? <p className="text-sm opacity-60">No project budgets yet.</p> : (
           <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase opacity-60"><tr><th className="py-1">Project</th><th>Allocated</th><th>Spent</th><th>Reserved</th><th>Remaining</th><th>Tokens</th></tr></thead>
+            <thead className="label text-left"><tr><th className="py-1">Project</th><th>Allocated</th><th>Spent</th><th>Reserved</th><th>Remaining</th><th>Tokens</th></tr></thead>
             <tbody>
               {(budgets ?? []).map((b) => (
-                <tr key={b.project_id} className="border-t border-ink/10 dark:border-paper/10">
+                <tr key={b.project_id} className="border-t border-line">
                   <td className="py-1">{title(b.project_id!)}</td>
                   <td>{money(b.total_cents)}</td><td>{money(b.spent_cents)}</td><td>{money(b.reserved_open_cents)}</td><td>{money(b.remaining_cents)}</td>
                   <td className="opacity-70">{(b.spent_tokens ?? 0).toLocaleString()} / {(b.total_tokens ?? 0).toLocaleString()}</td>

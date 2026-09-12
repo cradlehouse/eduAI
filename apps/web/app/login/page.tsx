@@ -12,7 +12,7 @@ export default async function LoginPage({
       <p className="mb-4 text-sm opacity-80">
         No passwords. Enter the email your programme lead invited, and we&apos;ll send a sign-in link.
       </p>
-      {error && <p className="mb-3 rounded bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {error && <p className="mb-3 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
       <LoginForm next={next ?? "/"} initialEmail={email ?? ""} />
     </Card>
   );

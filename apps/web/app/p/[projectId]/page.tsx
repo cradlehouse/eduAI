@@ -16,11 +16,11 @@ export default async function Dashboard({ params }: { params: Promise<{ projectI
 
   return (
     <div className="max-w-3xl">
-      <h1 className="text-2xl font-semibold">{project.title}</h1>
+      <h1 className="display text-2xl">{project.title}</h1>
       <p className="mb-6 text-sm opacity-80">{project.logline}</p>
 
-      <section className="mb-8 rounded-lg border border-ink/10 p-4 dark:border-paper/15">
-        <div className="mb-1 text-xs uppercase tracking-wide opacity-60">This week</div>
+      <section className="mb-8 card p-4">
+        <div className="mb-1 label">This week</div>
         {current ? (
           <>
             <h2 className="font-medium">Module {current.module.position}: {current.module.title}</h2>
@@ -32,14 +32,14 @@ export default async function Dashboard({ params }: { params: Promise<{ projectI
       </section>
 
       <section className="mb-8 grid gap-4 md:grid-cols-2">
-        <div className="rounded-lg border border-ink/10 p-4 dark:border-paper/15">
-          <div className="mb-2 text-xs uppercase tracking-wide opacity-60">Crew</div>
+        <div className="card p-4">
+          <div className="mb-2 label">Crew</div>
           <ul className="text-sm">
             {members.map((m) => <li key={m.user_id}>{m.users?.display_name ?? m.users?.email} <span className="opacity-60">· {m.role}</span></li>)}
           </ul>
         </div>
-        <div className="rounded-lg border border-ink/10 p-4 dark:border-paper/15">
-          <div className="mb-2 text-xs uppercase tracking-wide opacity-60">Budget</div>
+        <div className="card p-4">
+          <div className="mb-2 label">Budget</div>
           {budget ? (
             <dl className="grid grid-cols-2 gap-y-1 text-sm">
               <dt className="opacity-60">Remaining</dt><dd>{(budget.remaining_tokens ?? 0).toLocaleString()} tokens</dd>
@@ -51,7 +51,7 @@ export default async function Dashboard({ params }: { params: Promise<{ projectI
       </section>
 
       <section>
-        <div className="mb-2 text-xs uppercase tracking-wide opacity-60">Recent generations</div>
+        <div className="mb-2 label">Recent generations</div>
         {(jobs ?? []).length === 0 ? <p className="text-sm opacity-60">Nothing generated yet. The shot console arrives in P1-09.</p> : (
           <ul className="text-sm">{(jobs ?? []).map((j) => <li key={j.job_id}>{j.created_at ? new Date(j.created_at).toLocaleString() : ""} · {j.lane} · {j.status} · {(j.actual_tokens ?? j.estimated_tokens ?? 0).toLocaleString()} tokens</li>)}</ul>
         )}

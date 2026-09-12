@@ -81,6 +81,7 @@ export async function updateShot(formData: FormData) {
     objective: String(formData.get("objective") ?? "").trim(),
     continuity: String(formData.get("continuity") ?? "").trim(),
     camera_language: String(formData.get("camera_language") ?? "").trim(),
+    dialogue: String(formData.get("dialogue") ?? "").trim(),
     no_bible_assets: formData.get("no_bible_assets") === "on",
   };
   const { error } = await supabase.from("shots").update({

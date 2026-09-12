@@ -15,9 +15,9 @@ export default async function OrgLayout({ children }: { children: React.ReactNod
   if (!org) redirect("/");
   return (
     <div className="flex min-h-screen">
-      <aside className="w-56 shrink-0 border-r border-ink/10 p-4 dark:border-paper/15">
+      <aside className="w-56 shrink-0 panel m-3 p-4">
         <div className="mb-6">
-          <div className="text-xs uppercase tracking-wide opacity-60">Admin</div>
+          <div className="label">Admin</div>
           <div className="font-semibold">{org.name}</div>
         </div>
         <nav className="flex flex-col gap-1 text-sm">
@@ -25,7 +25,7 @@ export default async function OrgLayout({ children }: { children: React.ReactNod
             n.soon ? (
               <span key={n.href} className="rounded px-2 py-1 opacity-40">{n.label} <span className="text-xs">soon</span></span>
             ) : (
-              <Link key={n.href} href={n.href} className="rounded px-2 py-1 hover:bg-ink/5 dark:hover:bg-paper/10">{n.label}</Link>
+              <Link key={n.href} href={n.href} className="rounded-full px-3 py-1 hover:bg-card">{n.label}</Link>
             ),
           )}
         </nav>

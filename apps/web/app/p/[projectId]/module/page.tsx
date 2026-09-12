@@ -26,11 +26,11 @@ export default async function ModulePage({ params, searchParams }: { params: Pro
   return (
     <div className="grid max-w-4xl gap-8 md:grid-cols-[220px_1fr]">
       <nav>
-        <div className="mb-2 text-xs uppercase tracking-wide opacity-60">Modules</div>
+        <div className="mb-2 label">Modules</div>
         <ol className="flex flex-col gap-1 text-sm">
           {mods.map((x) => (
             <li key={x.id}>
-              <a href={`?m=${x.id}`} className={`block rounded px-2 py-1 hover:bg-ink/5 dark:hover:bg-paper/10 ${selected?.id === x.id ? "bg-ink/5 dark:bg-paper/10" : ""}`}>
+              <a href={`?m=${x.id}`} className={`block rounded-full px-3 py-1 hover:bg-card ${selected?.id === x.id ? "bg-sand" : ""}`}>
                 <span className="opacity-60">{x.module.position}.</span> {x.module.title}
                 <span className={`ml-1 text-xs ${x.state === "open" ? "text-money" : "opacity-50"}`}>{STATE_LABEL[x.state]}</span>
               </a>
@@ -41,8 +41,8 @@ export default async function ModulePage({ params, searchParams }: { params: Pro
       <article>
         {selected ? (
           <>
-            <div className="text-xs uppercase tracking-wide opacity-60">Module {selected.module.position}</div>
-            <h1 className="mb-1 text-2xl font-semibold">{selected.module.title}</h1>
+            <div className="label">Module {selected.module.position}</div>
+            <h1 className="mb-1 display text-2xl">{selected.module.title}</h1>
             <p className="mb-4 text-xs opacity-70">
               {selected.opens_at ? `Opens ${new Date(selected.opens_at).toLocaleDateString()}` : "No open date"}
               {selected.due_at ? ` · due ${new Date(selected.due_at).toLocaleDateString()}` : ""}

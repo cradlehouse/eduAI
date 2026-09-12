@@ -4,7 +4,7 @@ import { BibleChip } from "@/components/BibleChip";
 import { createEntry } from "./actions";
 
 const KINDS = ["character", "location", "prop", "style", "voice"] as const;
-const input = "rounded border border-ink/20 bg-white px-2 py-1 text-sm text-ink dark:border-paper/20";
+const input = "input";
 
 export default async function BiblePage({ params, searchParams }: { params: Promise<{ projectId: string }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
   const { projectId } = await params;
@@ -16,21 +16,21 @@ export default async function BiblePage({ params, searchParams }: { params: Prom
 
   return (
     <div className="max-w-4xl">
-      <h1 className="mb-1 text-2xl font-semibold">Bible</h1>
+      <h1 className="mb-1 display text-2xl">Bible</h1>
       <p className="mb-6 text-sm opacity-70">Characters, locations, props, styles and voices. Anything depicting a real person needs a signed release before it can be generated.</p>
-      {ok && <p className="mb-4 rounded bg-money/10 p-2 text-sm text-money">{ok}</p>}
-      {error && <p className="mb-4 rounded bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
+      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
 
       {KINDS.map((kind) => {
         const rows = (entries ?? []).filter((e) => e.kind === kind);
         if (rows.length === 0) return null;
         return (
           <section key={kind} className="mb-6">
-            <h2 className="mb-2 text-xs uppercase tracking-wide opacity-60">{kind}s</h2>
+            <h2 className="mb-2 label">{kind}s</h2>
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {rows.map((e) => (
                 <li key={e.id}>
-                  <Link href={`/p/${projectId}/bible/${e.id}`} className="block rounded-lg border border-ink/10 p-3 hover:bg-ink/5 dark:border-paper/15 dark:hover:bg-paper/10">
+                  <Link href={`/p/${projectId}/bible/${e.id}`} className="block card p-3 hover:bg-sand">
                     <div className="mb-1"><BibleChip state={e.requires_consent ? e.consent_state : "not_required"} /></div>
                     {e.reference_asset_id && (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -48,7 +48,7 @@ export default async function BiblePage({ params, searchParams }: { params: Prom
       })}
       {(entries ?? []).length === 0 && <p className="mb-6 text-sm opacity-60">Nothing in the bible yet.</p>}
 
-      <section className="rounded-lg border border-ink/10 p-4 dark:border-paper/15">
+      <section className="card p-4">
         <h2 className="mb-3 font-medium">Add an entry</h2>
         <form action={createEntry} className="grid gap-3 sm:grid-cols-2">
           <input type="hidden" name="project_id" value={projectId} />
@@ -59,7 +59,7 @@ export default async function BiblePage({ params, searchParams }: { params: Prom
             <input name="likeness_of" placeholder="leave empty if not a real person" className={`${input} w-full`} />
           </label>
           <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="requires_consent" /> Requires consent anyway (e.g. a private location)</label>
-          <button className="rounded bg-ink px-3 py-2 text-sm font-medium text-paper dark:bg-paper dark:text-ink sm:col-span-2">Add to bible</button>
+          <button className="btn-primary sm:col-span-2">Add to bible</button>
         </form>
       </section>
     </div>

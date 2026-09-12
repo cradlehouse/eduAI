@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { BibleChip } from "@/components/BibleChip";
 import { addRelease, deleteEntry, revokeRelease, updateEntry } from "../actions";
 
-const input = "rounded border border-ink/20 bg-white px-2 py-1 text-sm text-ink dark:border-paper/20";
-const btn = "rounded border border-ink/20 px-2 py-1 text-xs hover:bg-ink/5 dark:border-paper/20 dark:hover:bg-paper/10";
+const input = "input";
+const btn = "btn";
 const LANES = ["explore", "control", "finish", "voice_likeness"] as const;
 
 export default async function EntryPage({ params, searchParams }: { params: Promise<{ projectId: string; entryId: string }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
@@ -28,10 +28,10 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
     <div className="max-w-3xl">
       <Link href={`/p/${projectId}/bible`} className="text-xs underline opacity-70">← Bible</Link>
       <div className="mb-1 mt-2"><BibleChip state={e.requires_consent ? e.consent_state : "not_required"} /></div>
-      <h1 className="text-2xl font-semibold">{e.name}</h1>
+      <h1 className="display text-2xl">{e.name}</h1>
       <p className="mb-4 text-xs opacity-60">{e.kind}{e.likeness_of ? ` · likeness of ${e.likeness_of}` : ""}</p>
-      {ok && <p className="mb-4 rounded bg-money/10 p-2 text-sm text-money">{ok}</p>}
-      {error && <p className="mb-4 rounded bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
+      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
 
       <div className="grid gap-6 md:grid-cols-[1fr_260px]">
         <form action={updateEntry} className="grid gap-3">
@@ -42,13 +42,13 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
           <label className="text-sm">Likeness or voice of (real person)<br /><input name="likeness_of" defaultValue={e.likeness_of ?? ""} className={`${input} w-full`} /></label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="requires_consent" defaultChecked={!!e.requires_consent} /> Requires consent</label>
           <label className="text-sm">Reference image<br /><input type="file" name="reference" accept="image/png,image/jpeg,image/webp" className="text-sm" /></label>
-          <div className="flex gap-2"><button className="rounded bg-ink px-3 py-2 text-sm font-medium text-paper dark:bg-paper dark:text-ink">Save</button></div>
+          <div className="flex gap-2"><button className="btn-primary">Save</button></div>
         </form>
         <div>
           {e.reference_asset_id ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={`/api/assets/${e.reference_asset_id}`} alt={`Reference for ${e.name}`} className="w-full rounded border border-ink/10 dark:border-paper/15" />
-          ) : <div className="flex h-40 items-center justify-center rounded border border-dashed border-ink/20 text-xs opacity-60 dark:border-paper/20">no reference yet</div>}
+            <img src={`/api/assets/${e.reference_asset_id}`} alt={`Reference for ${e.name}`} className="w-full rounded-[12px] border border-line" />
+          ) : <div className="flex h-40 items-center justify-center rounded-[12px] border border-dashed border-line text-xs text-muted">no reference yet</div>}
           {laneStates.length > 0 && e.requires_consent && (
             <dl className="mt-3 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
               {laneStates.map(([lane, st]) => <div key={lane} className="contents"><dt className="opacity-60">{lane}</dt><dd>{String(st ?? "")}</dd></div>)}
@@ -68,7 +68,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
           {(releases ?? []).length === 0 ? <p className="mb-4 text-sm opacity-60">No release yet. Generate is blocked for this entry until one is signed.</p> : (
             <ul className="mb-6 flex flex-col gap-2">
               {(releases ?? []).map((r) => (
-                <li key={r.id} className="rounded-lg border border-ink/10 p-3 text-sm dark:border-paper/15">
+                <li key={r.id} className="card p-3 text-sm">
                   <div className="flex flex-wrap items-center gap-2">
                     <BibleChip state={r.state} />
                     <span className="font-medium">{r.subject_name}</span>
@@ -98,7 +98,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
             </ul>
           )}
 
-          <form action={addRelease} className="grid gap-3 rounded-lg border border-ink/10 p-4 sm:grid-cols-2 dark:border-paper/15">
+          <form action={addRelease} className="grid gap-3 card p-4 sm:grid-cols-2">
             <input type="hidden" name="project_id" value={projectId} />
             <input type="hidden" name="entry_id" value={entryId} />
             <h3 className="font-medium sm:col-span-2">Record a release</h3>
@@ -119,7 +119,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
             </label>
             <label className="text-sm">Signed document (PDF or image) — makes it signed<br /><input type="file" name="signed_file" accept="application/pdf,image/png,image/jpeg" className="text-sm" /></label>
             <label className="text-sm sm:col-span-2">Source asset the release covers (face photo or voice sample, optional)<br /><input type="file" name="source_file" accept="image/png,image/jpeg,image/webp,audio/*" className="text-sm" /></label>
-            <button className="rounded bg-ink px-3 py-2 text-sm font-medium text-paper dark:bg-paper dark:text-ink sm:col-span-2">Record release</button>
+            <button className="btn-primary sm:col-span-2">Record release</button>
           </form>
         </section>
       )}

@@ -929,6 +929,7 @@ export type Database = {
           inputs: Json
           job_id: string
           lane: Database["public"]["Enums"]["lane"] | null
+          layer: Database["public"]["Enums"]["layer"] | null
           model_version_id: string | null
           org_id: string
           output_hashes: string[]
@@ -946,6 +947,7 @@ export type Database = {
           inputs: Json
           job_id: string
           lane?: Database["public"]["Enums"]["lane"] | null
+          layer?: Database["public"]["Enums"]["layer"] | null
           model_version_id?: string | null
           org_id: string
           output_hashes?: string[]
@@ -963,6 +965,7 @@ export type Database = {
           inputs?: Json
           job_id?: string
           lane?: Database["public"]["Enums"]["lane"] | null
+          layer?: Database["public"]["Enums"]["layer"] | null
           model_version_id?: string | null
           org_id?: string
           output_hashes?: string[]
@@ -1025,6 +1028,7 @@ export type Database = {
           inputs: Json
           kind: Database["public"]["Enums"]["job_kind"]
           lane: Database["public"]["Enums"]["lane"] | null
+          layer: Database["public"]["Enums"]["layer"]
           model_version_id: string | null
           org_id: string
           policy_rejection: boolean
@@ -1055,6 +1059,7 @@ export type Database = {
           inputs?: Json
           kind?: Database["public"]["Enums"]["job_kind"]
           lane?: Database["public"]["Enums"]["lane"] | null
+          layer?: Database["public"]["Enums"]["layer"]
           model_version_id?: string | null
           org_id: string
           policy_rejection?: boolean
@@ -1085,6 +1090,7 @@ export type Database = {
           inputs?: Json
           kind?: Database["public"]["Enums"]["job_kind"]
           lane?: Database["public"]["Enums"]["lane"] | null
+          layer?: Database["public"]["Enums"]["layer"]
           model_version_id?: string | null
           org_id?: string
           policy_rejection?: boolean
@@ -2050,6 +2056,7 @@ export type Database = {
           intent: Json
           label: string
           org_id: string
+          plate_take_id: string | null
           position: number
           project_id: string
           scene_id: string
@@ -2064,6 +2071,7 @@ export type Database = {
           intent?: Json
           label?: string
           org_id: string
+          plate_take_id?: string | null
           position: number
           project_id: string
           scene_id: string
@@ -2078,6 +2086,7 @@ export type Database = {
           intent?: Json
           label?: string
           org_id?: string
+          plate_take_id?: string | null
           position?: number
           project_id?: string
           scene_id?: string
@@ -2104,6 +2113,13 @@ export type Database = {
             columns: ["org_id", "scene_id"]
             isOneToOne: false
             referencedRelation: "scenes"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "shots_plate_take_fk"
+            columns: ["org_id", "plate_take_id"]
+            isOneToOne: false
+            referencedRelation: "takes"
             referencedColumns: ["org_id", "id"]
           },
           {
@@ -2278,6 +2294,7 @@ export type Database = {
           job_id: string | null
           killed_at: string | null
           killed_by: string | null
+          layer: Database["public"]["Enums"]["layer"]
           lifecycle: Database["public"]["Enums"]["take_lifecycle"]
           model_version_id: string | null
           notes: string
@@ -2294,6 +2311,7 @@ export type Database = {
           job_id?: string | null
           killed_at?: string | null
           killed_by?: string | null
+          layer?: Database["public"]["Enums"]["layer"]
           lifecycle?: Database["public"]["Enums"]["take_lifecycle"]
           model_version_id?: string | null
           notes?: string
@@ -2310,6 +2328,7 @@ export type Database = {
           job_id?: string | null
           killed_at?: string | null
           killed_by?: string | null
+          layer?: Database["public"]["Enums"]["layer"]
           lifecycle?: Database["public"]["Enums"]["take_lifecycle"]
           model_version_id?: string | null
           notes?: string
@@ -2595,6 +2614,7 @@ export type Database = {
           estimated_tokens: number | null
           job_id: string | null
           lane: Database["public"]["Enums"]["lane"] | null
+          layer: Database["public"]["Enums"]["layer"] | null
           org_id: string | null
           project_id: string | null
           shot_id: string | null
@@ -2925,6 +2945,13 @@ export type Database = {
         | "cancelled"
         | "timed_out"
       lane: "explore" | "control" | "finish" | "voice_likeness"
+      layer:
+        | "background"
+        | "character"
+        | "merged"
+        | "dialogue"
+        | "sfx"
+        | "music"
       ledger_kind:
         | "grant"
         | "reserve"
@@ -3143,6 +3170,7 @@ export const Constants = {
         "timed_out",
       ],
       lane: ["explore", "control", "finish", "voice_likeness"],
+      layer: ["background", "character", "merged", "dialogue", "sfx", "music"],
       ledger_kind: [
         "grant",
         "reserve",

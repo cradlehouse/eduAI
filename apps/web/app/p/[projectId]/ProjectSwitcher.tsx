@@ -12,7 +12,7 @@ export function ProjectSwitcher({ current, projects }: { current: string; projec
       aria-label="Project"
       value={current}
       onChange={(e) => router.push(`/p/${e.target.value}`)}
-      className="w-full rounded border border-ink/20 bg-white px-2 py-1 text-sm text-ink dark:border-paper/20"
+      className="w-full input"
     >
       {projects.map((p) => <option key={p.id} value={p.id}>{p.title} · {p.cohorts?.name}</option>)}
     </select>

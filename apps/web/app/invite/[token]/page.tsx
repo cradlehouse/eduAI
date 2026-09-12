@@ -48,7 +48,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
         {summary}
         <p className="mb-3 text-sm">Sign in with the invited email address to accept.</p>
         <Link
-          className="block rounded bg-ink px-3 py-2 text-center font-medium text-paper dark:bg-paper dark:text-ink"
+          className="btn-primary block text-center"
           href={`/login?next=${encodeURIComponent(`/invite/${token}`)}`}
         >
           Sign in to accept
@@ -63,7 +63,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
       <p className="mb-3 text-sm">Signed in as <strong>{user.email}</strong>.</p>
       <form action={acceptInvite}>
         <input type="hidden" name="token" value={token} />
-        <button type="submit" className="w-full rounded bg-ink px-3 py-2 font-medium text-paper dark:bg-paper dark:text-ink">
+        <button type="submit" className="w-full btn-primary">
           Accept invite
         </button>
       </form>

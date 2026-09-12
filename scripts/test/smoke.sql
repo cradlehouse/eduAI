@@ -300,6 +300,10 @@ begin
   assert (select remaining_tokens from public.project_tokens) = 585000, 'student sees tokens ($585 x 1000): ' || (select remaining_tokens from public.project_tokens);
   assert (select count(*) from public.project_budget_admin) = 0, 'student sees no admin money view';
   assert (select actual_tokens from public.job_tokens where job_id = '20000000-0000-4000-8000-000000000001') = 12000, 'job tokens ($12 x 1000)';
+  assert (select layer from public.job_tokens where job_id = '20000000-0000-4000-8000-000000000001') = 'merged', 'job layer default merged';
+  insert into public.jobs (project_id, shot_id, deployment_profile_id, lane, layer, inputs)
+  values ('00000000-0000-4000-8000-000000000030', '40000000-0000-4000-8000-000000000001', (select id from public.deployment_profiles where slug = 'stable-audio-3@fal'), 'explore', 'sfx', '{"prompt":"footsteps"}');
+  assert (select count(*) from public.jobs where layer = 'sfx') = 1, 'student queued an sfx layer job';
   assert (select count(*) from public.job_receipts) = 2, 'student sees project receipts';
   assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'explore') = 'signed', 'lane-aware consent rpc (explore)';
   assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'finish') = 'lane_not_permitted', 'lane-aware consent rpc (finish)';

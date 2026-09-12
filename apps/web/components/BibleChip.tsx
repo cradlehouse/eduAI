@@ -1,12 +1,12 @@
 // Consent state is the FIRST thing you see on a consent-bearing entry. Red blocks Generate.
 const STYLE: Record<string, string> = {
-  not_required: "bg-ink/5 dark:bg-paper/10",
-  signed: "bg-money/15 text-money",
-  pending: "bg-accent/20",
+  not_required: "bg-sand",
+  signed: "bg-control/15 text-control",
+  pending: "bg-money/25",
   missing: "bg-danger/15 text-danger",
   expired: "bg-danger/15 text-danger",
   revoked: "bg-danger/15 text-danger",
-  lane_not_permitted: "bg-accent/20",
+  lane_not_permitted: "bg-money/25",
 };
 const LABEL: Record<string, string> = {
   not_required: "no consent needed", signed: "consent signed", pending: "consent pending", missing: "consent missing",

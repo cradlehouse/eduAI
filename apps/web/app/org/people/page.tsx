@@ -4,8 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { CopyButton } from "@/components/CopyButton";
 import { addToProject, createInvites, removeMember, revokeInvite, setMemberMinor, setMemberRole } from "./actions";
 
-const btn = "rounded border border-ink/20 px-2 py-0.5 text-xs hover:bg-ink/5 dark:border-paper/20 dark:hover:bg-paper/10";
-const input = "rounded border border-ink/20 bg-white px-2 py-1 text-sm text-ink dark:border-paper/20";
+const btn = "btn";
+const input = "input";
 
 export default async function PeoplePage({ searchParams }: { searchParams: Promise<{ ok?: string; error?: string }> }) {
   const { ok, error } = await searchParams;
@@ -27,11 +27,11 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
 
   return (
     <div className="max-w-4xl">
-      <h1 className="mb-6 text-2xl font-semibold">People</h1>
-      {ok && <p className="mb-4 rounded bg-money/10 p-2 text-sm text-money">{ok}</p>}
-      {error && <p className="mb-4 rounded bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      <h1 className="mb-6 display text-2xl">People</h1>
+      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
+      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
 
-      <section className="mb-10 rounded-lg border border-ink/10 p-4 dark:border-paper/15">
+      <section className="mb-10 card p-4">
         <h2 className="mb-1 font-medium">Invite</h2>
         <p className="mb-3 text-xs opacity-70">Paste emails (one per line, or comma-separated). Each gets a link below to share. Email sending arrives with Resend.</p>
         <form action={createInvites} className="grid gap-3 md:grid-cols-2">
@@ -63,7 +63,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
           <label className="flex items-center gap-2 text-sm md:col-span-2">
             <input type="checkbox" name="is_minor" /> These people are under 18 (forces content tier M, guardian signer, no personal social accounts)
           </label>
-          <button type="submit" className="rounded bg-ink px-3 py-2 text-sm font-medium text-paper dark:bg-paper dark:text-ink md:col-span-2">Create invites</button>
+          <button type="submit" className="btn-primary md:col-span-2">Create invites</button>
         </form>
       </section>
 
@@ -71,10 +71,10 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         <h2 className="mb-2 font-medium">Pending invites ({pending.length})</h2>
         {pending.length === 0 ? <p className="text-sm opacity-60">None.</p> : (
           <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase opacity-60"><tr><th className="py-1">Email</th><th>Role</th><th>Cohort / project</th><th>Expires</th><th></th></tr></thead>
+            <thead className="label text-left"><tr><th className="py-1">Email</th><th>Role</th><th>Cohort / project</th><th>Expires</th><th></th></tr></thead>
             <tbody>
               {pending.map((i) => (
-                <tr key={i.id} className="border-t border-ink/10 dark:border-paper/10">
+                <tr key={i.id} className="border-t border-line">
                   <td className="py-2">{i.email}{i.is_minor && <span className="ml-1 text-xs opacity-60">minor</span>}</td>
                   <td>{i.role}</td>
                   <td className="opacity-80">{i.cohorts?.name ?? "—"}{i.projects?.title ? ` / ${i.projects.title}` : ""}</td>
@@ -93,12 +93,12 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
       <section>
         <h2 className="mb-2 font-medium">Members ({members?.length ?? 0})</h2>
         <table className="w-full text-sm">
-          <thead className="text-left text-xs uppercase opacity-60"><tr><th className="py-1">Person</th><th>Role</th><th>Projects</th><th>Minor</th><th></th></tr></thead>
+          <thead className="label text-left"><tr><th className="py-1">Person</th><th>Role</th><th>Projects</th><th>Minor</th><th></th></tr></thead>
           <tbody>
             {(members ?? []).map((m) => {
               const locked = m.role === "owner" || (m.role === "admin" && !canInviteAdmins);
               return (
-                <tr key={m.id} className="border-t border-ink/10 dark:border-paper/10">
+                <tr key={m.id} className="border-t border-line">
                   <td className="py-2">{m.users?.display_name ?? m.users?.email}<div className="text-xs opacity-60">{m.users?.email}</div></td>
                   <td>
                     {locked ? m.role : (
