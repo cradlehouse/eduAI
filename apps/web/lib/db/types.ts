@@ -112,6 +112,13 @@ export type Database = {
             foreignKeyName: "assets_job_fk"
             columns: ["org_id", "job_id"]
             isOneToOne: false
+            referencedRelation: "job_tokens"
+            referencedColumns: ["org_id", "job_id"]
+          },
+          {
+            foreignKeyName: "assets_job_fk"
+            columns: ["org_id", "job_id"]
+            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["org_id", "id"]
           },
@@ -899,6 +906,13 @@ export type Database = {
             foreignKeyName: "job_events_org_id_job_id_fkey"
             columns: ["org_id", "job_id"]
             isOneToOne: false
+            referencedRelation: "job_tokens"
+            referencedColumns: ["org_id", "job_id"]
+          },
+          {
+            foreignKeyName: "job_events_org_id_job_id_fkey"
+            columns: ["org_id", "job_id"]
+            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["org_id", "id"]
           },
@@ -977,6 +991,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orgs"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_receipts_org_id_job_id_fkey"
+            columns: ["org_id", "job_id"]
+            isOneToOne: false
+            referencedRelation: "job_tokens"
+            referencedColumns: ["org_id", "job_id"]
           },
           {
             foreignKeyName: "job_receipts_org_id_job_id_fkey"
@@ -1184,6 +1205,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orgs"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_org_id_job_id_fkey"
+            columns: ["org_id", "job_id"]
+            isOneToOne: false
+            referencedRelation: "job_tokens"
+            referencedColumns: ["org_id", "job_id"]
           },
           {
             foreignKeyName: "ledger_org_id_job_id_fkey"
@@ -1585,6 +1613,7 @@ export type Database = {
           name: string
           public_entity: boolean
           slug: string
+          tokens_per_dollar: number
           updated_at: string
         }
         Insert: {
@@ -1596,6 +1625,7 @@ export type Database = {
           name: string
           public_entity?: boolean
           slug: string
+          tokens_per_dollar?: number
           updated_at?: string
         }
         Update: {
@@ -1607,6 +1637,7 @@ export type Database = {
           name?: string
           public_entity?: boolean
           slug?: string
+          tokens_per_dollar?: number
           updated_at?: string
         }
         Relationships: []
@@ -2299,6 +2330,13 @@ export type Database = {
             foreignKeyName: "takes_job_fk"
             columns: ["org_id", "job_id"]
             isOneToOne: false
+            referencedRelation: "job_tokens"
+            referencedColumns: ["org_id", "job_id"]
+          },
+          {
+            foreignKeyName: "takes_job_fk"
+            columns: ["org_id", "job_id"]
+            isOneToOne: false
             referencedRelation: "jobs"
             referencedColumns: ["org_id", "id"]
           },
@@ -2549,6 +2587,80 @@ export type Database = {
           },
         ]
       }
+      job_tokens: {
+        Row: {
+          actual_tokens: number | null
+          cost_unknown: boolean | null
+          created_at: string | null
+          estimated_tokens: number | null
+          job_id: string | null
+          lane: Database["public"]["Enums"]["lane"] | null
+          org_id: string | null
+          project_id: string | null
+          shot_id: string | null
+          status: Database["public"]["Enums"]["job_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobs_org_id_project_id_fkey"
+            columns: ["org_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "jobs_org_id_shot_id_fkey"
+            columns: ["org_id", "shot_id"]
+            isOneToOne: false
+            referencedRelation: "shots"
+            referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
+      personal_budget_admin: {
+        Row: {
+          cohort_id: string | null
+          org_id: string | null
+          remaining_cents: number | null
+          reserved_open_cents: number | null
+          spent_cents: number | null
+          spent_tokens: number | null
+          tokens_per_dollar: number | null
+          total_cents: number | null
+          total_tokens: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_budgets_org_id_cohort_id_fkey"
+            columns: ["org_id", "cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "personal_budgets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_budgets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       personal_budget_status: {
         Row: {
           cohort_id: string | null
@@ -2583,6 +2695,70 @@ export type Database = {
           },
         ]
       }
+      personal_tokens: {
+        Row: {
+          cohort_id: string | null
+          org_id: string | null
+          remaining_tokens: number | null
+          reserved_open_tokens: number | null
+          spent_tokens: number | null
+          total_tokens: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_budgets_org_id_cohort_id_fkey"
+            columns: ["org_id", "cohort_id"]
+            isOneToOne: false
+            referencedRelation: "cohorts"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "personal_budgets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "personal_budgets_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_budget_admin: {
+        Row: {
+          cohort_id: string | null
+          org_id: string | null
+          project_id: string | null
+          remaining_cents: number | null
+          reserved_open_cents: number | null
+          spent_cents: number | null
+          spent_tokens: number | null
+          tokens_per_dollar: number | null
+          total_cents: number | null
+          total_tokens: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budgets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_budgets_org_id_project_id_fkey"
+            columns: ["org_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
       project_budget_status: {
         Row: {
           cohort_id: string | null
@@ -2592,6 +2768,33 @@ export type Database = {
           reserved_open_cents: number | null
           spent_cents: number | null
           total_cents: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budgets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_budgets_org_id_project_id_fkey"
+            columns: ["org_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
+      project_tokens: {
+        Row: {
+          cohort_id: string | null
+          org_id: string | null
+          project_id: string | null
+          remaining_tokens: number | null
+          reserved_open_tokens: number | null
+          spent_tokens: number | null
+          total_tokens: number | null
         }
         Relationships: [
           {
@@ -2628,6 +2831,10 @@ export type Database = {
         }[]
       }
       my_landing: { Args: never; Returns: string }
+      set_project_budget_tokens: {
+        Args: { p_project: string; p_tokens: number }
+        Returns: number
+      }
     }
     Enums: {
       approval_status: "draft" | "approved" | "suspended" | "retired"

@@ -36,7 +36,7 @@ export default async function ProjectLayout({ children, params }: { children: Re
           )}
         </nav>
         <div className="mt-auto border-t border-ink/10 pt-4 dark:border-paper/15">
-          {budget ? <BudgetRing spent={budget.spent_cents ?? 0} total={budget.total_cents ?? 0} scope={budget.scope} />
+          {budget ? <BudgetRing spent={budget.spent_tokens ?? 0} total={budget.total_tokens ?? 0} scope={budget.scope} />
                   : <p className="text-xs opacity-60">No budget set yet.</p>}
           <div className="mt-4 text-xs opacity-70">{user.email}</div>
           <form action={signOut}><button className="text-xs underline" type="submit">Sign out</button></form>

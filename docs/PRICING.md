@@ -1,5 +1,11 @@
 # Pricing model (working notes)
 
+## Students see tokens
+
+$1 = 1,000 tokens by default (`orgs.tokens_per_dollar`, admin-editable). Students and instructors only ever see
+tokens: budget rings, spend, estimates. The admin sees money and the rate. Real cost stays in the ledger in
+cents, so the token rate can change without moving money.
+
 ## The unit is generated minutes, not seats
 
 Two ways a class can use the platform:

@@ -58,6 +58,7 @@ GPU platform before the Phase 4 self-hosted LTX profile.
 - Append-only, trigger-enforced: `ledger`, `job_events`, `job_receipts`, `assets`. Corrections are new rows with a note.
 - Settle exactly once (`settled_at is null` guard); reserve/settle/release replay is a no-op; unknown vendor cost settles at the estimate and is flagged.
 - Ledger sign convention: `cents` is a debit; reserve `+estimate`, settle `actual − estimate`, release `−estimate`.
+- **Tokens, not money, for students and instructors.** `orgs.tokens_per_dollar` (default 1000: $1 = 1,000 tokens) is admin-only. Views `project_tokens`, `personal_tokens`, `job_tokens` are what the shells read; `*_budget_admin` views and the ledger are admin-only; the cents columns on `jobs`/`job_receipts` are hidden from non-admins by column grants (so never `select *` on those). Instructors set budgets in tokens via `set_project_budget_tokens`.
 - Migrations are never edited once applied to the hosted project; fixes are new migrations. (0004 was the last in-place edit, before it had landed.)
 
 **Model governance**

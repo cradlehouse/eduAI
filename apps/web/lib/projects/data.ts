@@ -12,14 +12,14 @@ export async function getProject(projectId: string) {
     supabase.from("projects").select("id, title, slug, logline, org_id, cohort_id, cohorts(id, name, starts_on, ends_on)").eq("id", projectId).maybeSingle(),
     supabase.from("projects").select("id, title, cohorts(name)").order("created_at"),
     supabase.from("project_members").select("user_id, role, users(email, display_name)").eq("project_id", projectId).order("created_at"),
-    supabase.from("project_budget_status").select("total_cents, spent_cents, remaining_cents, reserved_open_cents").eq("project_id", projectId).maybeSingle(),
+    supabase.from("project_tokens").select("total_tokens, spent_tokens, remaining_tokens, reserved_open_tokens").eq("project_id", projectId).maybeSingle(),
   ]);
   if (!project) return null;
 
   let personalBudget = null;
   if (!projectBudget && project.cohort_id) {
-    const { data } = await supabase.from("personal_budget_status")
-      .select("total_cents, spent_cents, remaining_cents, reserved_open_cents")
+    const { data } = await supabase.from("personal_tokens")
+      .select("total_tokens, spent_tokens, remaining_tokens, reserved_open_tokens")
       .eq("cohort_id", project.cohort_id).eq("user_id", user.id).maybeSingle();
     personalBudget = data;
   }

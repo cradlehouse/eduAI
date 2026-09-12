@@ -286,7 +286,20 @@ do $$
 declare v_id uuid;
 begin
   assert (select count(*) from public.projects) = 1, 'student sees own project';
-  assert (select remaining_cents from public.project_budget_status) = 58500, 'student sees project budget';
+  begin
+    perform remaining_cents from public.project_budget_status;
+    raise exception 'student must not read the cents view';
+  exception when insufficient_privilege then null;
+  end;
+  begin
+    perform estimated_cents from public.jobs limit 1;
+    raise exception 'student must not read jobs.estimated_cents';
+  exception when insufficient_privilege then null;
+  end;
+  assert (select count(*) from public.ledger) = 0, 'student cannot read the ledger';
+  assert (select remaining_tokens from public.project_tokens) = 585000, 'student sees tokens ($585 x 1000): ' || (select remaining_tokens from public.project_tokens);
+  assert (select count(*) from public.project_budget_admin) = 0, 'student sees no admin money view';
+  assert (select actual_tokens from public.job_tokens where job_id = '20000000-0000-4000-8000-000000000001') = 12000, 'job tokens ($12 x 1000)';
   assert (select count(*) from public.job_receipts) = 2, 'student sees project receipts';
   assert (select count(*) from public.invites) = 0, 'student cannot see invites';
   assert (select count(*) from public.org_credentials) = 0, 'student cannot see credentials';
@@ -335,11 +348,10 @@ do $$
 begin
   assert (select count(*) from public.projects) = 1, 'instructor sees cohort project';
   assert (select count(*) from public.jobs) >= 4, 'instructor sees cohort jobs';
-  assert (select count(*) from public.ledger) = 7, 'instructor sees cohort ledger (2+2+2+refund)';
-  insert into public.project_budgets (org_id, project_id, total_cents)
-  values ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000030', 1)
-  on conflict (project_id) do update set total_cents = 70000;
-  assert (select total_cents from public.project_budgets) = 70000, 'instructor adjusted budget';
+  assert (select count(*) from public.ledger) = 0, 'instructor does not see cents ledger';
+  assert (select remaining_tokens from public.project_tokens) = 585000, 'instructor sees tokens';
+  assert public.set_project_budget_tokens('00000000-0000-4000-8000-000000000030', 700000) = 70000, 'instructor sets budget in tokens (700,000 = $700)';
+  assert (select total_cents from public.project_budgets) = 70000, 'budget stored in cents';
   update public.consent_releases set state = 'revoked', revoked_at = now(), revoked_reason = 'subject withdrew' where bible_entry_id = '50000000-0000-4000-8000-000000000001';
   assert (select state from public.consent_releases where bible_entry_id = '50000000-0000-4000-8000-000000000001') = 'revoked', 'instructor revoked';
   assert public.my_landing() = '/c/00000000-0000-4000-8000-000000000020', 'instructor lands on cohort: ' || public.my_landing();
