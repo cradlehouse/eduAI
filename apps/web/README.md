@@ -10,25 +10,20 @@ as the signed-in user (RLS) and calls three user-scoped RPCs from migration 0103
 
 | Route | What |
 |---|---|
-| `/` | redirect by role via `my_landing()` |
-| `/login` | magic-link form (`signInWithOtp`) |
-| `/auth/callback` | exchanges `?code=` (PKCE) or `?token_hash=`; redirects to sanitised `?next=` |
-| `/invite/[token]` | preview → sign in with the invited email → accept (one transaction) → land |
-| `/welcome` | signed in, no cohort/project yet |
-| `/org` | admin overview (counts) inside the admin rail |
-| `/org/people` | paste emails → invites (link to copy each; Resend later); revoke; member roles, minor flag, remove |
-| `/p/[projectId]` | student shell: rail (project switcher, nav, budget ring from the budget views, me), dashboard (this week, crew, budget, recent jobs); instructors get a “viewing as instructor” banner |
-| `/p/[projectId]/module` | the cohort schedule with derived state per module (open / upcoming / locked + why / closed) and the brief |
-| `/p/[projectId]/bible` | entries by kind with consent state first on every card; add entry |
-| `/p/[projectId]/bible/[entryId]` | edit, reference image upload, per-lane consent state, releases (subject, rights holder, guardian/minor, lanes, distribution, expiry, signed document ⇒ signed), revoke (instructor/admin) |
-| `/api/assets/[id]` | streams an asset from R2 via the Worker binding after the RLS check on the assets row |
-| `/p/[projectId]/scenes` | **Storyboard as e-conte**: one column of cuts per scene, picture + layer strips (bg / char / merged · dialogue / sfx), notes beside, timing right; add cut |
-| `/p/[projectId]/shots/[shotId]` | **the console**: layer tabs, lane toggle, route tiles with live token estimate and lock reasons (`model_options`, `estimate_tokens`), schema-driven inputs from `input_schema`, Generate → `jobs` row (server action re-checks readiness, allowlist and budget). Below: the cut's notes (objective, continuity, camera, dialogue), bible links, recent generations |
-| `/c/[cohortId]` | **instructor shell**: rail (Cohort, Projects, then Phase 2 items), cohort overview + module schedule with dates and “Open now” |
-| `/c/[cohortId]/projects` | create projects (title, logline, token budget), edit title/logline, set budget in tokens, add/remove crew from the cohort's enrolled apprentices, delete; Open project → student view |
-| `/org/cohorts` | create cohorts (course, name, dates, instructor) with the module schedule laid out weekly; assign instructors |
-| every signed-in page | one `Sidebar` (ADMIN / COHORT / PROJECT sections by role, me-unit bottom-left); see docs/DESIGN.md → Navigation |
-| `/c/[cohortId]/schedule` | module dates, on/off, “Open now” |
+| `/` | `my_landing()`: cohort, `/home`, or `/welcome` |
+| `/login`, `/auth/callback`, `/invite/[token]`, `/welcome` | auth and invite acceptance |
+| `/home` | hub: cohorts you can reach; Organisation card for admins |
+| `/org`, `/org/people`, `/org/cohorts` | organisation scope (admins) |
+| `/c/[cohortId]` | cohort Home: this week, team, my projects / all projects, open for sign-up / needs attention |
+| `/c/[cohortId]/team` | roster: person, project, roles; instructors get status, assign, roles, CSV |
+| `/c/[cohortId]/projects` | posted projects; students sign up with roles; instructors post, edit, approve |
+| `/c/[cohortId]/schedule` | module dates, on/off, Open now (instructors) |
+| `/p/[projectId]/brief` | the module brief (pre-production) |
+| `/p/[projectId]/bible`, `/bible/[entryId]` | bible + consent (pre-production) |
+| `/p/[projectId]/scenes` | storyboard as e-conte (pre-production) |
+| `/p/[projectId]/shoot` | production: cuts with per-layer take counts, recent generations |
+| `/p/[projectId]/shots/[shotId]` | the cut console |
+| `/p/[projectId]/members` | crew and roles (self-edit; instructors edit anyone) |
+| `/api/assets/[id]` | streams an asset from R2 after the RLS check |
 
-`pnpm dev` for Next dev, `pnpm cf:preview` to run the Worker bundle in workerd, `pnpm cf:deploy` to ship.
-Types: `pnpm db:types` at the repo root after any migration.
+Navigation: one `Shell` (global header with breadcrumb scope switcher + scope sidebar). See docs/NAVIGATION.md.

@@ -1,27 +1,55 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getProject } from "@/lib/projects/data";
 import { getNav } from "@/lib/auth/nav";
-import { Sidebar } from "@/components/Sidebar";
+import { createClient } from "@/lib/supabase/server";
+import { Shell } from "@/components/Shell";
+import { NavGroup, NavItem, NavSoon } from "@/components/NavItem";
+import { BudgetRing } from "@/components/BudgetRing";
+
+const SECTIONS = { "": "Brief", brief: "Brief", bible: "Bible", scenes: "Storyboard", shoot: "Shoot", shots: "Shoot", members: "Members" };
 
 export default async function ProjectLayout({ children, params }: { children: React.ReactNode; params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const [data, nav] = await Promise.all([getProject(projectId), getNav()]);
   if (!data || !nav) notFound();
+  if (!nav.cohorts.some((c) => c.id === data.project.cohort_id) && !data.isMember) redirect("/");
   const { project, budget, isMember } = data;
-  const ring = budget ? { spent: budget.spent_tokens ?? 0, total: budget.total_tokens ?? 0, scope: budget.scope } : null;
+  const manage = nav.cohorts.find((c) => c.id === project.cohort_id)?.manage ?? false;
+  const supabase = await createClient();
+  // Sibling projects for the header dropdown: mine in this cohort, or all of them for instructors.
+  const { data: sib } = manage
+    ? await supabase.from("projects").select("id, title").eq("cohort_id", project.cohort_id).order("title")
+    : { data: nav.myProjects.filter((p) => p.cohort_id === project.cohort_id).map((p) => ({ id: p.id, title: p.title })) };
+  const base = `/p/${projectId}`;
+  const cohortName = project.cohorts?.name ?? "Cohort";
+
   return (
-    <div className="flex min-h-screen">
-      <Sidebar nav={nav} ctx={{ cohortId: project.cohort_id, projectId: project.id, budget: ring }} />
-      <div className="flex-1">
-        {!isMember && (
-          <div className="bg-control/10 px-6 py-2 text-sm text-control">
-            Viewing as instructor. You are not a member of this project; edits still count as yours.{" "}
-            <Link href={`/c/${project.cohort_id}`} className="underline">Cohort overview</Link>
-          </div>
-        )}
-        <main className="p-8">{children}</main>
-      </div>
-    </div>
+    <Shell nav={nav}
+      crumbs={[{ label: nav.org?.name ?? "eduai", href: "/home" }, { label: cohortName, href: `/c/${project.cohort_id}` },
+               { label: project.title, href: base, siblings: (sib ?? []).map((p) => ({ id: p.id, label: p.title, href: `/p/${p.id}` })) }]}
+      base={base} sections={SECTIONS} sidebarTitle={project.title}
+      sidebar={<>
+        <NavItem href={`/c/${project.cohort_id}`} exact>‹ {cohortName}</NavItem>
+        <NavGroup title="Pre-production">
+          <NavItem href={`${base}/brief`}>Brief</NavItem>
+          <NavItem href={`${base}/bible`}>Bible</NavItem>
+          <NavItem href={`${base}/scenes`}>Storyboard</NavItem>
+        </NavGroup>
+        <NavGroup title="Production">
+          <NavItem href={`${base}/shoot`}>Shoot</NavItem>
+        </NavGroup>
+        <NavGroup title="Post-production">
+          <NavSoon label="Edit" when="Phase 3" />
+          <NavSoon label="Deliver" when="Phase 3" />
+        </NavGroup>
+        <NavGroup title="Project">
+          <NavItem href={`${base}/members`} mark={manage ? "instructor" : undefined}>Members</NavItem>
+          {manage && <NavSoon label="Settings" when="soon" />}
+        </NavGroup>
+        {budget && <div className="mt-4 px-3"><BudgetRing spent={budget.spent_tokens ?? 0} total={budget.total_tokens ?? 0} scope={budget.scope} /></div>}
+        {!isMember && <div className="mt-3 px-3 text-[11px] text-muted">You&apos;re not on this crew; you&apos;re here as {manage ? "an instructor" : "a viewer"}.</div>}
+      </>}>
+      {children}
+    </Shell>
   );
 }

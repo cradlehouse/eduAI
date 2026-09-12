@@ -1,0 +1,15 @@
+import { redirect } from "next/navigation";
+import { getNav } from "@/lib/auth/nav";
+import { Shell } from "@/components/Shell";
+import { NavItem } from "@/components/NavItem";
+
+export default async function HomeLayout({ children }: { children: React.ReactNode }) {
+  const nav = await getNav();
+  if (!nav) redirect("/login");
+  return (
+    <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "eduai" }, { label: "Home" }]} sidebarTitle="Home"
+      sidebar={<><NavItem href="/home" exact>Home</NavItem>{nav.isAdmin && <NavItem href="/org" mark="admin">Organisation</NavItem>}</>}>
+      {children}
+    </Shell>
+  );
+}

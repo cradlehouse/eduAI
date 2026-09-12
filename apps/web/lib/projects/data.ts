@@ -11,7 +11,7 @@ export async function getProject(projectId: string) {
   const [{ data: project }, { data: myProjects }, { data: members }, { data: projectBudget }] = await Promise.all([
     supabase.from("projects").select("id, title, slug, logline, org_id, cohort_id, cohorts(id, name, starts_on, ends_on)").eq("id", projectId).maybeSingle(),
     supabase.from("projects").select("id, title, cohorts(name)").order("created_at"),
-    supabase.from("project_members").select("user_id, role, users(email, display_name)").eq("project_id", projectId).order("created_at"),
+    supabase.from("project_members").select("user_id, roles, users(email, display_name)").eq("project_id", projectId).order("created_at"),
     supabase.from("project_tokens").select("total_tokens, spent_tokens, remaining_tokens, reserved_open_tokens").eq("project_id", projectId).maybeSingle(),
   ]);
   if (!project) return null;

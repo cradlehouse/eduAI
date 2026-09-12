@@ -19,7 +19,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
     supabase.from("invites").select("id, email, role, is_minor, token, expires_at, accepted_at, cohorts(name), projects(title)").eq("org_id", org.id).order("created_at", { ascending: false }),
     supabase.from("cohorts").select("id, name").eq("org_id", org.id).order("starts_on", { ascending: false }),
     supabase.from("projects").select("id, title, cohort_id").eq("org_id", org.id).order("title"),
-    supabase.from("project_members").select("user_id, role, projects(title)").eq("org_id", org.id),
+    supabase.from("project_members").select("user_id, roles, projects(title)").eq("org_id", org.id),
   ]);
   const projectsOf = (userId: string) => (pm ?? []).filter((x) => x.user_id === userId);
   const pending = (invites ?? []).filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date());
@@ -114,7 +114,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
                     )}
                   </td>
                   <td>
-                    <ul className="text-xs">{projectsOf(m.user_id).map((x, i) => <li key={i}>{x.projects?.title} · {x.role}</li>)}</ul>
+                    <ul className="text-xs">{projectsOf(m.user_id).map((x, i) => <li key={i}>{x.projects?.title} · {x.roles.join(", ")}</li>)}</ul>
                     <form action={addToProject} className="mt-1 flex items-center gap-1">
                       <input type="hidden" name="user_id" value={m.user_id} />
                       <select name="project_id" className={input} defaultValue="">

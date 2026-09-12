@@ -1617,6 +1617,7 @@ export type Database = {
           has_minors: boolean
           id: string
           name: string
+          project_roles: string[]
           public_entity: boolean
           slug: string
           tokens_per_dollar: number
@@ -1629,6 +1630,7 @@ export type Database = {
           has_minors?: boolean
           id?: string
           name: string
+          project_roles?: string[]
           public_entity?: boolean
           slug: string
           tokens_per_dollar?: number
@@ -1641,6 +1643,7 @@ export type Database = {
           has_minors?: boolean
           id?: string
           name?: string
+          project_roles?: string[]
           public_entity?: boolean
           slug?: string
           tokens_per_dollar?: number
@@ -1748,7 +1751,7 @@ export type Database = {
           id: string
           org_id: string
           project_id: string
-          role: Database["public"]["Enums"]["project_role"]
+          roles: string[]
           user_id: string
         }
         Insert: {
@@ -1756,7 +1759,7 @@ export type Database = {
           id?: string
           org_id: string
           project_id: string
-          role?: Database["public"]["Enums"]["project_role"]
+          roles?: string[]
           user_id: string
         }
         Update: {
@@ -1764,7 +1767,7 @@ export type Database = {
           id?: string
           org_id?: string
           project_id?: string
-          role?: Database["public"]["Enums"]["project_role"]
+          roles?: string[]
           user_id?: string
         }
         Relationships: [
@@ -1795,30 +1798,42 @@ export type Database = {
         Row: {
           cohort_id: string
           created_at: string
+          crew_cap: number | null
           id: string
           logline: string
           org_id: string
+          requires_approval: boolean
+          roles_needed: string[]
           slug: string
+          status: Database["public"]["Enums"]["project_status"]
           title: string
           updated_at: string
         }
         Insert: {
           cohort_id: string
           created_at?: string
+          crew_cap?: number | null
           id?: string
           logline?: string
           org_id: string
+          requires_approval?: boolean
+          roles_needed?: string[]
           slug: string
+          status?: Database["public"]["Enums"]["project_status"]
           title: string
           updated_at?: string
         }
         Update: {
           cohort_id?: string
           created_at?: string
+          crew_cap?: number | null
           id?: string
           logline?: string
           org_id?: string
+          requires_approval?: boolean
+          roles_needed?: string[]
           slug?: string
+          status?: Database["public"]["Enums"]["project_status"]
           title?: string
           updated_at?: string
         }
@@ -2128,6 +2143,71 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "takes"
             referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
+      signup_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          id: string
+          org_id: string
+          project_id: string
+          roles: string[]
+          status: Database["public"]["Enums"]["signup_status"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          org_id: string
+          project_id: string
+          roles: string[]
+          status?: Database["public"]["Enums"]["signup_status"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          id?: string
+          org_id?: string
+          project_id?: string
+          roles?: string[]
+          status?: Database["public"]["Enums"]["signup_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signup_requests_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signup_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signup_requests_org_id_project_id_fkey"
+            columns: ["org_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "signup_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2843,6 +2923,10 @@ export type Database = {
         Args: { p_entry: string; p_lane: Database["public"]["Enums"]["lane"] }
         Returns: string
       }
+      decide_signup: {
+        Args: { p_approve: boolean; p_request: string }
+        Returns: string
+      }
       estimate_tokens: {
         Args: { p_inputs: Json; p_profile: string }
         Returns: number
@@ -2893,6 +2977,10 @@ export type Database = {
           missing: string[]
           ready: boolean
         }[]
+      }
+      sign_up: {
+        Args: { p_project: string; p_roles: string[] }
+        Returns: string
       }
     }
     Enums: {
@@ -2970,6 +3058,7 @@ export type Database = {
         | "music"
         | "upscale"
       project_role: "director" | "dp" | "sound" | "editor" | "producer"
+      project_status: "draft" | "open" | "crewed" | "closed"
       publication_status:
         | "draft"
         | "approved"
@@ -2978,6 +3067,7 @@ export type Database = {
         | "failed"
         | "withdrawn"
       risk_level: "none" | "low" | "high"
+      signup_status: "pending" | "approved" | "declined"
       social_platform:
         | "youtube"
         | "tiktok"
@@ -3191,6 +3281,7 @@ export const Constants = {
         "upscale",
       ],
       project_role: ["director", "dp", "sound", "editor", "producer"],
+      project_status: ["draft", "open", "crewed", "closed"],
       publication_status: [
         "draft",
         "approved",
@@ -3200,6 +3291,7 @@ export const Constants = {
         "withdrawn",
       ],
       risk_level: ["none", "low", "high"],
+      signup_status: ["pending", "approved", "declined"],
       social_platform: [
         "youtube",
         "tiktok",

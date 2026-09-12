@@ -33,18 +33,22 @@ GLOBAL HEADER (every page, fixed)
 SIDEBAR = sections of the current scope only (two tiers max, Settings last, instructor-only items marked)
   Home        (no scope)   Home  ·  Organisation (admin)
   Org         (admin)      Overview · Cohorts · People · Courses · Models · Credentials · Settings
-  Cohort                   Overview · Projects · Students · Schedule · Review queue · Budgets · Release · Integrity · Evidence · Settings
-  Project                  Home · Module brief · Bible · Storyboard · Takes · Compare · Timeline · Export · Members · Settings
-                           (same list for every role; items a student cannot open show a visibility marker to instructors)
+  Cohort                   COHORT: Home · Team · Projects · [instructor: Schedule · Review queue · Budgets · Release · Settings]
+                           MY PROJECTS: the projects I am on, by name with my roles
+  Project                  ‹ cohort · PRE-PRODUCTION: Brief · Bible · Storyboard · PRODUCTION: Shoot · POST-PRODUCTION: Edit · Deliver
+                           PROJECT: Members · [instructor: Settings] · token ring
+                           (same list for every role; instructor-only items carry a marker)
 
-HOME (hub page, by what you have, additive)
-  admin:      Organisation card  + the cohorts they instruct  + "needs review"
-  instructor: their cohorts as cards, each listing its projects  + "needs review"
-  apprentice: their project card(s); exactly one project ⇒ land straight in it
+THE COHORT IS THE STUDENT'S HOME
+  sign in → cohort Home (this week, team, my projects, what's open for sign-up) → Team (everyone, their
+  projects and roles) → Projects (posted by the instructor; sign up with one or more roles; approval optional)
+  → the project, in three phases. Roles come from an org-editable list and a member may hold several.
 
-LANDING
-  apprentice → their project Home;  instructor → Home, or straight into the cohort if they have exactly one;
-  admin → Home (Organisation card first)
+/home (hub) exists for people who can reach more than one cohort: their cohorts as cards, Organisation card for admins.
+
+LANDING (public.my_landing)
+  instructor/admin with exactly one cohort → that cohort; with several → /home;
+  apprentice → their cohort; nobody → /welcome
 
 ENTERING A STUDENT'S PROJECT AND RETURNING
   Cohort › Projects (or Students › name) → open → identical project UI.

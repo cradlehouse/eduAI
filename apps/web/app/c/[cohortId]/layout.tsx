@@ -1,20 +1,48 @@
 import { notFound, redirect } from "next/navigation";
 import { getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
-import { Sidebar } from "@/components/Sidebar";
+import { Shell } from "@/components/Shell";
+import { NavGroup, NavItem, NavSoon } from "@/components/NavItem";
+
+const SECTIONS = { "": "Home", team: "Team", projects: "Projects", schedule: "Schedule" };
 
 export default async function CohortLayout({ children, params }: { children: React.ReactNode; params: Promise<{ cohortId: string }> }) {
   const { cohortId } = await params;
   const nav = await getNav();
   if (!nav) redirect("/login");
+  const me = nav.cohorts.find((c) => c.id === cohortId);
+  if (!me) notFound();
   const supabase = await createClient();
-  const { data: cohort } = await supabase.from("cohorts").select("id").eq("id", cohortId).maybeSingle();
+  const { data: cohort } = await supabase.from("cohorts").select("id, name").eq("id", cohortId).maybeSingle();
   if (!cohort) notFound();
-  if (!(nav.isAdmin || nav.cohorts.some((c) => c.id === cohortId))) redirect("/");
+  const mine = nav.myProjects.filter((p) => p.cohort_id === cohortId);
+  const base = `/c/${cohortId}`;
+  const siblings = nav.cohorts.map((c) => ({ id: c.id, label: c.name, href: `/c/${c.id}` }));
+
   return (
-    <div className="flex min-h-screen">
-      <Sidebar nav={nav} ctx={{ cohortId }} />
-      <main className="flex-1 p-8">{children}</main>
-    </div>
+    <Shell nav={nav}
+      crumbs={[{ label: nav.org?.name ?? "eduai", href: "/home" }, { label: cohort.name, href: base, siblings }]}
+      base={base} sections={SECTIONS} sidebarTitle={cohort.name}
+      sidebar={<>
+        <NavGroup title="Cohort">
+          <NavItem href={base} exact>Home</NavItem>
+          <NavItem href={`${base}/team`}>Team</NavItem>
+          <NavItem href={`${base}/projects`}>Projects</NavItem>
+          {me.manage && <>
+            <NavItem href={`${base}/schedule`} mark="instructor">Schedule</NavItem>
+            <NavSoon label="Review queue" when="Phase 2" />
+            <NavSoon label="Budgets" when="Phase 2" />
+            <NavSoon label="Release" when="Phase 3" />
+            <NavSoon label="Settings" when="soon" />
+          </>}
+        </NavGroup>
+        {mine.length > 0 && (
+          <NavGroup title="My projects">
+            {mine.map((p) => <NavItem key={p.id} href={`/p/${p.id}`} mark={p.roles.join(" · ")}>{p.title}</NavItem>)}
+          </NavGroup>
+        )}
+      </>}>
+      {children}
+    </Shell>
   );
 }

@@ -20,7 +20,7 @@ do $$
 begin
   assert (select count(*) from public.memberships where org_id = '00000000-0000-4000-8000-000000000001') = 3, 'three memberships';
   assert exists (select 1 from public.cohort_instructors where user_id = '10000000-0000-4000-8000-000000000001'), 'instructor assigned';
-  assert (select role from public.project_members where user_id = '10000000-0000-4000-8000-000000000002') = 'director', 'student-1 director';
+  assert (select roles from public.project_members where user_id = '10000000-0000-4000-8000-000000000002') = '{director}', 'student-1 director';
   begin
     perform eduai.accept_invite('demo-student-1-token', '10000000-0000-4000-8000-000000000002');
     raise exception 'second accept should fail';
@@ -36,7 +36,7 @@ insert into public.cohorts (id, org_id, course_id, name) values ('00000000-0000-
 insert into public.projects (id, org_id, cohort_id, slug, title) values ('00000000-0000-4000-8000-000000000031', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000021', 'project-1', 'Project');
 insert into public.project_budgets (org_id, project_id, total_cents) values ('00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000031', 5000);
 insert into public.memberships (org_id, user_id, role) values ('00000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000004', 'student');
-insert into public.project_members (org_id, project_id, user_id) values ('00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000031', '10000000-0000-4000-8000-000000000004');
+insert into public.project_members (org_id, project_id, user_id, roles) values ('00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000031', '10000000-0000-4000-8000-000000000004', '{director}');
 insert into public.org_model_profiles (org_id, deployment_profile_id, lanes, ends_on, review_by)
 select '00000000-0000-4000-8000-000000000002', id, '{explore}', '2026-12-31', '2026-12-01' from public.deployment_profiles where slug = 'ltx-2.5@fal';
 
@@ -328,8 +328,8 @@ begin
   update public.jobs set status = 'succeeded' where id = v_id;   -- matches no row under USING
   assert (select status from public.jobs where id = v_id) = 'cancelled', 'student cannot force succeeded';
   begin
-    insert into public.project_members (org_id, project_id, user_id)
-    values ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000030', '10000000-0000-4000-8000-000000000004');
+    insert into public.project_members (org_id, project_id, user_id, roles)
+    values ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000030', '10000000-0000-4000-8000-000000000004', '{editor}');
     raise exception 'student adding members should be blocked';
   exception when insufficient_privilege then null;
   end;
@@ -349,7 +349,7 @@ begin
   assert r.status = 'accepted' and r.org_name = 'Demo Film School' and r.email_masked = 'd•••@example.com', 'preview of accepted invite: ' || r.status;
   select * into r from public.invite_preview('nope');
   assert r.status = 'not_found', 'preview of unknown token';
-  assert public.my_landing() = '/p/00000000-0000-4000-8000-000000000030', 'student lands on their project: ' || public.my_landing();
+  assert public.my_landing() = '/c/00000000-0000-4000-8000-000000000020', 'student lands on their cohort: ' || public.my_landing();
   begin
     perform public.accept_invite('mismatch-token');   -- open invite, but for a different email
     raise exception 'accepting someone else''s invite should fail';
@@ -358,11 +358,51 @@ begin
   raise notice 'ok  web rpcs (student)';
 end $$;
 
+-- sign-up as student-2 (enrolled via invite, on the project already as dp): post a second project as superuser first
+reset role;
+insert into public.projects (id, org_id, cohort_id, slug, title, status, crew_cap, roles_needed, requires_approval)
+values ('00000000-0000-4000-8000-000000000032', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000020', 'yard', 'Yard at Night', 'open', 2, '{dp,editor}', false);
+insert into public.projects (id, org_id, cohort_id, slug, title, status, requires_approval)
+values ('00000000-0000-4000-8000-000000000033', '00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000020', 'pier', 'The Pier', 'open', true);
+set local role authenticated;
+set local request.jwt.claims to '{"sub":"10000000-0000-4000-8000-000000000003"}';
+do $$
+begin
+  assert (select count(*) from public.projects) = 3, 'student sees all posted cohort projects: ' || (select count(*) from public.projects);
+  assert (select count(*) from public.enrolments) = 2, 'student sees the team (enrolments)';
+  assert public.sign_up('00000000-0000-4000-8000-000000000032', '{dp,sound}') = 'joined', 'auto sign-up joins';
+  assert (select roles from public.project_members where project_id = '00000000-0000-4000-8000-000000000032' and user_id = auth.uid()) = '{dp,sound}', 'two roles on one membership';
+  begin
+    perform public.sign_up('00000000-0000-4000-8000-000000000032', '{editor}');
+    raise exception 'double sign-up should fail';
+  exception when others then assert sqlerrm = 'already_on_project', sqlerrm;
+  end;
+  begin
+    perform public.sign_up('00000000-0000-4000-8000-000000000033', '{astronaut}');
+    raise exception 'unknown role should fail';
+  exception when others then assert sqlerrm = 'invalid_roles', sqlerrm;
+  end;
+  assert public.sign_up('00000000-0000-4000-8000-000000000033', '{writer}') = 'pending', 'approval-required sign-up is pending';
+  assert (select count(*) from public.signup_requests where user_id = auth.uid() and status = 'pending') = 1, 'pending request visible to me';
+  raise notice 'ok  sign-up (student)';
+end $$;
+set local request.jwt.claims to '{"sub":"10000000-0000-4000-8000-000000000001"}';
+do $$
+declare v_req uuid;
+begin
+  select id into v_req from public.signup_requests where status = 'pending' limit 1;
+  assert v_req is not null, 'instructor sees the pending request';
+  assert public.decide_signup(v_req, true) = 'approved', 'instructor approves';
+  assert exists (select 1 from public.project_members where project_id = '00000000-0000-4000-8000-000000000033' and roles = '{writer}'), 'approved request became membership';
+  raise notice 'ok  sign-up (instructor)';
+end $$;
+set local request.jwt.claims to '{"sub":"10000000-0000-4000-8000-000000000002"}';
+
 -- RLS: instructor sees the cohort's project without being a member, and can review
 set local request.jwt.claims to '{"sub":"10000000-0000-4000-8000-000000000001"}';
 do $$
 begin
-  assert (select count(*) from public.projects) = 1, 'instructor sees cohort project';
+  assert (select count(*) from public.projects) = 3, 'instructor sees all cohort projects';
   assert (select count(*) from public.jobs) >= 4, 'instructor sees cohort jobs';
   assert (select count(*) from public.ledger) = 0, 'instructor does not see cents ledger';
   assert (select remaining_tokens from public.project_tokens) = 585000, 'instructor sees tokens';
@@ -370,7 +410,7 @@ begin
   assert (select total_cents from public.project_budgets) = 70000, 'budget stored in cents';
   update public.consent_releases set state = 'revoked', revoked_at = now(), revoked_reason = 'subject withdrew' where bible_entry_id = '50000000-0000-4000-8000-000000000001';
   assert (select state from public.consent_releases where bible_entry_id = '50000000-0000-4000-8000-000000000001') = 'revoked', 'instructor revoked';
-  assert public.my_landing() = '/c/00000000-0000-4000-8000-000000000020', 'instructor lands on cohort: ' || public.my_landing();
+  assert public.my_landing() = '/c/00000000-0000-4000-8000-000000000020', 'instructor with one cohort lands on it: ' || public.my_landing();
   raise notice 'ok  rls instructor';
 end $$;
 

@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
-// "/" is only a router: send the user where their role says.
-export default async function Home() {
+// "/" only routes: my_landing() → the cohort (student, or instructor with one), /home, or /welcome.
+export default async function Root() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
