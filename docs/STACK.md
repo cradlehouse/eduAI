@@ -25,7 +25,7 @@ cameras/lighting/audio/laptops/software, and has apprentices make both individua
 | Web app | **Next.js 15** App Router, TypeScript, Tailwind, pnpm | Thin UI: CRUD + Realtime, no vendor calls | P1-03 |
 | Web hosting | **Cloudflare Pages** via OpenNext adapter | Cloudflare is already required (R2, Worker); no per-push deploy cost; **not Vercel** | P1-03 |
 | Orchestrator | **Python 3.12, FastAPI, uv**; one web service + `generate` and `render` workers | Talks to vendors, R2 and Postgres; never renders HTML | P1-10 |
-| Orchestrator hosting | **Render** (blueprint in `infra/render.yaml`); workers on paid instances | Free tier sleeps; generation must not | P1-16 |
+| Orchestrator hosting | **Render**, workspace `waterfallai` (really Cradle House), project `eduai`, region **Oregon**; env group `eduai` holds every orchestrator secret; workers on paid instances | Same AWS region as the database; free tier sleeps and generation must not | Project + env group created 2026-09-12; services at P1-16 |
 | Object storage | **Cloudflare R2**, bucket `eduai-assets`, content-addressed keys `<org>/<sha2>/<sha256>.<ext>` | Cheap egress; immutable assets | P1-10. Cloudflare account `300ea11f0166485a4c182f50ad32b524` (admin@cradle.house). **Bucket created 2026-09-12**, location wnam, lifecycle in infra/r2-lifecycle.json |
 | Webhook inbox | **Cloudflare Worker** → verify signature → insert `webhook_inbox` → 200 | Vendors never point at Render; replay-safe by `(provider, dedupe_key)` | P1-11 |
 | Media processing | **ffmpeg** in the render worker; **OTIO** for timelines; FCP7 XML / FCPXML / EDL writers | Export formats editors actually open | Phase 3 |
@@ -33,7 +33,7 @@ cameras/lighting/audio/laptops/software, and has apprentices make both individua
 | Self-hosted compute | **Crusoe Cloud** (stranded-energy + renewable GPUs) for the Phase 4 open-weight profiles | The only tier where energy is measurable; the sustainability differentiator vs CoreWeave/Lambda/RunPod | Phase 4, draft profile `ltx-2.5@crusoe` |
 | Prompt gate + assistants | **Anthropic Claude** | Content-tier prompt gate first (P1-14), seven assistants later | P1-14 |
 | Publishing | **Ayrshare** | One API for YouTube/TikTok/Instagram; org and personal profiles | Phase 3 |
-| Errors | **Sentry**, two projects (web, orchestrator) | | P1-15 |
+| Errors | **Sentry**, org `cradlehouse`, projects `eduai-orchestrator` (FastAPI; errors + logs) and `eduai-web` (Next.js). `send_default_pii=False` everywhere: users are mostly minors | | Projects created 2026-09-12; SDK wiring at P1-15 |
 | CI | **GitHub Actions**: generated-file sync · migrations + RLS check + smoke on `postgres:17` · web lint/typecheck · orchestrator ruff/pytest | The db job is the one that matters; the last two skip until code exists | Live, green |
 | Repo | **GitHub `cradlehouse/eduAI`**, pnpm-workspace monorepo | | Live |
 
@@ -93,6 +93,8 @@ integrity is never colour-only.
 
 ## Environment
 
+All orchestrator secrets live in the Render env group `eduai` (project eduai → Production). Nothing secret is in the repo.
+
 | Variable | Lives on | Used by |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Cloudflare Pages | web (browser + server) |
@@ -102,7 +104,8 @@ integrity is never colour-only.
 | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET` | Render | orchestrator |
 | `FAL_KEY`, `REPLICATE_API_TOKEN`, `ANTHROPIC_API_KEY`, `AYRSHARE_API_KEY` | Render | orchestrator |
 | `WEBHOOK_SIGNING_SECRETS` (JSON) | Cloudflare Worker secret + Render | inbox verification |
-| `SENTRY_DSN` | Cloudflare Pages, Render | both |
+| `SENTRY_DSN` | Render | orchestrator |
+| `SENTRY_DSN_WEB` | Render env group (parked) → Cloudflare Pages at P1-03 | web |
 | `JOB_KINDS` | Render, per worker | `generate` or `render` |
 | Org-supplied vendor keys | Supabase Vault only | orchestrator, via `org_credentials.secret_ref` |
 
