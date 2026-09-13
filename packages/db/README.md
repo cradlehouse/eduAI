@@ -50,6 +50,7 @@ health, adapter test date, quota).
 | `claim_inbox(limit) → setof webhook_inbox` | drain unprocessed deliveries, locked |
 | `accept_invite(token, user) → memberships` | membership + enrolment/instructor + project member, one tx |
 | `shot_consent_ok(shot) → bool` | every consent-bearing bible entry on the shot is signed |
+| `public.add_org_credential` / `revoke_org_credential` | admin RPCs (0119): key into Vault, row in `org_credentials`; revoke scrubs the secret and keeps the row |
 
 The web app inserts `jobs` with only `project_id, shot_id, deployment_profile_id, lane, inputs`; a
 trigger derives `org_id, cohort_id, provider, model_version_id, requested_by` before RLS checks the

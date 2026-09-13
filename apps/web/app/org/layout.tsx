@@ -4,7 +4,7 @@ import { getNav } from "@/lib/auth/nav";
 import { Shell } from "@/components/Shell";
 import { NavItem } from "@/components/NavItem";
 
-const SECTIONS = { "": "Overview", people: "People", cohorts: "Cohorts" };
+const SECTIONS = { "": "Overview", people: "People", cohorts: "Cohorts", keys: "Keys" };
 
 export default async function OrgLayout({ children }: { children: React.ReactNode }) {
   const [org, nav] = await Promise.all([getAdminOrg(), getNav()]);
@@ -16,6 +16,7 @@ export default async function OrgLayout({ children }: { children: React.ReactNod
         <NavItem href="/org" exact icon="Building2">Overview</NavItem>
         <NavItem href="/org/cohorts" icon="GraduationCap">Cohorts</NavItem>
         <NavItem href="/org/people" icon="Users">People</NavItem>
+        <NavItem href="/org/keys" icon="KeyRound">Keys</NavItem>
       </>}>
       {children}
     </Shell>

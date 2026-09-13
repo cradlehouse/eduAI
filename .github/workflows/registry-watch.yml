@@ -1,0 +1,23 @@
+name: registry watch
+# Weekly: confirm every approved route still exists at the vendor and ask Claude (web search) what
+# moved in the market. Files the report as an issue. Nothing edits the registry automatically.
+on:
+  schedule:
+    - cron: "0 9 * * 1"   # Mondays 09:00 UTC
+  workflow_dispatch:
+permissions:
+  issues: write
+  contents: read
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - working-directory: services/orchestrator
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: uv sync --frozen && uv run python -m orchestrator.watch > ../../watch.md
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh issue create --title "Registry watch $(date -u +%F)" --label registry --body-file watch.md

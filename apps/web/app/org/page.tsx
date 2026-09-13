@@ -56,6 +56,7 @@ export default async function OrgPage({ searchParams }: { searchParams: Promise<
             </form>
           ))}
           <Link href="/org/cohorts" className="btn">Add tokens to a project</Link>
+          <Link href="/org/keys" className="btn">Use your own vendor keys</Link>
           <button className="btn opacity-60" disabled title="Card payments are not connected yet; plans are invoiced.">Add a card · coming</button>
         </div>
         <form action={setBilling} className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-3 text-sm">

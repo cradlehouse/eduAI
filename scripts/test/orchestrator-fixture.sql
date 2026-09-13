@@ -17,5 +17,3 @@ insert into public.shot_bible_entries (org_id, shot_id, bible_entry_id) values
 insert into public.consent_releases (org_id, project_id, bible_entry_id, subject_name, rights_holder_name, permitted_lanes, distribution, state, signed_at, created_by)
 values ('00000000-0000-4000-8000-000000000001', '00000000-0000-4000-8000-000000000030', '50000000-0000-4000-8000-000000000001',
         'Ana Example', 'Ana Example', '{explore,control}', 'cohort', 'signed', now(), '10000000-0000-4000-8000-000000000002');
-create schema if not exists vault;
-create table if not exists vault.decrypted_secrets (id uuid primary key, decrypted_secret text);

@@ -112,7 +112,7 @@ All orchestrator secrets live in the Render env group `eduai` (project eduai →
 | `SENTRY_DSN` | Render | orchestrator |
 | `SENTRY_DSN_WEB` | Render env group (parked) → `wrangler secret put SENTRY_DSN` at P1-15 | web |
 | `JOB_KINDS` | Render, per worker | `generate` or `render` |
-| Org-supplied vendor keys | Supabase Vault only | orchestrator, via `org_credentials.secret_ref` |
+| Org-supplied vendor keys | Supabase Vault only, written by `public.add_org_credential` from Organisation → Keys (0119); revoked keys are scrubbed | orchestrator, via `org_credentials.secret_ref`; the vendor bills the school directly, tokens still meter usage |
 
 ## Phases
 
@@ -120,3 +120,12 @@ All orchestrator secrets live in the Render env group `eduai` (project eduai →
 2. Compare as the assessable artefact, stronger consent linkage, one controlled voice workflow.
 3. Timeline, export, release approvals, controlled publication.
 4. Registry expansion (self-hosted LTX), curriculum evidence, billing, org-supplied credentials.
+
+## Registry watch
+
+`.github/workflows/registry-watch.yml` runs `orchestrator/watch.py` every Monday: confirms each approved
+route's endpoint still exists at the vendor, then asks Claude with web search what changed in the market
+(prices, new video / audio / TTS models on fal and Replicate, disclosure news) against the registry, and
+files the report as a GitHub issue labelled `registry`. It never edits the registry; a person turns a
+proposal into CSV rows. Needs the repo secret `ANTHROPIC_API_KEY` for the market scan (endpoint checks run
+without it). Run on demand from the Actions tab.

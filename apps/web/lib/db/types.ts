@@ -3005,6 +3005,15 @@ export type Database = {
         Args: { p_token: string }
         Returns: Database["public"]["Enums"]["member_role"]
       }
+      add_org_credential: {
+        Args: {
+          p_label?: string
+          p_org: string
+          p_provider: string
+          p_secret: string
+        }
+        Returns: string
+      }
       bible_consent_state_for: {
         Args: { p_entry: string; p_lane: Database["public"]["Enums"]["lane"] }
         Returns: string
@@ -3054,6 +3063,7 @@ export type Database = {
         }[]
       }
       my_landing: { Args: never; Returns: string }
+      revoke_org_credential: { Args: { p_id: string }; Returns: boolean }
       set_project_budget_tokens: {
         Args: { p_project: string; p_tokens: number }
         Returns: number
