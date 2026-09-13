@@ -38,6 +38,13 @@ const REASON: Record<string, string> = {
 };
 const PROMPT_KEYS = ["prompt", "text"];
 
+// "LTX 2.5 fast" rather than "LTX" twice: family name + the version's own part of its slug.
+function routeLabel(o: Option): string {
+  const family = o.display_name.toLowerCase().replace(/\s+/g, "-") + "-";
+  const v = o.version_slug.startsWith(family) ? o.version_slug.slice(family.length) : o.version_slug;
+  return `${o.display_name} ${v.replace(/-/g, " ")}`;
+}
+
 function defaultsFor(schema: Schema, seed: Record<string, Json>): Record<string, Json> {
   const out: Record<string, Json> = {};
   for (const [k, p] of Object.entries(schema.properties ?? {})) {
@@ -190,7 +197,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
 
           <details className="relative">
             <summary className="pill flex cursor-pointer list-none items-center gap-1.5 bg-card text-xs">
-              <span className="font-semibold">{selected ? selected.display_name : "Route"}</span>
+              <span className="font-semibold">{selected ? routeLabel(selected) : "Route"}</span>
               {selected && <span className="text-muted">{selected.compute_provider} · {selected.integrity_rating} · {selected.resource_disclosure}</span>}
               <span className="opacity-60">▾</span>
             </summary>
@@ -200,7 +207,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
               {options.map((o) => { const est = estimates[o.profile_id]; return (
                 <button key={o.profile_id} type="button" disabled={!o.allowed} onClick={(e) => { setProfileId(o.profile_id); (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); }}
                         className={`flex w-full items-center justify-between rounded-[10px] px-2 py-1.5 text-left hover:bg-sand ${o.allowed ? "" : "opacity-45"} ${selected?.profile_id === o.profile_id ? "bg-sand" : ""}`}>
-                  <span><span className="font-semibold">{o.display_name}</span> <span className="text-xs text-muted">{o.compute_provider} · integrity {o.integrity_rating} · energy {o.resource_disclosure}</span>
+                  <span><span className="font-semibold">{routeLabel(o)}</span> <span className="text-xs text-muted">{o.compute_provider} · integrity {o.integrity_rating} · energy {o.resource_disclosure}</span>
                     {!o.allowed && <span className="block text-xs text-muted">{REASON[o.reason ?? ""] ?? o.reason}</span>}</span>
                   <span className={`mono ml-2 shrink-0 text-xs ${o.allowed ? "text-money" : "text-muted"}`}>{o.allowed ? (est != null ? est.toLocaleString() : "…") : "—"}</span>
                 </button>
