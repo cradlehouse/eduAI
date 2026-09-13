@@ -14,6 +14,7 @@ export function AppTree({ nav, scope }: { nav: Nav; scope: Scope }) {
       {nav.isAdmin && (
         <NavGroup title={nav.org?.name ?? "Organisation"}>
           <NavItem href="/org" exact icon="Building2">Overview</NavItem>
+          <NavItem href="/org/cohorts" icon="GraduationCap">Cohorts</NavItem>
           <NavItem href="/org/people" icon="Users">People</NavItem>
           <NavItem href="/org/keys" icon="KeyRound">Keys</NavItem>
         </NavGroup>
