@@ -64,8 +64,11 @@ class Db:
             await c.execute(sql, args)
 
     # ---- health ---------------------------------------------------------
-    async def ping(self) -> bool:
-        return (await self._one("select 1 as ok")) is not None
+    async def ping(self, timeout: float = 3.0) -> bool:
+        """Never let /health hang on a pool that cannot connect: bounded wait, then report."""
+        async with self.pool.connection(timeout=timeout) as c:
+            cur = await c.execute("select 1 as ok")
+            return (await cur.fetchone()) is not None
 
     async def queue_depth(self, kinds: list[str]) -> dict[str, int]:
         rows = await self._all(

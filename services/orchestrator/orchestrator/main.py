@@ -50,6 +50,7 @@ async def health():
             ok = await db.ping()
             depth = await db.queue_depth(settings.kinds)
         except Exception as e:  # noqa: BLE001
-            return {"ok": False, "db": f"{type(e).__name__}", "worker": settings.worker_name}
+            return {"ok": False, "db": f"{type(e).__name__}: {str(e)[:200]}", "kinds": settings.kinds, "worker": settings.worker_name,
+                    "dispatcher": bool(app.state.task and not app.state.task.done())}
     return {"ok": ok, "db": ok, "kinds": settings.kinds, "worker": settings.worker_name,
             "dispatcher": bool(app.state.task and not app.state.task.done()), "queue": depth}
