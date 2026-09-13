@@ -89,7 +89,15 @@ def extract_outputs(adapter: dict[str, Any], payload: Any) -> list[OutputFile]:
     return found
 
 
+EXT_TYPES = {"mp4": "video/mp4", "webm": "video/webm", "mov": "video/quicktime", "wav": "audio/wav", "mp3": "audio/mpeg",
+             "flac": "audio/flac", "png": "image/png", "jpg": "image/jpeg", "jpeg": "image/jpeg", "webp": "image/webp"}
+
+
 def _collect(node: Any, key: str, out: list[OutputFile]) -> None:
+    if isinstance(node, str) and node.startswith("http") and key:
+        ext = node.split("?")[0].rsplit(".", 1)[-1].lower()
+        out.append(OutputFile(url=node, content_type=EXT_TYPES.get(ext, "application/octet-stream"), key=key))
+        return
     if isinstance(node, dict):
         if isinstance(node.get("url"), str) and node["url"].startswith("http"):
             out.append(OutputFile(

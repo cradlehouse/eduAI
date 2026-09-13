@@ -38,7 +38,7 @@ insert into public.project_budgets (org_id, project_id, total_cents) values ('00
 insert into public.memberships (org_id, user_id, role) values ('00000000-0000-4000-8000-000000000002', '10000000-0000-4000-8000-000000000004', 'student');
 insert into public.project_members (org_id, project_id, user_id, roles) values ('00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000031', '10000000-0000-4000-8000-000000000004', '{director}');
 insert into public.org_model_profiles (org_id, deployment_profile_id, lanes, ends_on, review_by)
-select '00000000-0000-4000-8000-000000000002', id, '{explore}', '2026-12-31', '2026-12-01' from public.deployment_profiles where slug = 'ltx-2.5@fal';
+select '00000000-0000-4000-8000-000000000002', id, '{explore}', '2026-12-31', '2026-12-01' from public.deployment_profiles where slug = 'ltx-2.5-fast@fal';
 
 do $$
 begin
@@ -53,8 +53,8 @@ end $$;
 -- registry gate
 do $$
 declare r record; demo uuid := '00000000-0000-4000-8000-000000000001'; stu uuid := '10000000-0000-4000-8000-000000000002';
-  ltx uuid := (select id from public.deployment_profiles where slug = 'ltx-2.5@fal');
-  veo uuid := (select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal');
+  ltx uuid := (select id from public.deployment_profiles where slug = 'ltx-2.5-fast@fal');
+  veo uuid := (select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2');
   flux uuid := (select id from public.deployment_profiles where slug = 'flux-2-dev@fal');
 begin
   assert (select count(*) from public.deployment_profiles where approval_status = 'approved') = 3, 'three approved Phase 1 profiles';
@@ -116,21 +116,21 @@ select j.id, '00000000-0000-4000-8000-000000000030', '40000000-0000-4000-8000-00
 from (values ('20000000-0000-4000-8000-000000000001'::uuid, '{"prompt":"a"}'::jsonb),
              ('20000000-0000-4000-8000-000000000002', '{"prompt":"b"}'),
              ('20000000-0000-4000-8000-000000000003', '{"prompt":"c"}')) j(id, inputs)
-cross join (select id from public.deployment_profiles where slug = 'ltx-2.5@fal') dp;
+cross join (select id from public.deployment_profiles where slug = 'ltx-2.5-fast@fal') dp;
 update public.jobs set created_at = created_at - interval '1 minute'  where id = '20000000-0000-4000-8000-000000000001';
 update public.jobs set created_at = created_at - interval '30 seconds' where id = '20000000-0000-4000-8000-000000000002';
 insert into public.scenes (id, org_id, project_id, position, title) values ('30000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000031', 1, 'S');
 insert into public.shots (id, org_id, project_id, scene_id, position) values ('40000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000002', '00000000-0000-4000-8000-000000000031', '30000000-0000-4000-8000-000000000002', 1);
 insert into public.jobs (id, project_id, shot_id, deployment_profile_id, lane, requested_by, inputs)
 values ('20000000-0000-4000-8000-000000000004', '00000000-0000-4000-8000-000000000031', '40000000-0000-4000-8000-000000000002',
-        (select id from public.deployment_profiles where slug = 'ltx-2.5@fal'), 'explore', '10000000-0000-4000-8000-000000000004', '{"prompt":"d"}');
+        (select id from public.deployment_profiles where slug = 'ltx-2.5-fast@fal'), 'explore', '10000000-0000-4000-8000-000000000004', '{"prompt":"d"}');
 
 do $$
 declare j public.jobs; got uuid[] := '{}';
 begin
   assert (select org_id from public.jobs where id = '20000000-0000-4000-8000-000000000001') = '00000000-0000-4000-8000-000000000001', 'trigger filled org_id';
   assert (select provider from public.jobs where id = '20000000-0000-4000-8000-000000000001') = 'fal', 'trigger filled provider';
-  assert (select model_version_id from public.jobs where id = '20000000-0000-4000-8000-000000000001') = (select id from public.model_versions where slug = 'ltx-2.5'), 'trigger pinned model version';
+  assert (select model_version_id from public.jobs where id = '20000000-0000-4000-8000-000000000001') = (select id from public.model_versions where slug = 'ltx-2.5-fast'), 'trigger pinned model version';
   assert (select count(*) from public.job_events where event = 'queued') = 4, 'queued events logged';
   for i in 1..5 loop
     j := eduai.claim_job('{generate}', 'w' || i);
@@ -148,23 +148,23 @@ end $$;
 -- registry immutability once used
 do $$
 begin
-  update public.model_versions set approved_until = '2027-06-30' where slug = 'ltx-2.5';                     -- operational: fine
+  update public.model_versions set approved_until = '2027-06-30' where slug = 'ltx-2.5-fast';                     -- operational: fine
   begin
-    update public.model_versions set input_schema = '{"type":"object","properties":{}}' where slug = 'ltx-2.5';
+    update public.model_versions set input_schema = '{"type":"object","properties":{}}' where slug = 'ltx-2.5-fast';
     raise exception 'schema change on a used version should fail';
   exception when others then assert sqlerrm like 'registry_record_in_use:%', sqlerrm;
   end;
   begin
-    update public.deployment_profiles set endpoint = 'fal-ai/other' where slug = 'ltx-2.5@fal';
+    update public.deployment_profiles set endpoint = 'fal-ai/other' where slug = 'ltx-2.5-fast@fal';
     raise exception 'endpoint change on a used profile should fail';
   exception when others then assert sqlerrm like 'registry_record_in_use:%', sqlerrm;
   end;
   update public.deployment_profiles set endpoint = 'fal-ai/other' where slug = 'kling-3@fal';                 -- unused: fine
   -- resource assessments are operational: a measured figure may replace an estimate on a used profile
-  update public.deployment_profiles set resource_model = '{"basis":"measured","gpu_watts":300}' where slug = 'ltx-2.5@fal';
-  update public.model_versions set resource_disclosure = 'A' where slug = 'ltx-2.5';
-  assert (select resource_disclosure from public.model_versions where slug = 'ltx-2.5') = 'A', 'disclosure tier updatable on used version';
-  update public.model_versions set resource_disclosure = 'B' where slug = 'ltx-2.5';
+  update public.deployment_profiles set resource_model = '{"basis":"measured","gpu_watts":300}' where slug = 'ltx-2.5-fast@fal';
+  update public.model_versions set resource_disclosure = 'A' where slug = 'ltx-2.5-fast';
+  assert (select resource_disclosure from public.model_versions where slug = 'ltx-2.5-fast') = 'A', 'disclosure tier updatable on used version';
+  update public.model_versions set resource_disclosure = 'B' where slug = 'ltx-2.5-fast';
   raise notice 'ok  registry immutability';
 end $$;
 
@@ -192,7 +192,7 @@ begin
   assert not eduai.release_job('20000000-0000-4000-8000-000000000001'), 'cannot release a settled job';
 
   select * into rc from public.job_receipts where job_id = '20000000-0000-4000-8000-000000000001';
-  assert rc.model_version_id = (select id from public.model_versions where slug = 'ltx-2.5'), 'receipt pins version';
+  assert rc.model_version_id = (select id from public.model_versions where slug = 'ltx-2.5-fast'), 'receipt pins version';
   assert rc.lane = 'explore' and rc.output_hashes = '{abc}' and rc.provenance ->> 'c2pa' = 'm1', 'receipt carries hashes + provenance';
   assert jsonb_array_length(rc.consent_basis) = 1 and rc.consent_basis -> 0 ->> 'state' = 'signed', 'receipt froze consent basis';
   assert rc.resource_estimate ->> 'disclosure_tier' = 'B' and rc.resource_estimate ->> 'basis' = 'undisclosed',
@@ -268,12 +268,12 @@ begin
   assert (select count(*) from public.job_receipts) = 0, 'outsider sees no demo receipts';
   assert (select count(*) from public.job_events where org_id = '00000000-0000-4000-8000-000000000001') = 0, 'outsider sees no demo events';
   assert (select count(*) from public.ledger) = 0, 'outsider sees no demo ledger';
-  assert (select count(*) from public.deployment_profiles) = 7, 'registry readable';
+  assert (select count(*) from public.deployment_profiles) = 10, 'registry readable';
   assert (select count(*) from public.org_model_profiles) = 1, 'sees own org allowlist only';
   assert (select count(*) from public.consent_releases) = 0, 'sees no demo releases';
   begin
     insert into public.jobs (project_id, shot_id, deployment_profile_id, lane, requested_by, inputs)
-    values ('00000000-0000-4000-8000-000000000030', '40000000-0000-4000-8000-000000000001', (select id from public.deployment_profiles where slug = 'ltx-2.5@fal'), 'explore', '10000000-0000-4000-8000-000000000004', '{}');
+    values ('00000000-0000-4000-8000-000000000030', '40000000-0000-4000-8000-000000000001', (select id from public.deployment_profiles where slug = 'ltx-2.5-fast@fal'), 'explore', '10000000-0000-4000-8000-000000000004', '{}');
     raise exception 'outsider job insert should be blocked';
   exception when insufficient_privilege then null;
   end;
@@ -302,25 +302,25 @@ begin
   assert (select actual_tokens from public.job_tokens where job_id = '20000000-0000-4000-8000-000000000001') = 12000, 'job tokens ($12 x 1000)';
   assert (select layer from public.job_tokens where job_id = '20000000-0000-4000-8000-000000000001') = 'merged', 'job layer default merged';
   insert into public.jobs (project_id, shot_id, deployment_profile_id, lane, layer, inputs)
-  values ('00000000-0000-4000-8000-000000000030', '40000000-0000-4000-8000-000000000001', (select id from public.deployment_profiles where slug = 'stable-audio-3@fal'), 'explore', 'sfx', '{"prompt":"footsteps"}');
+  values ('00000000-0000-4000-8000-000000000030', '40000000-0000-4000-8000-000000000001', (select id from public.deployment_profiles where slug = 'stable-audio-2.5@fal'), 'explore', 'sfx', '{"prompt":"footsteps"}');
   assert (select count(*) from public.jobs where layer = 'sfx') = 1, 'student queued an sfx layer job';
   assert (select count(*) from public.job_receipts) = 2, 'student sees project receipts';
   assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'explore') = 'signed', 'lane-aware consent rpc (explore)';
   assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'finish') = 'lane_not_permitted', 'lane-aware consent rpc (finish)';
   assert (select ready from public.shot_ready_for('40000000-0000-4000-8000-000000000001', 'explore')), 'shot_ready_for explore';
   -- estimates: ltx 4c/s × 5s = 20c = 200 tokens; veo 15c/s × 8s = 120c = 1200 tokens; sfx per_call 5c = 50
-  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'ltx-2.5@fal'), '{"duration_s":5}') = 200, 'ltx estimate';
-  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal'), '{"duration_s":8}') = 1200, 'veo estimate';
-  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'stable-audio-3@fal'), '{}') = 50, 'sfx estimate';
+  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'ltx-2.5-fast@fal'), '{"duration_s":5}') = 200, 'ltx estimate';
+  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2'), '{"duration_s":8}') = 1200, 'veo estimate';
+  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'stable-audio-2.5@fal'), '{}') = 50, 'sfx estimate';
   assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore')) = 7, 'model_options lists every profile';
   assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where allowed) = 2, 'explore: ltx + sfx allowed';
-  assert (select reason from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where profile_slug = 'veo-3.1-lite@fal') = 'lane_not_supported', 'veo not an explore route';
+  assert (select reason from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where profile_slug = 'veo-3.1-lite@fal-r2') = 'lane_not_supported', 'veo not an explore route';
   assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000031', 'explore')) = 0, 'no options for a project I cannot access';
   assert (select missing from public.shot_ready_for('40000000-0000-4000-8000-000000000001', 'finish')) = '{consent}', 'shot_ready_for finish blocked by consent';
   assert (select count(*) from public.invites) = 0, 'student cannot see invites';
   assert (select count(*) from public.org_credentials) = 0, 'student cannot see credentials';
   insert into public.jobs (project_id, shot_id, deployment_profile_id, lane, inputs)
-  values ('00000000-0000-4000-8000-000000000030', '40000000-0000-4000-8000-000000000001', (select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal'), 'finish', '{"prompt":"x"}')
+  values ('00000000-0000-4000-8000-000000000030', '40000000-0000-4000-8000-000000000001', (select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2'), 'finish', '{"prompt":"x"}')
   returning id into v_id;
   assert (select org_id from public.jobs where id = v_id) = '00000000-0000-4000-8000-000000000001', 'student job got org from trigger';
   update public.jobs set status = 'cancelled' where id = v_id;

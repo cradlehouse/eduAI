@@ -42,3 +42,8 @@ def test_kind_and_ext():
     assert asset_kind_for("video/mp4") == "video" and asset_kind_for("audio/wav") == "audio" and asset_kind_for("text/plain") == "document"
     assert ext_for("video/mp4", "https://x/y/abc.MP4?sig=1") == "mp4"
     assert ext_for("audio/mpeg", "https://x/noext") == "mp3"
+
+
+def test_extract_outputs_plain_url_string():
+    files = extract_outputs({"outputs": ["audio"]}, {"audio": "https://f/x.wav", "seed": 1})
+    assert len(files) == 1 and files[0].content_type == "audio/wav" and files[0].key == "audio"

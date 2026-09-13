@@ -59,9 +59,9 @@ three Phase 1 routes are approved and allowlisted (time-bounded to 31 Dec 2026, 
 
 | profile | lanes | role |
 |---|---|---|
-| `veo-3.1-lite@fal` | finish | the managed visual model; instructor-gated for release |
-| `ltx-2.5@fal` | explore, control | open-weight experimentation route (managed API now, self-hosted profile is Phase 4) |
-| `stable-audio-3@fal` | explore | SFX route |
+| `veo-3.1-lite@fal-r2` | finish | the managed visual model; instructor-gated for release |
+| `ltx-2.5-fast@fal` | explore, control | open-weight experimentation route (managed API now, self-hosted profile is Phase 4) |
+| `stable-audio-2.5@fal` | explore | SFX route |
 
 `kling-3@fal`, `flux-2-dev@fal` (non-commercial licence) and `chatterbox-1@replicate` (voice, Phase 2)
 are `draft`: visible in the registry, never selectable.

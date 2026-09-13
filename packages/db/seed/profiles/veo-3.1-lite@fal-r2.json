@@ -1,0 +1,36 @@
+{
+  "cost_model": {
+    "kind": "per_second",
+    "cents_per_second": 15,
+    "duration_field": "duration_s",
+    "verified": false
+  },
+  "retention": {
+    "vendor_retains_inputs": true,
+    "vendor_retention_days": null,
+    "platform_input_days": 90,
+    "platform_output_days": 365
+  },
+  "energy_profile": {
+    "grid": "unknown",
+    "region": "us",
+    "claim": "fal.ai does not publish data-centre energy sourcing.",
+    "verifiable": false,
+    "source": ""
+  },
+  "resource_model": {
+    "basis": "undisclosed"
+  },
+  "adapter": {
+    "input_map": {
+      "duration_s": {
+        "to": "duration",
+        "suffix": "s"
+      }
+    },
+    "outputs": [
+      "video"
+    ],
+    "verified": true
+  }
+}

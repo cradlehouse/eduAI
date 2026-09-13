@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       assets: {
@@ -625,6 +600,7 @@ export type Database = {
       }
       deployment_profiles: {
         Row: {
+          adapter: Json
           adapter_tested_at: string | null
           approval_owner: string | null
           approval_status: Database["public"]["Enums"]["approval_status"]
@@ -655,6 +631,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          adapter?: Json
           adapter_tested_at?: string | null
           approval_owner?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
@@ -685,6 +662,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          adapter?: Json
           adapter_tested_at?: string | null
           approval_owner?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
@@ -2691,6 +2669,7 @@ export type Database = {
           actual_tokens: number | null
           cost_unknown: boolean | null
           created_at: string | null
+          error: string | null
           estimated_tokens: number | null
           job_id: string | null
           lane: Database["public"]["Enums"]["lane"] | null
@@ -2982,6 +2961,17 @@ export type Database = {
         Args: { p_project: string; p_roles: string[] }
         Returns: string
       }
+      webhook_ingest: {
+        Args: {
+          p_body: string
+          p_dedupe_key: string
+          p_headers: Json
+          p_provider: string
+          p_request_id: string
+          p_signature_ok: boolean
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       approval_status: "draft" | "approved" | "suspended" | "retired"
@@ -3203,9 +3193,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       approval_status: ["draft", "approved", "suspended", "retired"],

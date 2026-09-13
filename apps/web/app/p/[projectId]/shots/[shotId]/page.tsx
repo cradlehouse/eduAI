@@ -18,7 +18,7 @@ export default async function ShotPage({ params, searchParams }: { params: Promi
     supabase.from("shot_bible_entries").select("bible_entry_id").eq("shot_id", shotId),
     supabase.from("bible_entry_status").select("id, name, kind, requires_consent, consent_state").eq("project_id", projectId).order("kind").order("name"),
     supabase.from("takes").select("id, layer, lifecycle").eq("shot_id", shotId).eq("lifecycle", "live"),
-    supabase.from("job_tokens").select("job_id, lane, layer, status, estimated_tokens, actual_tokens, created_at").eq("shot_id", shotId).order("created_at", { ascending: false }).limit(8),
+    supabase.from("job_tokens").select("job_id, lane, layer, status, estimated_tokens, actual_tokens, created_at, error").eq("shot_id", shotId).order("created_at", { ascending: false }).limit(8),
     supabase.from("assets").select("id, kind, provenance").eq("project_id", projectId).in("kind", ["image", "audio"]).order("created_at", { ascending: false }).limit(40),
   ]);
   if (!shot) notFound();
@@ -112,11 +112,12 @@ export default async function ShotPage({ params, searchParams }: { params: Promi
                 <li key={j.job_id} className="card px-3 py-2">
                   <div className="flex justify-between"><span className="font-semibold">{j.layer} · {j.lane}</span><span className="mono text-xs">{(j.actual_tokens ?? j.estimated_tokens ?? 0).toLocaleString()} tk</span></div>
                   <div className="text-xs text-muted">{j.status}{j.created_at ? ` · ${new Date(j.created_at).toLocaleTimeString()}` : ""}</div>
+                  {j.error && <div className="mt-1 text-xs text-danger">{j.error}</div>}
                 </li>
               ))}
             </ul>
           )}
-          <p className="mt-3 text-xs text-muted">Jobs run when the orchestrator ships (P1-10). Until then they queue.</p>
+          <p className="mt-3 text-xs text-muted">Tokens are reserved when a job starts and returned if it fails. Finished takes land in the contact sheet.</p>
         </aside>
       </div>
     </div>

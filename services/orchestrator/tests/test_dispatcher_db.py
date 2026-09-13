@@ -43,7 +43,7 @@ class FakeFal:
         return b"\x00\x00\x00\x18ftypmp42" + b"x" * 100
 
 
-async def insert_job(db: Db, inputs: dict, slug="ltx-2.5@fal", lane="explore") -> str:
+async def insert_job(db: Db, inputs: dict, slug="ltx-2.5-fast@fal", lane="explore") -> str:
     row = await db._one(
         "insert into public.jobs (project_id, shot_id, deployment_profile_id, lane, requested_by, inputs) "
         "select %s, %s, id, %s::public.lane, %s, %s::jsonb from public.deployment_profiles where slug = %s returning id",
@@ -60,13 +60,13 @@ async def test_happy_path_settles_with_take_receipt_and_ledger():
     try:
         fake = FakeFal()
         d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg())
-        jid = await insert_job(db, {"prompt": "a quiet warehouse at dusk", "duration_s": 5, "camera_motion": "pan"})
+        jid = await insert_job(db, {"prompt": "a quiet warehouse at dusk", "duration_s": 6, "camera_motion": "static"})
         await d.tick()
         job = await db.job(jid)
         assert job["status"] == "running", job["error"]
-        assert job["estimated_cents"] == 20 and job["provider_request_id"].startswith("req-")
-        assert fake.submitted[0] == "fal-ai/ltx-2.5/text-to-video" and fake.submitted[2] == "platform-key"
-        assert "camera_motion" not in fake.submitted[1] and fake.submitted[1]["duration"] == 5  # adapter map applied
+        assert job["estimated_cents"] == 24 and job["provider_request_id"].startswith("req-")
+        assert fake.submitted[0] == "lightricks/ltx-2.5/text-to-video/fast" and fake.submitted[2] == "platform-key"
+        assert "duration_s" not in fake.submitted[1] and fake.submitted[1]["duration"] == 6  # adapter map applied
         await d.tick()
         job = await db.job(jid)
         assert job["status"] == "succeeded" and job["cost_unknown"] is True and job["settled_at"] is not None
@@ -78,7 +78,7 @@ async def test_happy_path_settles_with_take_receipt_and_ledger():
         assert rec["resource_estimate"] == {"disclosure_tier": "B"}  # fal is undisclosed ⇒ tier only, no number
         assert rec["provenance"]["request_id"] == job["provider_request_id"]
         led = await db._all("select kind::text as kind, cents from public.ledger where job_id = %s order by created_at", jid)
-        assert [(r["kind"], r["cents"]) for r in led] == [("reserve", 20), ("settle", 0)]
+        assert [(r["kind"], r["cents"]) for r in led] == [("reserve", 24), ("settle", 0)]
         ev = [r["event"] for r in await db._all("select event::text as event from public.job_events where job_id = %s order by at, id", jid)]
         assert ev == ["queued", "claimed", "submitted", "accepted", "running", "output_received", "stored", "policy_approved", "settled", "unknown_cost"]
         # replay: a second completion must not double-charge or duplicate the take
@@ -104,12 +104,12 @@ async def test_vendor_submit_failure_releases_reservation():
     db = await Db.connect(URL)
     try:
         d = Dispatcher(db, MemoryStorage(), lambda name: FakeFal(fail_submit=True), cfg())
-        jid = await insert_job(db, {"prompt": "x", "duration_s": 5})
+        jid = await insert_job(db, {"prompt": "x", "duration_s": 6})
         await d.tick()
         job = await db.job(jid)
         assert job["status"] == "failed" and "boom" in job["error"]
         led = await db._all("select kind::text as kind, cents from public.ledger where job_id = %s order by created_at", jid)
-        assert [(r["kind"], r["cents"]) for r in led] == [("reserve", 20), ("release", -20)]
+        assert [(r["kind"], r["cents"]) for r in led] == [("reserve", 24), ("release", -24)]
     finally:
         await db.close()
 
@@ -120,7 +120,7 @@ async def test_timeout_releases():
         fake = FakeFal()
         fake.status = lambda sub, key: _queued()  # type: ignore[method-assign]
         d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg())
-        jid = await insert_job(db, {"prompt": "x", "duration_s": 5})
+        jid = await insert_job(db, {"prompt": "x", "duration_s": 6})
         await d.tick()
         await db._exec("update public.jobs set submitted_at = now() - interval '2 hours' where id = %s", jid)
         await d.tick()
@@ -138,7 +138,7 @@ async def test_inbox_delivery_completes_job_and_is_deduped():
     try:
         fake = FakeFal()
         d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg(), webhook_url="https://inbox.example/fal")
-        jid = await insert_job(db, {"prompt": "x", "duration_s": 5})
+        jid = await insert_job(db, {"prompt": "x", "duration_s": 6})
         await d.submit_queued()
         job = await db.job(jid)
         rid = job["provider_request_id"]
