@@ -24,7 +24,7 @@ export default async function CohortLayout({ children, params }: { children: Rea
 
   return (
     <Shell nav={nav}
-      crumbs={[{ label: nav.org?.name ?? "eduai", href: "/home" }, { label: cohort.name, href: base, siblings }]}
+      crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home" }, { label: cohort.name, href: base, siblings }]}
       base={base} sections={SECTIONS} sidebarTitle={cohort.name}
       budget={personal ? { spent: personal.spent_tokens ?? 0, total: personal.total_tokens ?? 0, scope: "personal" } : null}
       sidebar={<>

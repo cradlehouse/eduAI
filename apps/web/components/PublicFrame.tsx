@@ -6,7 +6,7 @@ export function PublicFrame({ current, children }: { current: "mission" | "how";
   return (
     <div className="min-h-screen">
       <header className="flex items-center gap-3 border-b border-line bg-card px-5 py-2">
-        <Link href="/mission" className="display text-base">eduai</Link>
+        <Link href="/mission" className="display text-base">Imaje</Link>
         <nav className="ml-2 flex gap-1">{tab("/mission", "Mission", current === "mission")}{tab("/how-it-works", "How it works", current === "how")}</nav>
         <Link href="/login" className="btn ml-auto">Sign in</Link>
       </header>

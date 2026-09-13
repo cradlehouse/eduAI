@@ -1,6 +1,6 @@
 import { PublicFrame } from "@/components/PublicFrame";
 
-export const metadata = { title: "eduai · How it works", description: "Scenes, cuts, layers, lanes, routes and tokens: how a cohort makes a film in eduai." };
+export const metadata = { title: "Imaje · How it works", description: "Scenes, cuts, layers, lanes, routes and tokens: how a cohort makes a film in Imaje." };
 
 const LAYERS = [
   ["Background", "The location plate. Generated once, reused across every cut in the scene, so the room stays the same room."],

@@ -1,4 +1,4 @@
-# eduai
+# Imaje (repo: eduai)
 
 Working name for the AI film platform. Trimmed from `ai-film-platform-code-handoff.md`; the spec
 (`ai-film-platform-build-spec.md`) is the *why*, the handoff is the *how*, this file is *what exists*.

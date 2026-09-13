@@ -48,15 +48,15 @@ enable_confirmations = false
 # The link starts from {{ .SiteURL }}; the original emailRedirectTo travels as redirect_to and the
 # callback lifts ?next= out of it (same-origin only).
 [auth.email.template.magic_link]
-subject = "Sign in to eduai"
+subject = "Sign in to Imaje"
 content_path = "./supabase/templates/magic_link.html"
 
 [auth.email.template.confirmation]
-subject = "Confirm your email for eduai"
+subject = "Confirm your email for Imaje"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
-subject = "Reset your eduai password"
+subject = "Reset your Imaje password"
 content_path = "./supabase/templates/recovery.html"
 
 # Google sign-in: create an OAuth client (Web) in Google Cloud with redirect URI

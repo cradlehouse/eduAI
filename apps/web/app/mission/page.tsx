@@ -1,6 +1,6 @@
 import { PublicFrame } from "@/components/PublicFrame";
 
-export const metadata = { title: "eduai · Mission", description: "Teach young people to make films with AI: creatively, with integrity, and without pretending the resource cost is zero." };
+export const metadata = { title: "Imaje · Mission", description: "Teach young people to make films with AI: creatively, with integrity, and without pretending the resource cost is zero." };
 
 export default function Mission() {
   return (
@@ -10,7 +10,7 @@ export default function Mission() {
       <p className="mb-10 max-w-[62ch] text-lg leading-relaxed">
         The tools are here. Fourteen-year-olds can already generate a shot in a minute. What they can&apos;t get anywhere is a place that teaches
         the craft around the button: what a cut is for, whose face is in it, what it cost, and what to do when the machine gives you
-        something you didn&apos;t ask for. eduai is that place. A studio built for cohorts, where the film comes first and the model is a crew member.
+        something you didn&apos;t ask for. Imaje is that place. A studio built for cohorts, where the film comes first and the model is a crew member.
       </p>
 
       <h2 className="display mb-3 text-2xl">Three promises</h2>

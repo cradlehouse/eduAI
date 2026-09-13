@@ -7,8 +7,8 @@ const body = Source_Sans_3({ subsets: ["latin"], weight: ["400", "500", "600"], 
 const mono = JetBrains_Mono({ subsets: ["latin"], weight: ["500"], variable: "--font-mono" });
 
 export const metadata: Metadata = {
-  title: "eduai",
-  description: "A safe AI shot-generation studio for film cohorts.",
+  title: "Imaje",
+  description: "Imaje: a studio where young filmmakers make films with AI, with integrity and a real resource footprint.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

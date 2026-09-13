@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
             await app.state.db.close()
 
 
-app = FastAPI(title="eduai orchestrator", lifespan=lifespan, docs_url=None, redoc_url=None)
+app = FastAPI(title="Imaje orchestrator", lifespan=lifespan, docs_url=None, redoc_url=None)
 
 
 @app.get("/health")

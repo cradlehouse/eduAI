@@ -18,7 +18,7 @@ export function Shell({ nav, crumbs, base, sections, sidebarTitle, sidebar, budg
     <div className="flex min-h-screen flex-col">
       <SessionGuard userId={nav.userId} />
       <header className="flex items-center gap-4 border-b border-line bg-card px-4 py-2">
-        <Link href="/" className="display text-base">eduai</Link>
+        <Link href="/" className="display text-base">Imaje</Link>
         <Crumb segs={crumbs} base={base} sections={sections} />
         <details className="relative ml-auto">
           <summary className="display flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full bg-ink text-xs text-paper">{(name[0] ?? "?").toUpperCase()}</summary>

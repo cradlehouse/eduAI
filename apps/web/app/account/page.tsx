@@ -19,7 +19,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const hasPassword = providers.includes("email") && Boolean(user?.user_metadata?.has_password);
 
   return (
-    <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "eduai", href: "/home" }, { label: "Account" }]} sidebarTitle="Account"
+    <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home" }, { label: "Account" }]} sidebarTitle="Account"
       sidebar={<><NavItem href="/account" exact icon="UserRound">Account</NavItem><NavItem href="/home" icon="Home">Home</NavItem></>}>
       <div className="max-w-md">
         <h1 className="display mb-1 text-2xl">Account</h1>
