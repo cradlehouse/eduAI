@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Database, Json } from "@/lib/db/types";
 import { generate } from "./generate";
-import { killTake, restoreTake, selectTake, unselectTake } from "./actions";
+import { setChosenTake, setTakeLifecycle } from "./actions";
 
 type Lane = "explore" | "control" | "finish";
 type Layer = Database["public"]["Enums"]["layer"];
@@ -71,10 +71,10 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   promptSeed: string; dialogueSeed: string;
   assets: { id: string; kind: string; label: string }[];
 }) {
-  const live = useMemo(() => takes.filter((t) => t.lifecycle === "live"), [takes]);
-  const counts = useMemo(() => { const c: Record<string, number> = {}; for (const t of live) c[t.layer] = (c[t.layer] ?? 0) + 1; return c; }, [live]);
-  const hasPlate = !!shot.plate_take_id || (counts.background ?? 0) > 0;
-  const [layer, setLayer] = useState<Layer>(hasPlate ? ((counts.merged ?? 0) > 0 ? "merged" : "character") : "background");
+  const countOf = (rows: TakeRow[]) => { const c: Record<string, number> = {}; for (const t of rows) c[t.layer] = (c[t.layer] ?? 0) + 1; return c; };
+  const serverCounts = countOf(takes.filter((t) => t.lifecycle === "live"));
+  const hasPlate = !!shot.plate_take_id || (serverCounts.background ?? 0) > 0;
+  const [layer, setLayer] = useState<Layer>(hasPlate ? ((serverCounts.merged ?? 0) > 0 ? "merged" : "character") : "background");
   const [lane, setLane] = useState<Lane>("explore");
   const [profileId, setProfileId] = useState<string | null>(null);
   const [inputs, setInputs] = useState<Record<string, Json>>({});
@@ -82,7 +82,30 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   const [msg, setMsg] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [focus, setFocus] = useState<string | null>(null);
   const [pending, start] = useTransition();
+  // Bin state is local and optimistic: a tick or a kill changes this view immediately and the server
+  // catches up; nothing reloads, nothing jumps. Server truth arrives on the next render of the page.
+  const [chosen, setChosen] = useState<{ background: string | null; merged: string | null }>({ background: shot.plate_take_id, merged: shot.selected_take_id });
+  const [lifecycle, setLifecycle] = useState<Record<string, string>>(() => Object.fromEntries(takes.map((t) => [t.id, t.lifecycle])));
+  const [binMsg, setBinMsg] = useState<string | null>(null);
+  useEffect(() => { setChosen({ background: shot.plate_take_id, merged: shot.selected_take_id }); }, [shot.plate_take_id, shot.selected_take_id]);
+  useEffect(() => { setLifecycle(Object.fromEntries(takes.map((t) => [t.id, t.lifecycle]))); }, [takes]);
 
+  function toggleChoose(t: TakeRow) {
+    if (layer !== "background" && layer !== "merged") return;
+    const key = layer; const next = chosen[key] === t.id ? null : t.id;
+    setChosen((c) => ({ ...c, [key]: next })); setBinMsg(null);
+    start(async () => { const r = await setChosenTake(projectId, shot.id, layer, next); if ("error" in r) { setBinMsg(r.error); setChosen((c) => ({ ...c, [key]: chosen[key] })); } });
+  }
+  function setLife(t: TakeRow, life: "live" | "killed") {
+    if (life === "killed" && !confirm("Kill this take? It leaves the bin but is never deleted; you can restore it from the killed shelf.")) return;
+    const prev = lifecycle[t.id];
+    setLifecycle((m) => ({ ...m, [t.id]: life })); setBinMsg(null);
+    if (life === "killed" && focus === t.id) setFocus(null);
+    start(async () => { const r = await setTakeLifecycle(projectId, t.id, life); if ("error" in r) { setBinMsg(r.error); setLifecycle((m) => ({ ...m, [t.id]: prev })); } });
+  }
+
+  const live = useMemo(() => takes.filter((t) => (lifecycle[t.id] ?? t.lifecycle) === "live"), [takes, lifecycle]);
+  const counts = countOf(live);
   const layerDef = LAYERS.find((l) => l.id === layer)!;
   const options = useMemo(() => optionsByLane[lane].filter((o) => layerDef.modalities.includes(o.modality)), [optionsByLane, lane, layerDef]);
   const selected = options.find((o) => o.profile_id === profileId) ?? options.find((o) => o.allowed) ?? null;
@@ -129,8 +152,8 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
 
   // ---- stage: the takes of the current layer, chosen one large
   const layerTakes = live.filter((t) => t.layer === layer);
-  const killed = takes.filter((t) => t.layer === layer && t.lifecycle === "killed");
-  const chosenId = layer === "background" ? shot.plate_take_id : layer === "merged" ? shot.selected_take_id : null;
+  const killed = takes.filter((t) => t.layer === layer && (lifecycle[t.id] ?? t.lifecycle) === "killed");
+  const chosenId = layer === "background" ? chosen.background : layer === "merged" ? chosen.merged : null;
   const main = layerTakes.find((t) => t.id === focus) ?? layerTakes.find((t) => t.id === chosenId) ?? layerTakes[0] ?? null;
   const canChoose = layer === "background" || layer === "merged";
 
@@ -157,11 +180,8 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
                   <div key={t.id} className={`group relative shrink-0 overflow-hidden rounded-[8px] bg-ink ring-2 ${isMain ? "ring-ink" : "ring-transparent"}`}>
                     <button type="button" onClick={() => setFocus(t.id)} className="block h-[68px] w-full" title={new Date(t.created_at).toLocaleString()}><Media take={t} /></button>
                     {canChoose && (
-                      <form action={isChosen ? unselectTake : selectTake} className="absolute bottom-1 right-1">
-                        <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={t.id} /><input type="hidden" name="layer" value={layer} />
-                        <button type="submit" aria-label={isChosen ? "Unchoose" : "Choose this take"} title={isChosen ? "Chosen · click to unchoose" : (layer === "background" ? "Use as plate" : "Choose this take")}
-                                className={`grid h-6 w-6 place-items-center rounded-full text-[13px] font-bold ${isChosen ? "bg-money text-ink" : "bg-black/55 text-paper opacity-0 hover:bg-money hover:text-ink group-hover:opacity-100"}`}>✓</button>
-                      </form>
+                      <button type="button" onClick={() => toggleChoose(t)} aria-pressed={isChosen} aria-label={isChosen ? "Chosen · click to unchoose" : "Choose this take"} title={isChosen ? "Chosen · click to unchoose" : (layer === "background" ? "Use as plate" : "Choose this take")}
+                              className={`absolute bottom-1 right-1 grid h-6 w-6 place-items-center rounded-full text-[13px] font-bold ${isChosen ? "bg-money text-ink" : "bg-black/55 text-paper opacity-0 hover:bg-money hover:text-ink group-hover:opacity-100"}`}>✓</button>
                     )}
                   </div>
                 );
@@ -176,10 +196,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
               </div>
             )}
             {main && (
-              <form action={killTake} className="absolute bottom-3 right-3" onSubmit={(e) => { if (!confirm("Kill this take? It leaves the bin but is never deleted; you can restore it from the killed shelf.")) e.preventDefault(); }}>
-                <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={main.id} />
-                <button type="submit" className="rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] text-paper hover:bg-danger">Kill take</button>
-              </form>
+              <button type="button" onClick={() => setLife(main, "killed")} className="absolute bottom-3 right-3 rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] text-paper hover:bg-danger">Kill take</button>
             )}
             {main && (
               <div className="absolute left-3 top-3 flex gap-1.5">
@@ -191,6 +208,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
         </div>
       </div>
 
+      {binMsg && <p className="text-xs text-danger">{binMsg}</p>}
       {killed.length > 0 && (
         <details className="text-xs text-muted">
           <summary className="cursor-pointer select-none">Killed takes on this layer ({killed.length}) · nothing is ever deleted</summary>
@@ -198,8 +216,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
             {killed.map((t) => (
               <div key={t.id} className="flex items-center gap-2 rounded-[10px] border border-line bg-card p-1.5">
                 <div className="h-12 w-20 overflow-hidden rounded-[6px] bg-ink opacity-60"><Media take={t} /></div>
-                <form action={restoreTake}><input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={t.id} />
-                  <button className="btn text-xs">Restore</button></form>
+                <button type="button" onClick={() => setLife(t, "live")} className="btn text-xs">Restore</button>
               </div>
             ))}
           </div>

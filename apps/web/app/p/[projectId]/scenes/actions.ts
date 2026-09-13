@@ -185,3 +185,24 @@ export async function unselectTake(formData: FormData) {
   revalidatePath(`/p/${projectId}/scenes`);
   goCut(projectId, shotId, { ok: layer === "background" ? "Plate unset." : "Take unchosen." });
 }
+
+// In-place versions for the bin: no redirect, the caller keeps its scroll, focus and layer.
+export async function setChosenTake(projectId: string, shotId: string, layer: string, takeId: string | null): Promise<{ ok: true } | { error: string }> {
+  const supabase = await createClient();
+  const patch = layer === "background" ? { plate_take_id: takeId } : layer === "merged" ? { selected_take_id: takeId } : null;
+  if (!patch) return { error: "Only background plates and merged takes are chosen per cut." };
+  const { data, error } = await supabase.from("shots").update(patch).eq("id", shotId).select("id");
+  if (error || !data?.length) return { error: error?.message ?? "Nothing changed." };
+  revalidatePath(`/p/${projectId}/scenes`);
+  return { ok: true };
+}
+
+export async function setTakeLifecycle(projectId: string, takeId: string, lifecycle: "live" | "killed"): Promise<{ ok: true } | { error: string }> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const patch = lifecycle === "killed" ? { lifecycle, killed_at: new Date().toISOString(), killed_by: user?.id ?? null } : { lifecycle, killed_at: null, killed_by: null };
+  const { data, error } = await supabase.from("takes").update(patch).eq("id", takeId).select("id");
+  if (error || !data?.length) return { error: error?.message ?? "Nothing changed." };
+  revalidatePath(`/p/${projectId}/scenes`);
+  return { ok: true };
+}
