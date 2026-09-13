@@ -6,7 +6,7 @@ import { Shell } from "@/components/Shell";
 import { NavGroup, NavItem, NavSoon } from "@/components/NavItem";
 import { SidebarNote } from "@/components/Sidebar";
 
-const SECTIONS = { "": "Brief", brief: "Brief", bible: "Bible", scenes: "Storyboard", shoot: "Shoot", shots: "Shoot", members: "Members" };
+const SECTIONS = { "": "Brief", brief: "Brief", bible: "Bible", scenes: "Scenes", shoot: "Shoot", shots: "Shoot", members: "Members" };
 
 export default async function ProjectLayout({ children, params }: { children: React.ReactNode; params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -34,7 +34,7 @@ export default async function ProjectLayout({ children, params }: { children: Re
         <NavGroup title="Pre-production">
           <NavItem href={`${base}/brief`} icon="FileText">Brief</NavItem>
           <NavItem href={`${base}/bible`} icon="BookOpen">Bible</NavItem>
-          <NavItem href={`${base}/scenes`} icon="LayoutGrid">Storyboard</NavItem>
+          <NavItem href={`${base}/scenes`} icon="LayoutGrid">Scenes</NavItem>
         </NavGroup>
         <NavGroup title="Production">
           <NavItem href={`${base}/shoot`} icon="Video">Shoot</NavItem>

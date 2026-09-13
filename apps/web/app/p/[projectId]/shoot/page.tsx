@@ -24,7 +24,7 @@ export default async function ShootPage({ params }: { params: Promise<{ projectI
     <div className="max-w-5xl">
       <h1 className="display mb-1 text-2xl">Shoot</h1>
       <p className="mb-6 text-sm text-muted">Each cut has its own console: generate takes by layer, compare three, choose one. Cuts need their storyboard notes first.</p>
-      {(scenes ?? []).length === 0 && <p className="text-sm text-muted">No cuts yet. Start in the <Link href={`/p/${projectId}/scenes`} className="underline">Storyboard</Link>.</p>}
+      {(scenes ?? []).length === 0 && <p className="text-sm text-muted">No cuts yet. Start in <Link href={`/p/${projectId}/scenes`} className="underline">Scenes</Link>.</p>}
       {(scenes ?? []).map((sc) => (
         <section key={sc.id} className="card mb-6 p-4" style={{ borderRadius: 22 }}>
           <div className="label mb-2">Scene {sc.position} · {sc.title}</div>

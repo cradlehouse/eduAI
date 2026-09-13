@@ -62,10 +62,10 @@ ENTERING A STUDENT'S PROJECT AND RETURNING
 - Nothing in the sidebar opens a different scope. Scope changes happen in the header breadcrumb or on hub pages.
 - Every page renders the header breadcrumb: `Org › Cohort › Project › Section`, last segment unlinked.
 
-## Storyboard as the working surface (2026-09-13)
+## Scenes as the working surface (2026-09-13)
 
 Decision: option C (Flow-style filmstrip + inspector) with option B's dock (LTX-style prompt bar).
-The Storyboard page is where students generate: a filmstrip of cuts per scene, the selected cut large
+The Scenes page (sidebar: Scenes; the drawn board is the e-conte view) is where students generate: a filmstrip of cuts per scene, the selected cut large
 with its takes for the chosen layer (choose a plate / a merged take, kill), and the dock under it — the
 prompt box whose meaning follows the layer (picture, line to voice, sound), then lane, route (with the
 "cost before you commit" list), the route's inputs as chips, and Generate carrying the token cost.

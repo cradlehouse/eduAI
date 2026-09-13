@@ -69,7 +69,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
     <div className="max-w-[1400px]">
       <JobWatcher active={busy} />
       <div className="mb-3 flex flex-wrap items-baseline gap-4">
-        <h1 className="display text-2xl">Storyboard</h1>
+        <h1 className="display text-2xl">Scenes</h1>
         <span className="text-sm text-muted">{allShots.length} cuts · {Math.floor(total / 60)}:{String(Math.round(total % 60)).padStart(2, "0")} planned</span>
         <div className="ml-auto flex gap-1 rounded-full bg-sand p-0.5 text-xs">
           <Link href={`/p/${projectId}/scenes${current ? `?cut=${current.id}` : ""}`} className={`rounded-full px-3 py-1 ${view !== "list" ? "bg-ink text-paper" : ""}`}>Filmstrip</Link>
