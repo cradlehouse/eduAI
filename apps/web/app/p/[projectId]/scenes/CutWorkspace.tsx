@@ -37,6 +37,10 @@ const REASON: Record<string, string> = {
   minor_voice_likeness: "not available for under-18s", allowlist_expired: "school approval expired", allowlist_not_started: "school approval not started yet", profile_down: "route is down",
 };
 const PROMPT_KEYS = ["prompt", "text"];
+const MISSING: Record<string, string> = {
+  objective: "an objective", continuity: "continuity", camera_language: "a camera note",
+  bible_assets: "a bible entry ticked under Continuity (or 'uses nothing from the bible')", consent: "a signed release for a linked entry",
+};
 
 // "LTX 2.5 fast" rather than "LTX" twice: family name + the version's own part of its slug.
 function routeLabel(o: Option): string {
@@ -289,7 +293,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
           </button>
         </div>
         {gate && !gate.ready && (
-          <p className="mt-2 text-xs"><b>Locked.</b> {gateLane === "voice_likeness" ? "Dialogue in a real voice needs a voice release." : `Missing: ${gate.missing.join(", ")}.`} Fill the notes on the right.</p>
+          <p className="mt-2 text-xs"><b>Not ready.</b> {gateLane === "voice_likeness" ? "Dialogue in a real voice needs a voice release." : `This cut still needs ${gate.missing.map((m) => MISSING[m] ?? m).join(", ")}.`} Save the notes on the right and this unlocks.</p>
         )}
         {msg && <p className={`mt-2 text-xs ${msg.kind === "ok" ? "text-control" : "text-danger"}`}>{msg.text}</p>}
       </div>

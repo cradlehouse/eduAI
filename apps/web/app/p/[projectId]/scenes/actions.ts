@@ -83,20 +83,45 @@ export async function updateShot(formData: FormData) {
   const shotId = String(formData.get("shot_id"));
   const supabase = await createClient();
   const dur = String(formData.get("duration_target_s") ?? "");
+  // Continuity is built from things that already exist (cuts to match, bible entries) plus free notes.
+  const matchCuts = formData.getAll("match_cut").map(String).filter(Boolean);
+  const entryIds = formData.getAll("entry").map(String).filter(Boolean);
+  const notes = String(formData.get("continuity") ?? "").trim();
+  const [{ data: cutRows }, { data: entryRows }] = await Promise.all([
+    matchCuts.length ? supabase.from("shots").select("id, label").in("id", matchCuts) : Promise.resolve({ data: [] as { id: string; label: string }[] }),
+    entryIds.length ? supabase.from("bible_entries").select("id, name").in("id", entryIds) : Promise.resolve({ data: [] as { id: string; name: string }[] }),
+  ]);
+  const parts = [
+    ...(cutRows ?? []).map((c) => `match cut ${c.label}`),
+    ...(entryRows ?? []).map((e) => e.name),
+    notes,
+  ].filter(Boolean);
   const intent: Json = {
     objective: String(formData.get("objective") ?? "").trim(),
-    continuity: String(formData.get("continuity") ?? "").trim(),
+    continuity: parts.join("; "),
+    continuity_notes: notes,
+    match_cuts: matchCuts,
     camera_language: String(formData.get("camera_language") ?? "").trim(),
     dialogue: String(formData.get("dialogue") ?? "").trim(),
     no_bible_assets: formData.get("no_bible_assets") === "on",
   };
-  const { error } = await supabase.from("shots").update({
+  const { data: saved, error } = await supabase.from("shots").update({
     label: String(formData.get("label") ?? "").trim(),
     description: String(formData.get("description") ?? "").trim(),
     duration_target_s: dur ? Number(dur) : null,
     intent,
-  }).eq("id", shotId);
-  if (error) goCut(projectId, shotId, { error: error.message });
+  }).eq("id", shotId).select("id");
+  if (error || !saved?.length) goCut(projectId, shotId, { error: error?.message ?? "Nothing changed: you can't edit this cut." });
+
+  // Bible links follow the picker exactly.
+  const orgId = await orgOf(projectId);
+  const { data: existing } = await supabase.from("shot_bible_entries").select("bible_entry_id").eq("shot_id", shotId);
+  const have = new Set((existing ?? []).map((l) => l.bible_entry_id));
+  const want = new Set(entryIds);
+  const toAdd = entryIds.filter((id) => !have.has(id)).map((id) => ({ org_id: orgId!, shot_id: shotId, bible_entry_id: id }));
+  const toDrop = [...have].filter((id) => !want.has(id));
+  if (toAdd.length) await supabase.from("shot_bible_entries").insert(toAdd);
+  if (toDrop.length) await supabase.from("shot_bible_entries").delete().eq("shot_id", shotId).in("bible_entry_id", toDrop);
   revalidatePath(`/p/${projectId}/scenes`);
   goCut(projectId, shotId, { ok: "Saved." });
 }

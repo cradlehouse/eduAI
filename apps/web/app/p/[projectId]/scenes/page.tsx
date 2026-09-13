@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { BibleChip } from "@/components/BibleChip";
-import { createScene, createShot, deleteScene, deleteShot, linkBible, unlinkBible, updateScene, updateShot } from "./actions";
+import { createScene, createShot, deleteScene, deleteShot, updateScene, updateShot } from "./actions";
 import { CutWorkspace, type Option, type Readiness, type TakeRow } from "./CutWorkspace";
 import { EConte } from "./EConte";
 import { JobWatcher } from "./JobWatcher";
@@ -10,7 +10,7 @@ const input = "input";
 const btn = "btn";
 const LANES = ["explore", "control", "finish", "voice_likeness"] as const;
 const LANE_DOT: Record<string, string> = { explore: "bg-explore", control: "bg-control", finish: "bg-finish" };
-type Intent = { objective?: string; continuity?: string; camera_language?: string; dialogue?: string; no_bible_assets?: boolean };
+type Intent = { objective?: string; continuity?: string; continuity_notes?: string; match_cuts?: string[]; camera_language?: string; dialogue?: string; no_bible_assets?: boolean };
 
 // The storyboard: a filmstrip of cuts per scene, the selected cut large with its takes and the prompt
 // dock under it, and the e-conte notes / bible / generations in an inspector on the right.
@@ -157,38 +157,37 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
                   <label className="text-xs"><span className="label">Action</span><input name="description" defaultValue={current.description} className={`${input} w-full`} /></label>
                 </div>
                 <label className="text-xs"><span className="label">Objective</span><textarea name="objective" rows={2} defaultValue={intent.objective ?? ""} className={`${input} w-full`} placeholder="what this cut must achieve" /></label>
-                <label className="text-xs"><span className="label">Continuity</span><textarea name="continuity" rows={2} defaultValue={intent.continuity ?? ""} className={`${input} w-full`} placeholder="what it must match, or: none" /></label>
+                <fieldset className="rounded-[12px] border border-line p-2 text-xs">
+                  <legend className="label px-1">Continuity · what this cut must match</legend>
+                  {cuts.filter((c) => c.id !== current.id).length > 0 && (
+                    <div className="mb-1.5">
+                      <div className="mb-1 text-[11px] text-muted">Cuts</div>
+                      <div className="flex flex-wrap gap-1">
+                        {cuts.filter((c) => c.id !== current.id).map((c) => (
+                          <label key={c.id} className="pill flex cursor-pointer items-center gap-1 bg-card"><input type="checkbox" name="match_cut" value={c.id} defaultChecked={(intent.match_cuts ?? []).includes(c.id)} /> Cut {c.label}</label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className="mb-1 text-[11px] text-muted">Bible entries in this cut</div>
+                  {entryList.length === 0 ? <p className="text-muted">Nothing in the bible yet. <Link href={`/p/${projectId}/bible`} className="underline">Add a location or character</Link>, then pick it here.</p> : (
+                    <div className="flex flex-wrap gap-1">
+                      {entryList.map((e) => (
+                        <label key={e.id} className="pill flex cursor-pointer items-center gap-1 bg-card">
+                          <input type="checkbox" name="entry" value={e.id} defaultChecked={linkedIds.has(e.id)} /> {e.name} <span className="text-muted">{e.kind}</span>
+                          {e.requires_consent && <BibleChip state={e.consent_state} />}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                  <label className="mt-1.5 block"><span className="text-[11px] text-muted">Notes</span><textarea name="continuity" rows={2} defaultValue={intent.continuity_notes ?? intent.continuity ?? ""} className={`${input} w-full`} placeholder="lighting, props, position, or: none" /></label>
+                  <label className="mt-1 flex items-center gap-2"><input type="checkbox" name="no_bible_assets" defaultChecked={!!intent.no_bible_assets} /> This cut uses nothing from the bible</label>
+                </fieldset>
                 <label className="text-xs"><span className="label">Camera</span><input name="camera_language" defaultValue={intent.camera_language ?? ""} className={`${input} w-full`} /></label>
                 <label className="text-xs"><span className="label">Dialogue</span><input name="dialogue" defaultValue={intent.dialogue ?? ""} className={`${input} w-full`} placeholder="ANA: That wasn't there." /></label>
-                <div className="flex items-end gap-3">
-                  <label className="text-xs"><span className="label">Seconds</span><input name="duration_target_s" type="number" min={1} max={60} defaultValue={current.duration_target_s ?? ""} className={`${input} w-20`} /></label>
-                  <label className="flex items-center gap-2 pb-2 text-xs"><input type="checkbox" name="no_bible_assets" defaultChecked={!!intent.no_bible_assets} /> no bible entries</label>
-                </div>
+                <label className="text-xs"><span className="label">Seconds</span><input name="duration_target_s" type="number" min={1} max={60} defaultValue={current.duration_target_s ?? ""} className={`${input} w-20`} /></label>
                 <div className="flex gap-2"><button className="btn-primary text-xs">Save notes</button><button formAction={deleteShot} className={`${btn} text-xs text-danger`}>Delete cut</button></div>
               </form>
-
-              <section className="card p-4" style={{ borderRadius: 18 }}>
-                <h2 className="display mb-1 text-sm">Bible in this cut</h2>
-                <p className="mb-2 text-[11px] text-muted">Consent-bearing entries need a valid release for the lane you generate in.</p>
-                {links.filter((l) => l.shot_id === current.id).length === 0 ? <p className="mb-2 text-xs text-muted">None linked.</p> : (
-                  <ul className="mb-2 flex flex-wrap gap-1.5">
-                    {links.filter((l) => l.shot_id === current.id).map((l) => { const e = entryList.find((x) => x.id === l.entry_id); return (
-                      <li key={l.entry_id} className="flex items-center gap-1.5 rounded-full border border-line bg-card px-2.5 py-0.5 text-xs">
-                        <span>{l.name} <span className="text-muted">{e?.kind}</span></span>{e?.requires_consent && <BibleChip state={e.consent_state} />}
-                        <form action={unlinkBible}><input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={current.id} /><input type="hidden" name="entry_id" value={l.entry_id} /><button className="text-muted hover:text-danger" aria-label="unlink">×</button></form>
-                      </li>); })}
-                  </ul>
-                )}
-                <form action={linkBible} className="flex items-center gap-1.5">
-                  <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={current.id} />
-                  <select name="entry_id" className={`${input} min-w-0 flex-1 text-xs`} defaultValue="">
-                    <option value="">add an entry…</option>
-                    {entryList.filter((e) => !linkedIds.has(e.id)).map((e) => <option key={e.id} value={e.id}>{e.kind}: {e.name}</option>)}
-                  </select>
-                  <button className={`${btn} text-xs`}>Link</button>
-                </form>
-                <Link href={`/p/${projectId}/bible`} className="mt-2 block text-[11px] text-muted underline">Open the bible</Link>
-              </section>
 
               <section className="panel p-4" style={{ borderRadius: 18 }}>
                 <h2 className="display mb-2 text-sm">Generations</h2>
