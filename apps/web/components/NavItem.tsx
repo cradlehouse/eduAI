@@ -20,12 +20,12 @@ export function NavItem({ href, exact, mark, icon, depth = 0, children }: { href
           style={{ paddingLeft: undefined }}>
       <span className="flex min-w-0 items-center gap-2 pl-3 lg:pl-0" style={{ marginLeft: depth * 14 }}>
         {Icon ? <Icon size={16} strokeWidth={1.75} className="shrink-0 opacity-80" aria-hidden /> : <span className="inline-block h-4 w-4 shrink-0 text-center text-xs opacity-50">·</span>}
-        <span className="hidden truncate lg:inline">{children}</span>
+        <span className="nav-label hidden truncate lg:inline">{children}</span>
       </span>
-      {mark && <span className={`ml-2 hidden shrink-0 text-[10px] lg:inline ${active ? "text-paper/70" : "text-muted"}`}>{mark}</span>}
+      {mark && <span className={`nav-mark ml-2 hidden shrink-0 text-[10px] lg:inline ${active ? "text-paper/70" : "text-muted"}`}>{mark}</span>}
     </Link>
   );
 }
 export function NavGroup({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="mt-3"><div className="label mb-1 hidden px-3 lg:block">{title}</div><div className="my-2 border-t border-line lg:hidden" />{children}</div>;
+  return <div className="mt-3"><div className="nav-title label mb-1 hidden px-3 lg:block">{title}</div><div className="nav-rule my-2 border-t border-line lg:hidden" />{children}</div>;
 }

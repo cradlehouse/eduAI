@@ -105,3 +105,8 @@ Schedule) and its projects, and under the current project its pages (Scenes, Bib
 deeper never replaces the menu; it opens the row underneath. The breadcrumb in the header remains the
 scope switcher. Below the `lg` breakpoint the same tree is an icon rail; there is no manual collapse.
 Layouts only declare their scope (`{cohortId, projectId}`); the tree is built once from `getNav()`.
+
+Refinement the same day: the tree stops at **Projects**. Opening a project drops the tree to an icon
+rail and slides out a second panel (`ProjectPanel`) listing the cohort's projects, the current one open
+with Scenes · Bible · Members beneath, the project's token meter on top, and "All projects" back to the
+cohort's list. The rail is CSS (`.rail`) so it is icons-only at every width while the panel is open.

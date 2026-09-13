@@ -40,3 +40,7 @@ body { background: var(--color-paper); color: var(--color-ink); font-family: var
   .pill { border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.75rem; font-weight: 600; }
   .label { font-family: var(--font-display); font-weight: 800; font-size: 0.7rem; letter-spacing: 0.06em; color: var(--color-muted); text-transform: uppercase; }
 }
+
+/* A sidebar in rail mode is icons only at every width (a project panel is open beside it). */
+.rail .nav-label, .rail .nav-mark, .rail .nav-title { display: none !important; }
+.rail .nav-rule { display: block !important; }

@@ -4,6 +4,7 @@ import { Crumb, type CrumbSeg } from "./Crumb";
 import type { Budget } from "./TokenMeter";
 import { Sidebar } from "./Sidebar";
 import { AppTree, type Scope } from "./AppTree";
+import { ProjectPanel } from "./ProjectPanel";
 import { signOut } from "@/app/welcome/actions";
 import { SessionGuard } from "./SessionGuard";
 
@@ -33,7 +34,14 @@ export function Shell({ nav, crumbs, base, sections, scope = {}, note, budget, c
         </details>
       </header>
       <div className="flex flex-1">
-        <Sidebar budget={budget}><AppTree nav={nav} scope={scope} />{note}</Sidebar>
+        {scope.projectId && scope.cohortId ? (
+          <>
+            <Sidebar rail><AppTree nav={nav} scope={scope} /></Sidebar>
+            <ProjectPanel nav={nav} cohortId={scope.cohortId} projectId={scope.projectId} budget={budget} note={note} />
+          </>
+        ) : (
+          <Sidebar budget={budget}><AppTree nav={nav} scope={scope} />{note}</Sidebar>
+        )}
         <main className="min-w-0 flex-1 p-8">{children}</main>
       </div>
     </div>
