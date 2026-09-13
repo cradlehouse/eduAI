@@ -107,7 +107,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
           <summary className="flex cursor-pointer list-none items-baseline gap-3">
             <h2 className="display text-lg">Scene {scene.position} · {scene.title}</h2>
             {scene.synopsis && <span className="truncate text-sm text-muted">{scene.synopsis}</span>}
-            <span className="ml-auto shrink-0 text-xs text-muted underline group-open:hidden">Edit scene</span>
+            <span className="ml-auto shrink-0 text-xs text-muted underline group-open:hidden">Edit scene · add a scene</span>
           </summary>
           <form action={updateScene} className="mt-2 flex flex-wrap items-center gap-2">
             <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="scene_id" value={scene.id} />
@@ -116,7 +116,22 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
             <button className={btn}>Save</button>
             <button formAction={deleteScene} className={`${btn} text-danger`}>Delete scene</button>
           </form>
+          <form action={createScene} className="mt-2 flex flex-wrap items-center gap-2 border-t border-line pt-2">
+            <input type="hidden" name="project_id" value={projectId} />
+            <span className="label">Next scene</span>
+            <input name="title" placeholder="title" className={input} />
+            <input name="synopsis" placeholder="synopsis" className={`${input} min-w-64 flex-1`} />
+            <button className="btn-primary">+ Add scene</button>
+          </form>
         </details>
+      )}
+      {!scene && (
+        <form action={createScene} className="panel mb-4 flex flex-wrap items-end gap-2 p-4">
+          <input type="hidden" name="project_id" value={projectId} />
+          <label className="text-sm"><span className="label">First scene</span><br /><input name="title" placeholder="title" className={input} /></label>
+          <label className="text-sm"><span className="label">Synopsis</span><br /><input name="synopsis" className={`${input} min-w-72`} /></label>
+          <button className="btn-primary">+ Add scene</button>
+        </form>
       )}
 
       {scene && view === "list" ? (
@@ -222,12 +237,6 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
         </div>
       ) : null}
 
-      <form action={createScene} className="panel mt-6 flex flex-wrap items-end gap-2 p-4">
-        <input type="hidden" name="project_id" value={projectId} />
-        <label className="text-sm"><span className="label">New scene</span><br /><input name="title" placeholder="title" className={input} /></label>
-        <label className="text-sm"><span className="label">Synopsis</span><br /><input name="synopsis" className={`${input} min-w-72`} /></label>
-        <button className="btn-primary">+ Add scene</button>
-      </form>
       <p className="mt-3 text-xs text-muted">Cuts read left to right as the film. Music is scored to the locked cut at the timeline stage.</p>
     </div>
   );
