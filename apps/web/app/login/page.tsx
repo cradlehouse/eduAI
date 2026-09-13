@@ -8,6 +8,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <Card title="Sign in">
       {error && <p className="mb-3 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
       <LoginForm next={next ?? "/"} initialEmail={email ?? ""} google={AUTH_GOOGLE} initialMode={mode === "link" ? "link" : "password"} />
+      <p className="mt-5 text-center text-xs text-muted"><a href="/mission" className="underline">What eduai is</a> · <a href="/how-it-works" className="underline">How it works</a></p>
     </Card>
   );
 }
