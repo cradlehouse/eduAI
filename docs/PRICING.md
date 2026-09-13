@@ -52,3 +52,14 @@ towards shorter takes.
 - Actual numbers: seat fee, cents per finished minute per lane, take-to-keep assumption per module.
 - Whether the two modes are two products or two plans of one (affects the outline for Pegasus Media Project, the design-partner org; MAP is free to students, so the payer is PMP/grants, not the apprentice).
 - Credit purchase (Model B) vs org-supplied keys (Model A) pass-through margin.
+
+## Plans (2026-09-13, first cut, in the database as `public.plans`)
+
+| Plan | Price | People | Generation included | Notes |
+|---|---|---|---|---|
+| Cohort | $250 / month | 30 | $200 / month ($600 over a three-month term) | one cohort |
+| School | $1,000 / month | 100 | $750 / month | several cohorts |
+
+Admins see the plan, people used, generation used this month (money and tokens), and can upgrade or
+switch on the Organisation screen. Overages past the allowance need a card; card payments and invoices
+are not connected yet (Stripe is the obvious next step), so plans are invoiced by hand for now.

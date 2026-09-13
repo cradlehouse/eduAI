@@ -16,7 +16,7 @@ begin
   from pg_class c
   join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'public' and c.relkind in ('r', 'p')
-    and c.relname not in ('orgs', 'users', 'models', 'model_versions', 'deployment_profiles', 'webhook_inbox')   -- the org itself, global identity, global registry (3), pre-org inbox
+    and c.relname not in ('orgs', 'users', 'models', 'model_versions', 'deployment_profiles', 'webhook_inbox', 'plans')   -- the org itself, global identity, global registry (3), pre-org inbox, public price list
     and not exists (
       select 1 from pg_attribute a
       where a.attrelid = c.oid and a.attname = 'org_id' and a.attnotnull and not a.attisdropped);

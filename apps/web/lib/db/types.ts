@@ -1589,6 +1589,8 @@ export type Database = {
       }
       orgs: {
         Row: {
+          billing_email: string | null
+          card_on_file: boolean
           content_tier: Database["public"]["Enums"]["content_tier"]
           created_at: string
           credential_default: Database["public"]["Enums"]["credential_mode"]
@@ -1598,6 +1600,9 @@ export type Database = {
           looks: Json
           mark_url: string | null
           name: string
+          overage_allowed: boolean
+          plan: string
+          plan_started_on: string
           project_roles: string[]
           public_entity: boolean
           slug: string
@@ -1605,6 +1610,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          billing_email?: string | null
+          card_on_file?: boolean
           content_tier?: Database["public"]["Enums"]["content_tier"]
           created_at?: string
           credential_default?: Database["public"]["Enums"]["credential_mode"]
@@ -1614,6 +1621,9 @@ export type Database = {
           looks?: Json
           mark_url?: string | null
           name: string
+          overage_allowed?: boolean
+          plan?: string
+          plan_started_on?: string
           project_roles?: string[]
           public_entity?: boolean
           slug: string
@@ -1621,6 +1631,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          billing_email?: string | null
+          card_on_file?: boolean
           content_tier?: Database["public"]["Enums"]["content_tier"]
           created_at?: string
           credential_default?: Database["public"]["Enums"]["credential_mode"]
@@ -1630,13 +1642,24 @@ export type Database = {
           looks?: Json
           mark_url?: string | null
           name?: string
+          overage_allowed?: boolean
+          plan?: string
+          plan_started_on?: string
           project_roles?: string[]
           public_entity?: boolean
           slug?: string
           tokens_per_dollar?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orgs_plan_fkey"
+            columns: ["plan"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["key"]
+          },
+        ]
       }
       personal_budgets: {
         Row: {
@@ -1689,6 +1712,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plans: {
+        Row: {
+          blurb: string
+          key: string
+          monthly_cents: number
+          name: string
+          seats: number
+          sort: number
+          token_cents_per_month: number
+        }
+        Insert: {
+          blurb?: string
+          key: string
+          monthly_cents: number
+          name: string
+          seats: number
+          sort?: number
+          token_cents_per_month: number
+        }
+        Update: {
+          blurb?: string
+          key?: string
+          monthly_cents?: number
+          name?: string
+          seats?: number
+          sort?: number
+          token_cents_per_month?: number
+        }
+        Relationships: []
       }
       project_budgets: {
         Row: {
@@ -2734,6 +2787,22 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "jobs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_spend_monthly: {
+        Row: {
+          month: string | null
+          org_id: string | null
+          spent_cents: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "orgs"
