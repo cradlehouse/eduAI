@@ -16,7 +16,7 @@ type SchemaProp = { type?: string; title?: string; enum?: (string | number)[]; d
 const LANES: { id: Lane; label: string; blurb: string }[] = [
   { id: "explore", label: "Explore", blurb: "Quick, cheap tests and variations." },
   { id: "control", label: "Control", blurb: "References, settings, reproducible." },
-  { id: "finish", label: "Finish", blurb: "Release quality. Instructor-gated." },
+  { id: "finish", label: "Finish", blurb: "Release quality. Costs the most; use it for the cut you keep." },
 ];
 // Literal class names on purpose: Tailwind only emits classes it can see in source.
 const LANE_STYLE: Record<Lane, { solid: string; text: string; ring: string }> = {

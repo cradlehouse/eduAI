@@ -49,7 +49,7 @@ on conflict (project_id) do nothing;
 -- starts_on = approval date, not cohort start: instructors need to test routes before week 1.
 insert into public.org_model_profiles (org_id, deployment_profile_id, lanes, starts_on, ends_on, review_by, release_allowed, requires_instructor_gate, notes)
 select '00000000-0000-4000-8000-000000000001', dp.id, dp.lanes, '2026-09-09', '2026-12-31', '2026-11-15',
-       ('finish' = any (dp.lanes)), ('finish' = any (dp.lanes)), 'Autumn 2026 cohort'
+       ('finish' = any (dp.lanes)), false, 'Autumn 2026 cohort'
 from public.deployment_profiles dp
 where dp.slug in ('veo-3.1-lite@fal-r2', 'ltx-2.5-fast@fal', 'ltx-2.5-pro@fal', 'stable-audio-2.5@fal')
 on conflict (org_id, deployment_profile_id) do nothing;
