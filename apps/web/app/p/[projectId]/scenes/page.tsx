@@ -103,7 +103,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
       )}
 
       {scene && (
-        <details className="group mb-4">
+        <details key={scene.id} className="group mb-4">
           <summary className="flex cursor-pointer list-none items-baseline gap-3">
             <h2 className="display text-lg">Scene {scene.position} · {scene.title}</h2>
             {scene.synopsis && <span className="truncate text-sm text-muted">{scene.synopsis}</span>}
@@ -168,7 +168,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
             </div>
 
             {current ? (
-              <CutWorkspace projectId={projectId} shot={{ id: current.id, label: current.label, selected_take_id: current.selected_take_id, plate_take_id: current.plate_take_id }}
+              <CutWorkspace key={current.id} projectId={projectId} shot={{ id: current.id, label: current.label, selected_take_id: current.selected_take_id, plate_take_id: current.plate_take_id }}
                             takes={allTakes.filter((t) => t.shot_id === current.id)} optionsByLane={optionsByLane} readiness={readiness}
                             promptSeed={promptSeed} dialogueSeed={intent.dialogue ?? ""} assets={assetOptions} look={look} />
             ) : <p className="text-sm text-muted">Add the first cut of this scene above.</p>}
@@ -177,7 +177,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
           {/* inspector */}
           {current && (
             <aside className="flex flex-col gap-4">
-              <form action={updateShot} className="card grid gap-2 p-4" style={{ borderRadius: 18 }}>
+              <form key={current.id} action={updateShot} className="card grid gap-2 p-4" style={{ borderRadius: 18 }}>
                 <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={current.id} />
                 <div className="flex items-baseline justify-between"><h2 className="display">Cut {current.label}</h2><span className="text-[11px] text-muted">e-conte notes</span></div>
                 <div className="grid grid-cols-[64px_1fr] gap-2">
