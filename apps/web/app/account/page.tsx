@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { Shell } from "@/components/Shell";
-import { NavItem } from "@/components/NavItem";
 import { getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { PasswordForm } from "./PasswordForm";
@@ -19,8 +18,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
   const hasPassword = providers.includes("email") && Boolean(user?.user_metadata?.has_password);
 
   return (
-    <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home", image: nav.org?.mark_url }, { label: "Account" }]} sidebarTitle="Account"
-      sidebar={<><NavItem href="/account" exact icon="UserRound">Account</NavItem><NavItem href="/home" icon="Home">Home</NavItem></>}>
+    <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home", image: nav.org?.mark_url }, { label: "Account" }]}>
       <div className="max-w-md">
         <h1 className="display mb-1 text-2xl">Account</h1>
         <p className="mb-6 text-sm text-muted">{nav.email}</p>

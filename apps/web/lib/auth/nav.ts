@@ -20,7 +20,19 @@ export async function getNav() {
   }
   for (const r of enrolled ?? []) if (r.cohorts && !cohorts.has(r.cohorts.id)) cohorts.set(r.cohorts.id, { ...r.cohorts, manage: false });
   const { data: myProjects } = await supabase.from("project_members").select("project_id, roles, projects(id, title, cohort_id)").eq("user_id", user.id);
+  const manageIds = [...cohorts.values()].filter((c) => c.manage).map((c) => c.id);
+  const { data: managed } = manageIds.length
+    ? await supabase.from("projects").select("id, title, cohort_id").in("cohort_id", manageIds).order("title")
+    : { data: [] as { id: string; title: string; cohort_id: string }[] };
+  const projectsByCohort: Record<string, { id: string; title: string }[]> = {};
+  for (const p of managed ?? []) (projectsByCohort[p.cohort_id] ??= []).push({ id: p.id, title: p.title });
+  for (const m of myProjects ?? []) {
+    if (!m.projects) continue;
+    const list = (projectsByCohort[m.projects.cohort_id] ??= []);
+    if (!list.some((x) => x.id === m.projects!.id)) list.push({ id: m.projects.id, title: m.projects.title });
+  }
   return {
+    projectsByCohort,
     userId: user.id, email: user.email ?? "",
     isAdmin, isInstructor: (instructing ?? []).length > 0,
     org: memberships?.[0]?.orgs ?? null,

@@ -3,14 +3,15 @@ import type { Nav } from "@/lib/auth/nav";
 import { Crumb, type CrumbSeg } from "./Crumb";
 import type { Budget } from "./TokenMeter";
 import { Sidebar } from "./Sidebar";
+import { AppTree, type Scope } from "./AppTree";
 import { signOut } from "@/app/welcome/actions";
 import { SessionGuard } from "./SessionGuard";
 
-// Global header (breadcrumb = scope switcher, avatar menu top right) + a sidebar: the token meter on top,
-// then the current scope's sections passed in by the layout.
-export function Shell({ nav, crumbs, base, sections, sidebarTitle, sidebar, budget, children }: {
-  nav: Nav; crumbs: CrumbSeg[]; base?: string; sections?: Record<string, string>; sidebarTitle: string;
-  sidebar: React.ReactNode; budget?: Budget | null; children: React.ReactNode;
+// Global header (breadcrumb = scope switcher, avatar menu top right) + the one app tree on the left,
+// opened along the current scope. Layouts only say where they are.
+export function Shell({ nav, crumbs, base, sections, scope = {}, note, budget, children }: {
+  nav: Nav; crumbs: CrumbSeg[]; base?: string; sections?: Record<string, string>; scope?: Scope;
+  note?: React.ReactNode; budget?: Budget | null; children: React.ReactNode;
 }) {
   const role = nav.isAdmin ? "admin" : nav.isInstructor ? "instructor" : "apprentice";
   const name = nav.email.split("@")[0];
@@ -32,7 +33,7 @@ export function Shell({ nav, crumbs, base, sections, sidebarTitle, sidebar, budg
         </details>
       </header>
       <div className="flex flex-1">
-        <Sidebar budget={budget} title={sidebarTitle}>{sidebar}</Sidebar>
+        <Sidebar budget={budget}><AppTree nav={nav} scope={scope} />{note}</Sidebar>
         <main className="min-w-0 flex-1 p-8">{children}</main>
       </div>
     </div>

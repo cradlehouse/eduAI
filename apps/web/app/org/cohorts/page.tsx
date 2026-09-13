@@ -49,8 +49,8 @@ export default async function CohortsPage({ searchParams }: { searchParams: Prom
                 {c.cohort_instructors.map((i) => <span key={i.user_id} className="pill bg-sand">{name(i.users)}</span>)}
                 <form action={setInstructor} className="flex items-center gap-1">
                   <input type="hidden" name="cohort_id" value={c.id} />
-                  <select name="user_id" className="input" defaultValue=""><option value="">add…</option>{(instructors ?? []).filter((i) => !c.cohort_instructors.some((x) => x.user_id === i.user_id)).map((i) => <option key={i.user_id} value={i.user_id}>{name(i.users)}</option>)}</select>
-                  <button className="btn">Add</button>
+                  <select name="user_id" className="input" defaultValue="" aria-label="Add an instructor"><option value="">choose an instructor…</option>{(instructors ?? []).filter((i) => !c.cohort_instructors.some((x) => x.user_id === i.user_id)).map((i) => <option key={i.user_id} value={i.user_id}>{name(i.users)}</option>)}</select>
+                  <button className="btn">Add instructor</button>
                 </form>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">

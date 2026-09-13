@@ -96,3 +96,12 @@ Menus today:
 
 Roadmap rows (not in menus): project Settings; cohort Review queue, Budgets, Release; org Courses,
 Models, Credentials, Settings; project Edit, Deliver (Post-production).
+
+## One tree (2026-09-13, after the review)
+
+The four swapping sidebars are gone. There is one tree on the left, and it opens along the path you are
+on: organisation rows (admins), every cohort you can reach, the current cohort's pages (Team, Projects,
+Schedule) and its projects, and under the current project its pages (Scenes, Bible, Members). Clicking
+deeper never replaces the menu; it opens the row underneath. The breadcrumb in the header remains the
+scope switcher. Below the `lg` breakpoint the same tree is an icon rail; there is no manual collapse.
+Layouts only declare their scope (`{cohortId, projectId}`); the tree is built once from `getNav()`.

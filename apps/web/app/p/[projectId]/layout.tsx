@@ -3,7 +3,6 @@ import { getProject } from "@/lib/projects/data";
 import { getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
-import { NavGroup, NavItem } from "@/components/NavItem";
 import { SidebarNote } from "@/components/Sidebar";
 
 const SECTIONS = { "": "Scenes", bible: "Bible", scenes: "Scenes", shoot: "Scenes", shots: "Scenes", members: "Members" };
@@ -27,17 +26,10 @@ export default async function ProjectLayout({ children, params }: { children: Re
     <Shell nav={nav}
       crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home", image: nav.org?.mark_url }, { label: cohortName, href: `/c/${project.cohort_id}` },
                { label: project.title, href: base, siblings: (sib ?? []).map((p) => ({ id: p.id, label: p.title, href: `/p/${p.id}` })) }]}
-      base={base} sections={SECTIONS} sidebarTitle={project.title}
+      base={base} sections={SECTIONS}
       budget={budget ? { spent: budget.spent_tokens ?? 0, total: budget.total_tokens ?? 0, scope: budget.scope } : null}
-      sidebar={<>
-        <NavItem href={`/c/${project.cohort_id}`} exact icon="ArrowLeft">{cohortName}</NavItem>
-        <NavGroup title="Project">
-          <NavItem href={`${base}/scenes`} icon="LayoutGrid">Scenes</NavItem>
-          <NavItem href={`${base}/bible`} icon="BookOpen">Bible</NavItem>
-          <NavItem href={`${base}/members`} icon="Users">Members</NavItem>
-        </NavGroup>
-        {!isMember && <SidebarNote>You&apos;re not on this crew; you&apos;re here as {manage ? "an instructor" : "a viewer"}.</SidebarNote>}
-      </>}>
+      scope={{ cohortId: project.cohort_id, projectId }}
+      note={!isMember ? <SidebarNote>You&apos;re not on this crew; you&apos;re here as {manage ? "an instructor" : "a viewer"}.</SidebarNote> : null}>
       {children}
     </Shell>
   );
