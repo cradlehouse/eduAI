@@ -113,6 +113,21 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   const counts = countOf(live);
   const layerDef = LAYERS.find((l) => l.id === layer)!;
   const options = useMemo(() => optionsByLane[lane].filter((o) => layerDef.modalities.includes(o.modality)), [optionsByLane, lane, layerDef]);
+  // The picker lists every route the school has for this layer, across lanes, and picking one sets the
+  // lane. Drafts and routes the school hasn't enabled don't appear at all.
+  const HIDDEN = ["profile_not_approved", "version_not_approved", "not_in_org_allowlist", "profile_approval_expired", "allowlist_expired", "allowlist_not_started"];
+  const picker = useMemo(() => {
+    const seen = new Map<string, { o: Option; lane: Lane }>();
+    for (const l of ["explore", "control", "finish"] as Lane[]) {
+      for (const o of optionsByLane[l]) {
+        if (!layerDef.modalities.includes(o.modality) || HIDDEN.includes(o.reason ?? "")) continue;
+        const cur = seen.get(o.profile_id);
+        if (!cur || (!cur.o.allowed && o.allowed) || (o.allowed && l === lane)) seen.set(o.profile_id, { o, lane: l });
+      }
+    }
+    return [...seen.values()].sort((a, b) => (a.lane === lane ? -1 : 1) - (b.lane === lane ? -1 : 1));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [optionsByLane, layerDef, lane]);
   const selected = options.find((o) => o.profile_id === profileId) ?? options.find((o) => o.allowed) ?? null;
   const schema = (selected?.input_schema ?? { type: "object" }) as Schema;
   const gateLane = layer === "dialogue" ? "voice_likeness" : lane;
@@ -131,14 +146,14 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
     const supabase = createClient();
     let cancelled = false;
     const t = setTimeout(async () => {
-      const entries = await Promise.all(options.filter((o) => o.allowed).map(async (o) => {
+      const entries = await Promise.all(picker.filter((p) => p.o.allowed).map(async ({ o }) => {
         const { data } = await supabase.rpc("estimate_tokens", { p_profile: o.profile_id, p_inputs: inputs });
         return [o.profile_id, data ?? null] as const;
       }));
       if (!cancelled) setEstimates(Object.fromEntries(entries));
     }, 250);
     return () => { cancelled = true; clearTimeout(t); };
-  }, [options, inputs]);
+  }, [picker, inputs]);
 
   const estimate = selected ? estimates[selected.profile_id] ?? null : null;
   const canGenerate = !!selected?.allowed && !!gate?.ready && !pending;
@@ -254,13 +269,14 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
             </summary>
             <div className="card absolute left-0 z-20 mt-1 w-80 p-2 text-sm">
               <div className="label mb-1 px-2">Route · cost before you commit</div>
-              {options.length === 0 && <div className="px-2 py-1 text-xs text-muted">No route serves this layer in the {lane} lane.</div>}
-              {options.map((o) => { const est = estimates[o.profile_id]; return (
-                <button key={o.profile_id} type="button" disabled={!o.allowed} onClick={(e) => { setProfileId(o.profile_id); (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); }}
-                        className={`flex w-full items-center justify-between rounded-[10px] px-2 py-1.5 text-left hover:bg-sand ${o.allowed ? "" : "opacity-45"} ${selected?.profile_id === o.profile_id ? "bg-sand" : ""}`}>
-                  <span><span className="font-semibold">{routeLabel(o)}</span> <span className="text-xs text-muted">{o.compute_provider} · integrity {o.integrity_rating} · energy {o.resource_disclosure}</span>
-                    {!o.allowed && <span className="block text-xs text-muted">{REASON[o.reason ?? ""] ?? o.reason}</span>}</span>
-                  <span className={`mono ml-2 shrink-0 text-xs ${o.allowed ? "text-money" : "text-muted"}`}>{o.allowed ? (est != null ? est.toLocaleString() : "…") : "—"}</span>
+              {picker.length === 0 && <div className="px-2 py-1 text-xs text-muted">Your school has no route for this layer yet.</div>}
+              {picker.map(({ o, lane: l }) => { const est = estimates[o.profile_id]; const usable = o.allowed || l !== lane; return (
+                <button key={o.profile_id} type="button" disabled={!usable}
+                        onClick={(e) => { setLane(l); setProfileId(o.profile_id); (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); }}
+                        className={`flex w-full items-center justify-between rounded-[10px] px-2 py-1.5 text-left hover:bg-sand ${usable ? "" : "opacity-45"} ${selected?.profile_id === o.profile_id ? "bg-sand" : ""}`}>
+                  <span><span className="font-semibold">{routeLabel(o)}</span> <span className={`ml-1 rounded-full px-1.5 text-[10px] ${LANE_STYLE[l].text} bg-sand`}>{l}</span>
+                    <span className="block text-xs text-muted">{o.compute_provider} · integrity {o.integrity_rating} · energy {o.resource_disclosure}{!o.allowed && l === lane ? ` · ${REASON[o.reason ?? ""] ?? o.reason}` : ""}</span></span>
+                  <span className={`mono ml-2 shrink-0 text-xs ${usable ? "text-money" : "text-muted"}`}>{est != null ? est.toLocaleString() : "…"}</span>
                 </button>
               ); })}
               {selected?.limitations && <div className="mt-1 px-2 text-xs text-muted">{selected.limitations}</div>}
