@@ -36,7 +36,7 @@ export async function generate(input: { projectId: string; shotId: string; profi
     lane: input.lane, layer: input.layer, inputs: input.inputs,
   }).select("id").single();
   if (error) return { error: error.message };
-  revalidatePath(`/p/${input.projectId}/shots/${input.shotId}`);
+  revalidatePath(`/p/${input.projectId}/scenes`);
   revalidatePath(`/p/${input.projectId}`);
   return { ok: true, jobId: job.id, tokens: est ?? null };
 }

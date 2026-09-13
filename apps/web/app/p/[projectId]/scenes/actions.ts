@@ -9,6 +9,12 @@ const go = (projectId: string, path = "scenes", msg?: { ok?: string; error?: str
   redirect(`/p/${projectId}/${path}${q}`);
 };
 
+// Everything about one cut lands back on the storyboard with that cut selected.
+const goCut = (projectId: string, shotId: string, msg?: { ok?: string; error?: string }) => {
+  const q = msg?.ok ? `&ok=${encodeURIComponent(msg.ok)}` : msg?.error ? `&error=${encodeURIComponent(msg.error)}` : "";
+  redirect(`/p/${projectId}/scenes?cut=${shotId}${q}`);
+};
+
 async function orgOf(projectId: string) {
   const supabase = await createClient();
   const { data } = await supabase.from("projects").select("org_id").eq("id", projectId).maybeSingle();
@@ -90,10 +96,9 @@ export async function updateShot(formData: FormData) {
     duration_target_s: dur ? Number(dur) : null,
     intent,
   }).eq("id", shotId);
-  if (error) go(projectId, `shots/${shotId}`, { error: error.message });
-  revalidatePath(`/p/${projectId}/shots/${shotId}`);
+  if (error) goCut(projectId, shotId, { error: error.message });
   revalidatePath(`/p/${projectId}/scenes`);
-  go(projectId, `shots/${shotId}`, { ok: "Saved." });
+  goCut(projectId, shotId, { ok: "Saved." });
 }
 
 export async function deleteShot(formData: FormData) {
@@ -109,13 +114,13 @@ export async function linkBible(formData: FormData) {
   const projectId = String(formData.get("project_id"));
   const shotId = String(formData.get("shot_id"));
   const entryId = String(formData.get("entry_id") ?? "");
-  if (!entryId) go(projectId, `shots/${shotId}`);
+  if (!entryId) goCut(projectId, shotId);
   const orgId = await orgOf(projectId);
   const supabase = await createClient();
   const { error } = await supabase.from("shot_bible_entries").upsert({ org_id: orgId!, shot_id: shotId, bible_entry_id: entryId }, { onConflict: "shot_id,bible_entry_id", ignoreDuplicates: true });
-  if (error) go(projectId, `shots/${shotId}`, { error: error.message });
-  revalidatePath(`/p/${projectId}/shots/${shotId}`);
-  go(projectId, `shots/${shotId}`);
+  if (error) goCut(projectId, shotId, { error: error.message });
+  revalidatePath(`/p/${projectId}/scenes`);
+  goCut(projectId, shotId);
 }
 
 export async function unlinkBible(formData: FormData) {
@@ -123,7 +128,35 @@ export async function unlinkBible(formData: FormData) {
   const shotId = String(formData.get("shot_id"));
   const supabase = await createClient();
   const { error } = await supabase.from("shot_bible_entries").delete().eq("shot_id", shotId).eq("bible_entry_id", String(formData.get("entry_id")));
-  if (error) go(projectId, `shots/${shotId}`, { error: error.message });
-  revalidatePath(`/p/${projectId}/shots/${shotId}`);
-  go(projectId, `shots/${shotId}`);
+  if (error) goCut(projectId, shotId, { error: error.message });
+  revalidatePath(`/p/${projectId}/scenes`);
+  goCut(projectId, shotId);
+}
+
+// P1-13: choose a take (background → the cut's plate, merged → the cut's selected take) or kill one.
+// Users may only change lifecycle on takes (RLS); pointers live on the shot.
+export async function selectTake(formData: FormData) {
+  const projectId = String(formData.get("project_id"));
+  const shotId = String(formData.get("shot_id"));
+  const takeId = String(formData.get("take_id"));
+  const layer = String(formData.get("layer"));
+  const supabase = await createClient();
+  const patch = layer === "background" ? { plate_take_id: takeId } : layer === "merged" ? { selected_take_id: takeId } : null;
+  if (!patch) goCut(projectId, shotId, { error: "Only background plates and merged takes are chosen per cut." });
+  const { data, error } = await supabase.from("shots").update(patch!).eq("id", shotId).select("id");
+  if (error || !data?.length) goCut(projectId, shotId, { error: error?.message ?? "Nothing changed." });
+  revalidatePath(`/p/${projectId}/scenes`);
+  goCut(projectId, shotId, { ok: layer === "background" ? "Plate chosen for this cut." : "Take chosen for this cut." });
+}
+
+export async function killTake(formData: FormData) {
+  const projectId = String(formData.get("project_id"));
+  const shotId = String(formData.get("shot_id"));
+  const takeId = String(formData.get("take_id"));
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase.from("takes").update({ lifecycle: "killed", killed_at: new Date().toISOString(), killed_by: user?.id ?? null }).eq("id", takeId).select("id");
+  if (error || !data?.length) goCut(projectId, shotId, { error: error?.message ?? "Nothing changed." });
+  revalidatePath(`/p/${projectId}/scenes`);
+  goCut(projectId, shotId, { ok: "Take killed. It stays in the receipts; it just leaves the bin." });
 }

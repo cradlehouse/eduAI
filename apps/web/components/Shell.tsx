@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { Nav } from "@/lib/auth/nav";
 import { Crumb, type CrumbSeg } from "./Crumb";
-import { TokenBar, TokenRing, type Budget } from "./TokenMeter";
+import type { Budget } from "./TokenMeter";
+import { Sidebar } from "./Sidebar";
 import { signOut } from "@/app/welcome/actions";
 import { SessionGuard } from "./SessionGuard";
 
@@ -31,16 +32,7 @@ export function Shell({ nav, crumbs, base, sections, sidebarTitle, sidebar, budg
         </details>
       </header>
       <div className="flex flex-1">
-        <aside className="panel m-3 flex w-60 shrink-0 flex-col p-3">
-          {budget && (
-            <div className="card mb-3 flex items-center gap-3 p-3">
-              <TokenRing spent={budget.spent} total={budget.total} size={40} />
-              <div className="min-w-0 flex-1"><TokenBar {...budget} /></div>
-            </div>
-          )}
-          <div className="display mb-1 px-3 text-sm">{sidebarTitle}</div>
-          {sidebar}
-        </aside>
+        <Sidebar budget={budget} title={sidebarTitle}>{sidebar}</Sidebar>
         <main className="min-w-0 flex-1 p-8">{children}</main>
       </div>
     </div>

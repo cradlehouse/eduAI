@@ -38,8 +38,8 @@ export default async function ShootPage({ params }: { params: Promise<{ projectI
                   {LAYERS.map((l) => { const n = count(s.id, l); return <td key={l} className={`text-center ${n ? "" : "text-muted"}`}>{n || "·"}</td>; })}
                   <td className="text-right">
                     {intentOk(s.intent)
-                      ? <Link href={`/p/${projectId}/shots/${s.id}`} className="btn">Open console</Link>
-                      : <Link href={`/p/${projectId}/shots/${s.id}`} className="text-xs text-explore underline">notes incomplete</Link>}
+                      ? <Link href={`/p/${projectId}/scenes?cut=${s.id}`} className="btn">Open console</Link>
+                      : <Link href={`/p/${projectId}/scenes?cut=${s.id}`} className="text-xs text-explore underline">notes incomplete</Link>}
                   </td>
                 </tr>
               ))}

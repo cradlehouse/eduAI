@@ -4,6 +4,7 @@ import { getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
 import { NavGroup, NavItem, NavSoon } from "@/components/NavItem";
+import { SidebarNote } from "@/components/Sidebar";
 
 const SECTIONS = { "": "Brief", brief: "Brief", bible: "Bible", scenes: "Storyboard", shoot: "Shoot", shots: "Shoot", members: "Members" };
 
@@ -46,7 +47,7 @@ export default async function ProjectLayout({ children, params }: { children: Re
           <NavItem href={`${base}/members`} mark={manage ? "instructor" : undefined} icon="Users">Members</NavItem>
           {manage && <NavSoon label="Settings" when="soon" icon="Settings" />}
         </NavGroup>
-        {!isMember && <div className="mt-3 px-3 text-[11px] text-muted">You&apos;re not on this crew; you&apos;re here as {manage ? "an instructor" : "a viewer"}.</div>}
+        {!isMember && <SidebarNote>You&apos;re not on this crew; you&apos;re here as {manage ? "an instructor" : "a viewer"}.</SidebarNote>}
       </>}>
       {children}
     </Shell>
