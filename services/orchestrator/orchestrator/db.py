@@ -42,7 +42,10 @@ class Db:
 
     @classmethod
     async def connect(cls, url: str) -> Db:
-        pool = AsyncConnectionPool(url, min_size=1, max_size=4, kwargs={"row_factory": dict_row, "autocommit": True}, open=False)
+        # prepare_threshold=None: Supavisor's transaction pooler (port 6543) hands each transaction a different
+        # server connection, so psycopg's auto-prepared statements collide ("_pg3_30 already exists").
+        pool = AsyncConnectionPool(url, min_size=1, max_size=4, open=False,
+                                   kwargs={"row_factory": dict_row, "autocommit": True, "prepare_threshold": None})
         await pool.open()
         return cls(pool)
 
