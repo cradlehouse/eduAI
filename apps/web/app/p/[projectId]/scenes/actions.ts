@@ -172,3 +172,16 @@ export async function restoreTake(formData: FormData) {
   revalidatePath(`/p/${projectId}/scenes`);
   goCut(projectId, shotId, { ok: "Take restored." });
 }
+
+// Untick: clear the cut's pointer without touching the take.
+export async function unselectTake(formData: FormData) {
+  const projectId = String(formData.get("project_id"));
+  const shotId = String(formData.get("shot_id"));
+  const layer = String(formData.get("layer"));
+  const supabase = await createClient();
+  const patch = layer === "background" ? { plate_take_id: null } : { selected_take_id: null };
+  const { data, error } = await supabase.from("shots").update(patch).eq("id", shotId).select("id");
+  if (error || !data?.length) goCut(projectId, shotId, { error: error?.message ?? "Nothing changed." });
+  revalidatePath(`/p/${projectId}/scenes`);
+  goCut(projectId, shotId, { ok: layer === "background" ? "Plate unset." : "Take unchosen." });
+}

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Database, Json } from "@/lib/db/types";
 import { generate } from "./generate";
-import { killTake, restoreTake, selectTake } from "./actions";
+import { killTake, restoreTake, selectTake, unselectTake } from "./actions";
 
 type Lane = "explore" | "control" | "finish";
 type Layer = Database["public"]["Enums"]["layer"];
@@ -147,42 +147,48 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
       </div>
 
       <div className="card overflow-hidden" style={{ borderRadius: 18 }}>
-        <div className={`relative bg-ink ${layer === "dialogue" || layer === "sfx" ? "h-24" : "aspect-video"}`}>
-          {main ? <Media take={main} big /> : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-sm text-paper/70">
-              <span>No {layerDef.label.toLowerCase()} take yet.</span>
-              <span className="text-xs text-paper/50">Write the prompt below and generate.</span>
+        <div className={`grid ${layerTakes.length > 0 ? "grid-cols-[128px_minmax(0,1fr)]" : "grid-cols-1"}`}>
+          {/* the bin: takes down the left, tick to choose, × to kill */}
+          {layerTakes.length > 0 && (
+            <div className="flex max-h-[520px] flex-col gap-2 overflow-y-auto border-r border-line bg-sand p-2">
+              {layerTakes.map((t) => {
+                const isMain = main?.id === t.id; const isChosen = t.id === chosenId;
+                return (
+                  <div key={t.id} className={`group relative shrink-0 overflow-hidden rounded-[8px] bg-ink ring-2 ${isMain ? "ring-ink" : "ring-transparent"}`}>
+                    <button type="button" onClick={() => setFocus(t.id)} className="block h-[68px] w-full" title={new Date(t.created_at).toLocaleString()}><Media take={t} /></button>
+                    {canChoose && (
+                      <form action={isChosen ? unselectTake : selectTake} className="absolute bottom-1 right-1">
+                        <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={t.id} /><input type="hidden" name="layer" value={layer} />
+                        <button type="submit" aria-label={isChosen ? "Unchoose" : "Choose this take"} title={isChosen ? "Chosen · click to unchoose" : (layer === "background" ? "Use as plate" : "Choose this take")}
+                                className={`grid h-6 w-6 place-items-center rounded-full text-[13px] font-bold ${isChosen ? "bg-money text-ink" : "bg-black/55 text-paper opacity-0 hover:bg-money hover:text-ink group-hover:opacity-100"}`}>✓</button>
+                      </form>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
-          {main && (
-            <div className="absolute left-3 top-3 flex gap-1.5">
-              {main.id === chosenId && <span className="rounded-full bg-money px-2 py-0.5 text-[11px] font-semibold text-ink">{layer === "background" ? "plate" : "chosen"}</span>}
-              <span className="rounded-full bg-black/55 px-2 py-0.5 text-[11px] text-paper">{layerDef.short}{main.duration_s ? ` · ${main.duration_s.toFixed(1)} s` : ""}</span>
-            </div>
-          )}
-        </div>
-        {layerTakes.length > 0 && (
-          <div className="flex items-center gap-2 overflow-x-auto p-2">
-            {layerTakes.map((t) => (
-              <button key={t.id} type="button" onClick={() => setFocus(t.id)}
-                      className={`relative h-14 w-24 shrink-0 overflow-hidden rounded-[8px] bg-ink ring-2 ${main?.id === t.id ? "ring-ink" : "ring-transparent"}`} title={new Date(t.created_at).toLocaleString()}>
-                <Media take={t} />
-                {t.id === chosenId && <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-money" />}
-              </button>
-            ))}
+          <div className={`relative bg-ink ${layer === "dialogue" || layer === "sfx" ? "h-24" : "aspect-video"}`}>
+            {main ? <Media take={main} big /> : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-sm text-paper/70">
+                <span>No {layerDef.label.toLowerCase()} take yet.</span>
+                <span className="text-xs text-paper/50">Write the prompt below and generate.</span>
+              </div>
+            )}
             {main && (
-              <div className="ml-auto flex shrink-0 items-center gap-2 pr-1">
-                {canChoose && (main.id === chosenId
-                  ? <span className="pill bg-money text-xs font-semibold text-ink">{layer === "background" ? "Plate for this cut" : "Chosen for this cut"}</span>
-                  : <form action={selectTake}><input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={main.id} /><input type="hidden" name="layer" value={layer} />
-                      <button className="btn-primary text-xs">{layer === "background" ? "Use as plate" : "Choose this take"}</button></form>)}
-                <form action={killTake} onSubmit={(e) => { if (!confirm("Kill this take? It leaves the bin but is never deleted; you can restore it from the killed shelf.")) e.preventDefault(); }}>
-                  <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={main.id} />
-                  <button className="btn text-xs text-danger">Kill</button></form>
+              <form action={killTake} className="absolute bottom-3 right-3" onSubmit={(e) => { if (!confirm("Kill this take? It leaves the bin but is never deleted; you can restore it from the killed shelf.")) e.preventDefault(); }}>
+                <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={main.id} />
+                <button type="submit" className="rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] text-paper hover:bg-danger">Kill take</button>
+              </form>
+            )}
+            {main && (
+              <div className="absolute left-3 top-3 flex gap-1.5">
+                {main.id === chosenId && <span className="rounded-full bg-money px-2 py-0.5 text-[11px] font-semibold text-ink">✓ {layer === "background" ? "plate for this cut" : "chosen for this cut"}</span>}
+                <span className="rounded-full bg-black/55 px-2 py-0.5 text-[11px] text-paper">{layerDef.short}{main.duration_s ? ` · ${main.duration_s.toFixed(1)} s` : ""}</span>
               </div>
             )}
           </div>
-        )}
+        </div>
       </div>
 
       {killed.length > 0 && (
