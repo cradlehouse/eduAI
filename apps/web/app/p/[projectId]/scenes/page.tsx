@@ -22,15 +22,16 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
   const [{ data: scenes }, { data: shots }, { data: takeRows }, { data: jobs }, { data: entries }, { data: imageAssets }] = await Promise.all([
     supabase.from("scenes").select("id, position, title, synopsis").eq("project_id", projectId).order("position"),
     supabase.from("shots").select("id, scene_id, position, label, description, duration_target_s, intent, selected_take_id, plate_take_id").eq("project_id", projectId).order("position"),
-    supabase.from("takes").select("id, shot_id, layer, asset_id, created_at, assets(mime, kind, duration_s)").eq("project_id", projectId).eq("lifecycle", "live").order("created_at"),
+    supabase.from("takes").select("id, shot_id, layer, asset_id, created_at, lifecycle, assets(mime, kind, duration_s)").eq("project_id", projectId).in("lifecycle", ["live", "killed"]).order("created_at"),
     supabase.from("job_tokens").select("job_id, shot_id, lane, layer, status, estimated_tokens, actual_tokens, created_at, error").eq("project_id", projectId).order("created_at", { ascending: false }).limit(60),
     supabase.from("bible_entry_status").select("id, name, kind, requires_consent, consent_state").eq("project_id", projectId).order("kind").order("name"),
     supabase.from("assets").select("id, kind, provenance").eq("project_id", projectId).in("kind", ["image", "audio"]).order("created_at", { ascending: false }).limit(40),
   ]);
-  const takes: (TakeRow & { shot_id: string })[] = (takeRows ?? []).map((t) => ({
-    id: t.id, shot_id: t.shot_id, layer: t.layer, asset_id: t.asset_id, created_at: t.created_at,
+  const allTakes: (TakeRow & { shot_id: string })[] = (takeRows ?? []).map((t) => ({
+    id: t.id, shot_id: t.shot_id, layer: t.layer, asset_id: t.asset_id, created_at: t.created_at, lifecycle: t.lifecycle,
     mime: t.assets?.mime ?? "application/octet-stream", kind: t.assets?.kind ?? "video", duration_s: t.assets?.duration_s ?? null,
   }));
+  const takes = allTakes.filter((t) => t.lifecycle === "live");
   const allShots = shots ?? [];
   const selectedShot = allShots.find((s) => s.id === cut) ?? null;
   const scene = (scenes ?? []).find((sc) => sc.id === (selectedShot?.scene_id ?? sceneParam)) ?? (scenes ?? [])[0] ?? null;
@@ -134,7 +135,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
 
             {current ? (
               <CutWorkspace projectId={projectId} shot={{ id: current.id, label: current.label, selected_take_id: current.selected_take_id, plate_take_id: current.plate_take_id }}
-                            takes={takes.filter((t) => t.shot_id === current.id)} optionsByLane={optionsByLane} readiness={readiness}
+                            takes={allTakes.filter((t) => t.shot_id === current.id)} optionsByLane={optionsByLane} readiness={readiness}
                             promptSeed={promptSeed} dialogueSeed={intent.dialogue ?? ""} assets={assetOptions} />
             ) : <p className="text-sm text-muted">Add the first cut of this scene above.</p>}
           </div>

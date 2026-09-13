@@ -3,13 +3,13 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { Database, Json } from "@/lib/db/types";
 import { generate } from "./generate";
-import { killTake, selectTake } from "./actions";
+import { killTake, restoreTake, selectTake } from "./actions";
 
 type Lane = "explore" | "control" | "finish";
 type Layer = Database["public"]["Enums"]["layer"];
 export type Option = Database["public"]["Functions"]["model_options"]["Returns"][number];
 export type Readiness = { lane: string; ready: boolean; missing: string[] };
-export type TakeRow = { id: string; layer: Layer; asset_id: string; created_at: string; mime: string; kind: string; duration_s: number | null };
+export type TakeRow = { id: string; layer: Layer; asset_id: string; created_at: string; lifecycle: string; mime: string; kind: string; duration_s: number | null };
 type Schema = { type?: string; required?: string[]; properties?: Record<string, SchemaProp> };
 type SchemaProp = { type?: string; title?: string; enum?: (string | number)[]; default?: Json; minimum?: number; maximum?: number; maxLength?: number; format?: string; "x-ui"?: { widget?: string; accept?: string } };
 
@@ -71,7 +71,8 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   promptSeed: string; dialogueSeed: string;
   assets: { id: string; kind: string; label: string }[];
 }) {
-  const counts = useMemo(() => { const c: Record<string, number> = {}; for (const t of takes) c[t.layer] = (c[t.layer] ?? 0) + 1; return c; }, [takes]);
+  const live = useMemo(() => takes.filter((t) => t.lifecycle === "live"), [takes]);
+  const counts = useMemo(() => { const c: Record<string, number> = {}; for (const t of live) c[t.layer] = (c[t.layer] ?? 0) + 1; return c; }, [live]);
   const hasPlate = !!shot.plate_take_id || (counts.background ?? 0) > 0;
   const [layer, setLayer] = useState<Layer>(hasPlate ? ((counts.merged ?? 0) > 0 ? "merged" : "character") : "background");
   const [lane, setLane] = useState<Lane>("explore");
@@ -127,7 +128,8 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   }
 
   // ---- stage: the takes of the current layer, chosen one large
-  const layerTakes = takes.filter((t) => t.layer === layer);
+  const layerTakes = live.filter((t) => t.layer === layer);
+  const killed = takes.filter((t) => t.layer === layer && t.lifecycle === "killed");
   const chosenId = layer === "background" ? shot.plate_take_id : layer === "merged" ? shot.selected_take_id : null;
   const main = layerTakes.find((t) => t.id === focus) ?? layerTakes.find((t) => t.id === chosenId) ?? layerTakes[0] ?? null;
   const canChoose = layer === "background" || layer === "merged";
@@ -169,18 +171,34 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
               </button>
             ))}
             {main && (
-              <div className="ml-auto flex shrink-0 gap-2 pr-1">
-                {canChoose && main.id !== chosenId && (
-                  <form action={selectTake}><input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={main.id} /><input type="hidden" name="layer" value={layer} />
-                    <button className="btn-primary text-xs">{layer === "background" ? "Use as plate" : "Choose this take"}</button></form>
-                )}
-                <form action={killTake}><input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={main.id} />
+              <div className="ml-auto flex shrink-0 items-center gap-2 pr-1">
+                {canChoose && (main.id === chosenId
+                  ? <span className="pill bg-money text-xs font-semibold text-ink">{layer === "background" ? "Plate for this cut" : "Chosen for this cut"}</span>
+                  : <form action={selectTake}><input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={main.id} /><input type="hidden" name="layer" value={layer} />
+                      <button className="btn-primary text-xs">{layer === "background" ? "Use as plate" : "Choose this take"}</button></form>)}
+                <form action={killTake} onSubmit={(e) => { if (!confirm("Kill this take? It leaves the bin but is never deleted; you can restore it from the killed shelf.")) e.preventDefault(); }}>
+                  <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={main.id} />
                   <button className="btn text-xs text-danger">Kill</button></form>
               </div>
             )}
           </div>
         )}
       </div>
+
+      {killed.length > 0 && (
+        <details className="text-xs text-muted">
+          <summary className="cursor-pointer select-none">Killed takes on this layer ({killed.length}) · nothing is ever deleted</summary>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {killed.map((t) => (
+              <div key={t.id} className="flex items-center gap-2 rounded-[10px] border border-line bg-card p-1.5">
+                <div className="h-12 w-20 overflow-hidden rounded-[6px] bg-ink opacity-60"><Media take={t} /></div>
+                <form action={restoreTake}><input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={shot.id} /><input type="hidden" name="take_id" value={t.id} />
+                  <button className="btn text-xs">Restore</button></form>
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
 
       {/* ---- the dock: prompt on top, everything else as chips, cost on the button */}
       <div className="card p-3 shadow-[0_14px_36px_rgba(35,33,43,0.10)]" style={{ borderRadius: 18 }}>

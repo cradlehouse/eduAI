@@ -160,3 +160,15 @@ export async function killTake(formData: FormData) {
   revalidatePath(`/p/${projectId}/scenes`);
   goCut(projectId, shotId, { ok: "Take killed. It stays in the receipts; it just leaves the bin." });
 }
+
+// Kill is a flag, never a delete: the take and its receipt stay. Restore puts it back in the bin.
+export async function restoreTake(formData: FormData) {
+  const projectId = String(formData.get("project_id"));
+  const shotId = String(formData.get("shot_id"));
+  const takeId = String(formData.get("take_id"));
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("takes").update({ lifecycle: "live", killed_at: null, killed_by: null }).eq("id", takeId).select("id");
+  if (error || !data?.length) goCut(projectId, shotId, { error: error?.message ?? "Nothing changed." });
+  revalidatePath(`/p/${projectId}/scenes`);
+  goCut(projectId, shotId, { ok: "Take restored." });
+}
