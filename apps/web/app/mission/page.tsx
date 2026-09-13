@@ -49,9 +49,15 @@ export default function Mission() {
       </p>
 
       <h2 className="display mb-3 text-2xl">Why open models</h2>
+      <p className="mb-4 max-w-[62ch] text-[15px] leading-relaxed">
+        The everyday routes are open-weight. That matters for a school in three plain ways. A student&apos;s film and the faces in it can stay on
+        infrastructure the school chooses, rather than becoming someone&apos;s training data. The model can be inspected and, on our own machines, metered,
+        which is the only honest route to a real energy number. And the same family carries a cut from first sketch to final take, with camera
+        logic, keyframes, extension and synced sound, so the look holds instead of changing every time a student changes tools.
+      </p>
       <p className="max-w-[62ch] text-[15px] leading-relaxed">
-        The everyday routes are open-weight: a school could run them itself, inspect them, and measure them. They give students camera logic, keyframes, extension and synced sound, in one family from
-        first sketch to final take, so the look holds. Closed models stay on the menu for a finish that wants them, with their ratings shown, never as the default.
+        Closed models stay on the menu for a finish that wants them, with their ratings shown, never as the default. Openness here is not a slogan;
+        it&apos;s what lets us keep the promises above.
       </p>
     </PublicFrame>
   );
