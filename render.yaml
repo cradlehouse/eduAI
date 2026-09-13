@@ -1,7 +1,7 @@
 # Render blueprint for the orchestrator (project eduai, region Oregon = same AWS region as Supabase).
-# Secrets come from the env group `eduai` (project eduai → Production). A blueprint can't link a group
-# in a project environment from outside it, so after Apply: service → Add to project (eduai / Production)
-# → Environment → Link environment group → eduai. Nothing secret is in this file.
+# Secrets come from the env group `eduai` (project eduai → Production). The service must live in that same
+# environment for the link to resolve (first deploy: Apply without the link, move the service into the
+# project, then this line syncs). Nothing secret is in this file.
 # One web service answers /health and runs the `generate` dispatcher; add a second service with
 # JOB_KINDS=render when the render worker exists (Phase 3). Free tier sleeps: generation must not.
 services:
@@ -16,6 +16,7 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
+      - fromGroup: eduai
       - key: JOB_KINDS
         value: generate
       - key: PYTHON_VERSION
