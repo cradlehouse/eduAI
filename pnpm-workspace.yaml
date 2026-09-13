@@ -8,3 +8,4 @@ allowBuilds:
   unrs-resolver: true
   workerd: true
   sharp: true
+  '@sentry/cli': false   # sourcemap uploader; not used, never built

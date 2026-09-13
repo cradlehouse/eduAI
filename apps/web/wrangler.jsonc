@@ -13,6 +13,7 @@
   "vars": {
     "NEXT_PUBLIC_SUPABASE_URL": "https://zhltmlguysknjeueabyy.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpobHRtbGd1eXNrbmpldWVhYnl5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5NzQ3MTMsImV4cCI6MjEwNDU1MDcxM30.wvKmjZt--42BLaYdgOfqPCREmFD6OBXjt_EWSDSr-t0",
-    "NEXT_PUBLIC_AUTH_GOOGLE": "0"
+    "NEXT_PUBLIC_AUTH_GOOGLE": "0",
+    "NEXT_PUBLIC_SENTRY_DSN": ""
   }
 }
