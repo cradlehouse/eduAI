@@ -66,7 +66,7 @@ function Media({ take, big }: { take: TakeRow; big?: boolean }) {
   return <img src={src} alt="" className="h-full w-full object-cover" />;
 }
 
-export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness, promptSeed, dialogueSeed, assets }: {
+export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness, promptSeed, dialogueSeed, assets, look }: {
   projectId: string;
   shot: { id: string; label: string; selected_take_id: string | null; plate_take_id: string | null };
   takes: TakeRow[];
@@ -74,6 +74,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   readiness: Readiness[];
   promptSeed: string; dialogueSeed: string;
   assets: { id: string; kind: string; label: string }[];
+  look: { key: string; label: string; prompt: string } | null;
 }) {
   const countOf = (rows: TakeRow[]) => { const c: Record<string, number> = {}; for (const t of rows) c[t.layer] = (c[t.layer] ?? 0) + 1; return c; };
   const serverCounts = countOf(takes.filter((t) => t.lifecycle === "live"));
@@ -233,6 +234,11 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
                   placeholder={layer === "dialogue" ? "The line to voice, from the notes" : layer === "sfx" ? "Describe the sound: rain on a tin roof, distant traffic" : "Describe the picture for this cut"}
                   className="w-full resize-none border-0 bg-transparent px-1 py-1 text-[15px] leading-snug outline-none placeholder:text-muted" />
         <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-line pt-2">
+          {["background", "character", "merged"].includes(layer) && (
+            look
+              ? <span className="pill bg-sand text-xs" title={`Every picture prompt in this project starts with: ${look.prompt}`}>Look · {look.label}</span>
+              : <span className="pill border-dashed text-xs text-muted" title="Set the project's look at the top of the page">Look · not set</span>
+          )}
           <div className="flex rounded-full bg-sand p-0.5">
             {LANES.map((l) => { const r = readiness.find((x) => x.lane === l.id); return (
               <button key={l.id} type="button" onClick={() => setLane(l.id)} title={r && !r.ready ? `blocked: ${r.missing.join(", ")}` : l.blurb}

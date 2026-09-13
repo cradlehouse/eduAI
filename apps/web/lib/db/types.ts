@@ -1594,6 +1594,7 @@ export type Database = {
           credential_default: Database["public"]["Enums"]["credential_mode"]
           has_minors: boolean
           id: string
+          looks: Json
           name: string
           project_roles: string[]
           public_entity: boolean
@@ -1607,6 +1608,7 @@ export type Database = {
           credential_default?: Database["public"]["Enums"]["credential_mode"]
           has_minors?: boolean
           id?: string
+          looks?: Json
           name: string
           project_roles?: string[]
           public_entity?: boolean
@@ -1620,6 +1622,7 @@ export type Database = {
           credential_default?: Database["public"]["Enums"]["credential_mode"]
           has_minors?: boolean
           id?: string
+          looks?: Json
           name?: string
           project_roles?: string[]
           public_entity?: boolean
@@ -1779,6 +1782,7 @@ export type Database = {
           crew_cap: number | null
           id: string
           logline: string
+          look: string | null
           org_id: string
           requires_approval: boolean
           roles_needed: string[]
@@ -1793,6 +1797,7 @@ export type Database = {
           crew_cap?: number | null
           id?: string
           logline?: string
+          look?: string | null
           org_id: string
           requires_approval?: boolean
           roles_needed?: string[]
@@ -1807,6 +1812,7 @@ export type Database = {
           crew_cap?: number | null
           id?: string
           logline?: string
+          look?: string | null
           org_id?: string
           requires_approval?: boolean
           roles_needed?: string[]
@@ -2700,6 +2706,32 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "shots"
             referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
+      org_job_metrics: {
+        Row: {
+          actual_cents: number | null
+          avg_seconds: number | null
+          cost_unknown: number | null
+          day: string | null
+          estimated_cents: number | null
+          failed: number | null
+          jobs: number | null
+          lane: Database["public"]["Enums"]["lane"] | null
+          layer: Database["public"]["Enums"]["layer"] | null
+          org_id: string | null
+          policy_rejected: number | null
+          provider: string | null
+          succeeded: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
           },
         ]
       }

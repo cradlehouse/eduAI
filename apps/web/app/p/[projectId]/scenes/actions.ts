@@ -231,3 +231,15 @@ export async function setTakeLifecycle(projectId: string, takeId: string, lifecy
   revalidatePath(`/p/${projectId}/scenes`);
   return { ok: true };
 }
+
+// The project's look: one per project, from the school's list. Any crew member or instructor can set it.
+export async function setLook(formData: FormData) {
+  const projectId = String(formData.get("project_id"));
+  const look = String(formData.get("look") ?? "") || null;
+  const back = String(formData.get("back") ?? "");
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("projects").update({ look }).eq("id", projectId).select("id");
+  if (error || !data?.length) redirect(`/p/${projectId}/scenes?error=${encodeURIComponent(error?.message ?? "Nothing changed.")}`);
+  revalidatePath(`/p/${projectId}`);
+  redirect(back.startsWith(`/p/${projectId}`) ? back : `/p/${projectId}/scenes`);
+}

@@ -23,17 +23,25 @@ export async function generate(input: { projectId: string; shotId: string; profi
   if (!opt.allowed) return { error: `Route not allowed: ${opt.reason}.` };
 
   const { data: est } = await supabase.rpc("estimate_tokens", { p_profile: input.profileId, p_inputs: input.inputs });
+  // (the estimate does not depend on prompt length for video routes; the look prefix is added below)
   const { data: budget } = await supabase.from("project_tokens").select("remaining_tokens").eq("project_id", input.projectId).maybeSingle();
   if (budget && est != null && est > (budget.remaining_tokens ?? 0)) return { error: `Not enough tokens: this needs ${est.toLocaleString()} and ${(budget.remaining_tokens ?? 0).toLocaleString()} are left.` };
 
   // org_id / cohort_id / requested_by are re-derived by the jobs_fill_defaults trigger before RLS;
   // they are passed here only because the insert type requires them.
-  const { data: project } = await supabase.from("projects").select("org_id, cohort_id").eq("id", input.projectId).maybeSingle();
+  const { data: project } = await supabase.from("projects").select("org_id, cohort_id, look, orgs(looks)").eq("id", input.projectId).maybeSingle();
   if (!project) return { error: "Project not found." };
+  // The project's look leads every picture prompt. Set once per project; students never retype it.
+  const inputs = { ...input.inputs };
+  const looks = (project.orgs?.looks ?? []) as { key: string; label: string; prompt: string }[];
+  const look = looks.find((l) => l.key === project.look);
+  if (look && ["background", "character", "merged"].includes(input.layer) && typeof inputs.prompt === "string") {
+    inputs.prompt = `${look.prompt}. ${inputs.prompt}`;
+  }
   const { data: job, error } = await supabase.from("jobs").insert({
     org_id: project.org_id, cohort_id: project.cohort_id, requested_by: user.id,
     project_id: input.projectId, shot_id: input.shotId, deployment_profile_id: input.profileId,
-    lane: input.lane, layer: input.layer, inputs: input.inputs,
+    lane: input.lane, layer: input.layer, inputs,
   }).select("id").single();
   if (error) return { error: error.message };
   revalidatePath(`/p/${input.projectId}/scenes`);

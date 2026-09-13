@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { BibleChip } from "@/components/BibleChip";
-import { createScene, createShot, deleteScene, deleteShot, updateScene, updateShot } from "./actions";
+import { createScene, createShot, deleteScene, deleteShot, setLook, updateScene, updateShot } from "./actions";
 import { CutWorkspace, type Option, type Readiness, type TakeRow } from "./CutWorkspace";
 import { EConte } from "./EConte";
 import { JobWatcher } from "./JobWatcher";
@@ -19,7 +19,8 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
   const { projectId } = await params;
   const { ok, error, cut, scene: sceneParam, view } = await searchParams;
   const supabase = await createClient();
-  const [{ data: scenes }, { data: shots }, { data: takeRows }, { data: jobs }, { data: entries }, { data: imageAssets }] = await Promise.all([
+  const [{ data: project }, { data: scenes }, { data: shots }, { data: takeRows }, { data: jobs }, { data: entries }, { data: imageAssets }] = await Promise.all([
+    supabase.from("projects").select("look, orgs(looks)").eq("id", projectId).maybeSingle(),
     supabase.from("scenes").select("id, position, title, synopsis").eq("project_id", projectId).order("position"),
     supabase.from("shots").select("id, scene_id, position, label, description, duration_target_s, intent, selected_take_id, plate_take_id").eq("project_id", projectId).order("position"),
     supabase.from("takes").select("id, shot_id, layer, asset_id, created_at, lifecycle, assets(mime, kind, duration_s)").eq("project_id", projectId).in("lifecycle", ["live", "killed"]).order("created_at"),
@@ -33,6 +34,8 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
   }));
   const takes = allTakes.filter((t) => t.lifecycle === "live");
   const allShots = shots ?? [];
+  const looks = ((project?.orgs?.looks ?? []) as { key: string; label: string; prompt: string }[]);
+  const look = looks.find((l) => l.key === project?.look) ?? null;
   const selectedShot = allShots.find((s) => s.id === cut) ?? null;
   const scene = (scenes ?? []).find((sc) => sc.id === (selectedShot?.scene_id ?? sceneParam)) ?? (scenes ?? [])[0] ?? null;
   const cuts = allShots.filter((s) => s.scene_id === scene?.id);
@@ -71,7 +74,17 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
       <div className="mb-3 flex flex-wrap items-baseline gap-4">
         <h1 className="display text-2xl">Scenes</h1>
         <span className="text-sm text-muted">{allShots.length} cuts · {Math.floor(total / 60)}:{String(Math.round(total % 60)).padStart(2, "0")} planned</span>
-        <div className="ml-auto flex gap-1 rounded-full bg-sand p-0.5 text-xs">
+        <form action={setLook} className="ml-auto flex items-center gap-1.5 text-xs">
+          <input type="hidden" name="project_id" value={projectId} />
+          <input type="hidden" name="back" value={`/p/${projectId}/scenes${current ? `?cut=${current.id}` : ""}`} />
+          <label htmlFor="look" className="label">Look</label>
+          <select id="look" name="look" defaultValue={project?.look ?? ""} className="input py-1 text-xs" title={look?.prompt ?? "Pick the film's look; it leads every picture prompt"}>
+            <option value="">not set</option>
+            {looks.map((l) => <option key={l.key} value={l.key}>{l.label}</option>)}
+          </select>
+          <button className="btn text-xs">Set</button>
+        </form>
+        <div className="flex gap-1 rounded-full bg-sand p-0.5 text-xs">
           <Link href={`/p/${projectId}/scenes${current ? `?cut=${current.id}` : ""}`} className={`rounded-full px-3 py-1 ${view !== "list" ? "bg-ink text-paper" : ""}`}>Filmstrip</Link>
           <Link href={`/p/${projectId}/scenes?view=list${scene ? `&scene=${scene.id}` : ""}`} className={`rounded-full px-3 py-1 ${view === "list" ? "bg-ink text-paper" : ""}`}>E-conte</Link>
         </div>
@@ -142,7 +155,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
             {current ? (
               <CutWorkspace projectId={projectId} shot={{ id: current.id, label: current.label, selected_take_id: current.selected_take_id, plate_take_id: current.plate_take_id }}
                             takes={allTakes.filter((t) => t.shot_id === current.id)} optionsByLane={optionsByLane} readiness={readiness}
-                            promptSeed={promptSeed} dialogueSeed={intent.dialogue ?? ""} assets={assetOptions} />
+                            promptSeed={promptSeed} dialogueSeed={intent.dialogue ?? ""} assets={assetOptions} look={look} />
             ) : <p className="text-sm text-muted">Add the first cut of this scene above.</p>}
           </div>
 
