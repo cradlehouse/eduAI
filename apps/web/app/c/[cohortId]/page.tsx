@@ -25,6 +25,10 @@ export default async function CohortHome({ params }: { params: Promise<{ cohortI
 
   return (
     <div className="max-w-4xl">
+      {nav.org?.logo_url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={nav.org.logo_url} alt={nav.org.name} className="mb-4 h-12 w-auto" />
+      )}
       <h1 className="display mb-1 text-2xl">{cohort.name}</h1>
       <p className="mb-6 text-sm text-muted">{cohort.courses?.title}{cohort.starts_on ? ` · ${cohort.starts_on}` : ""}{cohort.ends_on ? ` → ${cohort.ends_on}` : ""}</p>
 

@@ -1594,7 +1594,9 @@ export type Database = {
           credential_default: Database["public"]["Enums"]["credential_mode"]
           has_minors: boolean
           id: string
+          logo_url: string | null
           looks: Json
+          mark_url: string | null
           name: string
           project_roles: string[]
           public_entity: boolean
@@ -1608,7 +1610,9 @@ export type Database = {
           credential_default?: Database["public"]["Enums"]["credential_mode"]
           has_minors?: boolean
           id?: string
+          logo_url?: string | null
           looks?: Json
+          mark_url?: string | null
           name: string
           project_roles?: string[]
           public_entity?: boolean
@@ -1622,7 +1626,9 @@ export type Database = {
           credential_default?: Database["public"]["Enums"]["credential_mode"]
           has_minors?: boolean
           id?: string
+          logo_url?: string | null
           looks?: Json
+          mark_url?: string | null
           name?: string
           project_roles?: string[]
           public_entity?: boolean
@@ -2947,6 +2953,7 @@ export type Database = {
         Returns: {
           cohort_name: string
           email_masked: string
+          org_logo: string
           org_name: string
           project_title: string
           role: Database["public"]["Enums"]["member_role"]

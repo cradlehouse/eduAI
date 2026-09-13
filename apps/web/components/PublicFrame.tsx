@@ -11,7 +11,11 @@ export function PublicFrame({ current, children }: { current: "mission" | "how";
         <Link href="/login" className="btn ml-auto">Sign in</Link>
       </header>
       <main className="mx-auto max-w-3xl px-6 py-12">{children}</main>
-      <footer className="mx-auto max-w-3xl px-6 pb-12 text-xs text-muted">Built with Pegasus Media Project, Dallas. Students see tokens, never money; every take carries a receipt.</footer>
+      <footer className="mx-auto flex max-w-3xl items-center gap-3 px-6 pb-12 text-xs text-muted">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/orgs/pegasus-media-project/mark.png" alt="Pegasus Media Project" className="h-8 w-8" />
+        <span>Built with Pegasus Media Project, Dallas. Students see tokens, never money; every take carries a receipt.</span>
+      </footer>
     </div>
   );
 }

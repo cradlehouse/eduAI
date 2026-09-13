@@ -25,7 +25,7 @@ export default async function ProjectLayout({ children, params }: { children: Re
 
   return (
     <Shell nav={nav}
-      crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home" }, { label: cohortName, href: `/c/${project.cohort_id}` },
+      crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home", image: nav.org?.mark_url }, { label: cohortName, href: `/c/${project.cohort_id}` },
                { label: project.title, href: base, siblings: (sib ?? []).map((p) => ({ id: p.id, label: p.title, href: `/p/${p.id}` })) }]}
       base={base} sections={SECTIONS} sidebarTitle={project.title}
       budget={budget ? { spent: budget.spent_tokens ?? 0, total: budget.total_tokens ?? 0, scope: budget.scope } : null}

@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-export type CrumbSeg = { label: string; href?: string; siblings?: { id: string; label: string; href: string }[] };
+export type CrumbSeg = { label: string; href?: string; image?: string | null; siblings?: { id: string; label: string; href: string }[] };
 
 // Header breadcrumb = the scope switcher. A segment with siblings is a dropdown; the last segment is
 // the current page and is never a link (NN/g). Clicking a parent segment is the way back up.
@@ -29,7 +29,9 @@ export function Crumb({ segs: given, base, sections }: { segs: CrumbSeg[]; base?
                 {s.siblings.map((o) => <option key={o.id} value={o.href}>{o.label}</option>)}
               </select>
             ) : last || !s.href ? (
-              <span className={`truncate ${last ? "text-ink" : "text-muted"}`}>{s.label}</span>
+              <span className={`flex min-w-0 items-center gap-1.5 truncate ${last ? "text-ink" : "text-muted"}`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {s.image && <img src={s.image} alt="" className="h-5 w-5 shrink-0 object-contain" />}{s.label}</span>
             ) : (
               <Link href={s.href} className="truncate rounded-full border border-line bg-card px-2.5 py-0.5 text-xs hover:bg-sand">{s.label}</Link>
             )}

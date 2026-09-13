@@ -34,6 +34,12 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
   const summary = (
     <dl className="mb-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+      {invite.org_logo && (
+        <dd className="col-span-2 mb-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={invite.org_logo} alt={invite.org_name ?? ""} className="h-12 w-auto" />
+        </dd>
+      )}
       <dt className="opacity-70">Organisation</dt><dd>{invite.org_name}</dd>
       <dt className="opacity-70">Role</dt><dd>{invite.role ? ROLE_LABEL[invite.role] : ""}</dd>
       {invite.cohort_name && <><dt className="opacity-70">Cohort</dt><dd>{invite.cohort_name}</dd></>}

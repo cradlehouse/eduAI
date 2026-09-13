@@ -7,7 +7,7 @@ export default async function HomeLayout({ children }: { children: React.ReactNo
   const nav = await getNav();
   if (!nav) redirect("/login");
   return (
-    <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "Imaje" }, { label: "Home" }]} sidebarTitle="Home"
+    <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "Imaje", image: nav.org?.mark_url }, { label: "Home" }]} sidebarTitle="Home"
       sidebar={<><NavItem href="/home" exact icon="Home">Home</NavItem>{nav.isAdmin && <NavItem href="/org" mark="admin" icon="Building2">Organisation</NavItem>}</>}>
       {children}
     </Shell>

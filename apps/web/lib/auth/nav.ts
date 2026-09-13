@@ -7,7 +7,7 @@ export async function getNav() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
   const [{ data: memberships }, { data: instructing }, { data: enrolled }] = await Promise.all([
-    supabase.from("memberships").select("role, is_minor, orgs(id, name)").eq("user_id", user.id),
+    supabase.from("memberships").select("role, is_minor, orgs(id, name, logo_url, mark_url)").eq("user_id", user.id),
     supabase.from("cohort_instructors").select("cohorts(id, name)").eq("user_id", user.id),
     supabase.from("enrolments").select("cohorts(id, name)").eq("user_id", user.id).eq("status", "active"),
   ]);
