@@ -20,7 +20,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 
   return (
     <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "eduai", href: "/home" }, { label: "Account" }]} sidebarTitle="Account"
-      sidebar={<><NavItem href="/account" exact>Account</NavItem><NavItem href="/home">Home</NavItem></>}>
+      sidebar={<><NavItem href="/account" exact icon="UserRound">Account</NavItem><NavItem href="/home" icon="Home">Home</NavItem></>}>
       <div className="max-w-md">
         <h1 className="display mb-1 text-2xl">Account</h1>
         <p className="mb-6 text-sm text-muted">{nav.email}</p>

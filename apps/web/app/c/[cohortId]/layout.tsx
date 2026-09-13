@@ -29,20 +29,20 @@ export default async function CohortLayout({ children, params }: { children: Rea
       budget={personal ? { spent: personal.spent_tokens ?? 0, total: personal.total_tokens ?? 0, scope: "personal" } : null}
       sidebar={<>
         <NavGroup title="Cohort">
-          <NavItem href={base} exact>Home</NavItem>
-          <NavItem href={`${base}/team`}>Team</NavItem>
-          <NavItem href={`${base}/projects`}>Projects</NavItem>
+          <NavItem href={base} exact icon="Home">Home</NavItem>
+          <NavItem href={`${base}/team`} icon="Users">Team</NavItem>
+          <NavItem href={`${base}/projects`} icon="Clapperboard">Projects</NavItem>
           {me.manage && <>
-            <NavItem href={`${base}/schedule`} mark="instructor">Schedule</NavItem>
-            <NavSoon label="Review queue" when="Phase 2" />
-            <NavSoon label="Budgets" when="Phase 2" />
-            <NavSoon label="Release" when="Phase 3" />
-            <NavSoon label="Settings" when="soon" />
+            <NavItem href={`${base}/schedule`} mark="instructor" icon="CalendarDays">Schedule</NavItem>
+            <NavSoon label="Review queue" when="Phase 2" icon="ListChecks" />
+            <NavSoon label="Budgets" when="Phase 2" icon="Coins" />
+            <NavSoon label="Release" when="Phase 3" icon="Send" />
+            <NavSoon label="Settings" when="soon" icon="Settings" />
           </>}
         </NavGroup>
         {mine.length > 0 && (
           <NavGroup title="My projects">
-            {mine.map((p) => <NavItem key={p.id} href={`/p/${p.id}`} mark={p.roles.join(" · ")}>{p.title}</NavItem>)}
+            {mine.map((p) => <NavItem key={p.id} href={`/p/${p.id}`} mark={p.roles.join(" · ")} icon="Film">{p.title}</NavItem>)}
           </NavGroup>
         )}
       </>}>

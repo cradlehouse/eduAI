@@ -2,18 +2,35 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-export function NavItem({ href, exact, mark, children }: { href: string; exact?: boolean; mark?: string; children: React.ReactNode }) {
+import { ArrowLeft, BookMarked, BookOpen, Building2, CalendarDays, Clapperboard, Coins, Cpu, FileText, Film, GraduationCap, Home, KeyRound,
+         LayoutGrid, ListChecks, PackageCheck, Scissors, Send, Settings, UserRound, Users, Video } from "lucide-react";
+
+// Icons are named, not passed as components: layouts are server components and a function prop
+// cannot cross into this client component. Add a name here to use it in a sidebar.
+const ICONS = { ArrowLeft, BookMarked, BookOpen, Building2, CalendarDays, Clapperboard, Coins, Cpu, FileText, Film, GraduationCap, Home, KeyRound,
+                LayoutGrid, ListChecks, PackageCheck, Scissors, Send, Settings, UserRound, Users, Video };
+export type IconName = keyof typeof ICONS;
+
+// Sidebar rows: optional icon (lucide, 16px, inherits colour) + label + a small right-hand mark.
+export function NavItem({ href, exact, mark, icon, children }: { href: string; exact?: boolean; mark?: string; icon?: IconName; children: React.ReactNode }) {
+  const Icon = icon ? ICONS[icon] : null;
   const path = usePathname();
   const active = exact ? path === href : path === href || path.startsWith(href + "/");
   return (
     <Link href={href} className={`flex items-center justify-between rounded-full px-3 py-1 text-sm ${active ? "bg-ink text-paper" : "hover:bg-card"}`}>
-      <span>{children}</span>
-      {mark && <span className={`text-[10px] ${active ? "text-paper/70" : "text-muted"}`}>{mark}</span>}
+      <span className="flex min-w-0 items-center gap-2">{Icon && <Icon size={16} strokeWidth={1.75} className="shrink-0 opacity-80" aria-hidden />}<span className="truncate">{children}</span></span>
+      {mark && <span className={`ml-2 shrink-0 text-[10px] ${active ? "text-paper/70" : "text-muted"}`}>{mark}</span>}
     </Link>
   );
 }
-export function NavSoon({ label, when }: { label: string; when: string }) {
-  return <span className="flex items-center justify-between rounded-full px-3 py-1 text-sm opacity-40"><span>{label}</span><span className="text-[10px]">{when}</span></span>;
+export function NavSoon({ label, when, icon }: { label: string; when: string; icon?: IconName }) {
+  const Icon = icon ? ICONS[icon] : null;
+  return (
+    <span className="flex items-center justify-between rounded-full px-3 py-1 text-sm opacity-40">
+      <span className="flex items-center gap-2">{Icon && <Icon size={16} strokeWidth={1.75} className="shrink-0" aria-hidden />}<span>{label}</span></span>
+      <span className="text-[10px]">{when}</span>
+    </span>
+  );
 }
 export function NavGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return <div className="mt-3"><div className="label mb-1 px-3">{title}</div>{children}</div>;

@@ -8,7 +8,7 @@ export default async function HomeLayout({ children }: { children: React.ReactNo
   if (!nav) redirect("/login");
   return (
     <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "eduai" }, { label: "Home" }]} sidebarTitle="Home"
-      sidebar={<><NavItem href="/home" exact>Home</NavItem>{nav.isAdmin && <NavItem href="/org" mark="admin">Organisation</NavItem>}</>}>
+      sidebar={<><NavItem href="/home" exact icon="Home">Home</NavItem>{nav.isAdmin && <NavItem href="/org" mark="admin" icon="Building2">Organisation</NavItem>}</>}>
       {children}
     </Shell>
   );

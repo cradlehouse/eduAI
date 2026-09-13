@@ -29,22 +29,22 @@ export default async function ProjectLayout({ children, params }: { children: Re
       base={base} sections={SECTIONS} sidebarTitle={project.title}
       budget={budget ? { spent: budget.spent_tokens ?? 0, total: budget.total_tokens ?? 0, scope: budget.scope } : null}
       sidebar={<>
-        <NavItem href={`/c/${project.cohort_id}`} exact>‹ {cohortName}</NavItem>
+        <NavItem href={`/c/${project.cohort_id}`} exact icon="ArrowLeft">{cohortName}</NavItem>
         <NavGroup title="Pre-production">
-          <NavItem href={`${base}/brief`}>Brief</NavItem>
-          <NavItem href={`${base}/bible`}>Bible</NavItem>
-          <NavItem href={`${base}/scenes`}>Storyboard</NavItem>
+          <NavItem href={`${base}/brief`} icon="FileText">Brief</NavItem>
+          <NavItem href={`${base}/bible`} icon="BookOpen">Bible</NavItem>
+          <NavItem href={`${base}/scenes`} icon="LayoutGrid">Storyboard</NavItem>
         </NavGroup>
         <NavGroup title="Production">
-          <NavItem href={`${base}/shoot`}>Shoot</NavItem>
+          <NavItem href={`${base}/shoot`} icon="Video">Shoot</NavItem>
         </NavGroup>
         <NavGroup title="Post-production">
-          <NavSoon label="Edit" when="Phase 3" />
-          <NavSoon label="Deliver" when="Phase 3" />
+          <NavSoon label="Edit" when="Phase 3" icon="Scissors" />
+          <NavSoon label="Deliver" when="Phase 3" icon="PackageCheck" />
         </NavGroup>
         <NavGroup title="Project">
-          <NavItem href={`${base}/members`} mark={manage ? "instructor" : undefined}>Members</NavItem>
-          {manage && <NavSoon label="Settings" when="soon" />}
+          <NavItem href={`${base}/members`} mark={manage ? "instructor" : undefined} icon="Users">Members</NavItem>
+          {manage && <NavSoon label="Settings" when="soon" icon="Settings" />}
         </NavGroup>
         {!isMember && <div className="mt-3 px-3 text-[11px] text-muted">You&apos;re not on this crew; you&apos;re here as {manage ? "an instructor" : "a viewer"}.</div>}
       </>}>
