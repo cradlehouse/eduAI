@@ -20,3 +20,6 @@ services:
         value: generate
       - key: PYTHON_VERSION
         value: "3.12"
+      # Render pre-creates a venv at /opt/render/project/src/.venv; point uv at it so it stops warning.
+      - key: UV_PROJECT_ENVIRONMENT
+        value: /opt/render/project/src/.venv
