@@ -73,3 +73,26 @@ The right-hand inspector holds the e-conte notes, the bible links with consent s
 generation log with vendor errors. The e-conte column survives as the list view. The old per-cut console
 route redirects here. The sidebar collapses to an icon rail (remembered per browser) so the strip gets
 the width.
+
+## Menu audit (2026-09-13) — the kill rule
+
+Every menu row must answer: important, for what, where does it lead, does it add value. If not, kill.
+
+Applied:
+- **Brief** killed (the week's brief is on the cohort home). **Shoot** killed (same cuts and counts as the
+  Scenes filmstrip). Both routes forward to Scenes. `module` and `shots/[id]` forward too.
+- **Every "soon" row** killed from the sidebars (Edit, Deliver, Settings, Review queue, Budgets, Release,
+  Courses, Models, Credentials). A row a student can click and get nothing is noise; the roadmap lives here.
+- **Phase headings** dropped while each would hold one item. The project menu is flat: Scenes, Bible,
+  Members. Pre/Production/Post return as groups when Edit and Deliver exist.
+- Marks on rows are role marks only (`instructor`, `admin`) and appear only on rows that role alone sees.
+
+Menus today:
+- Home: Home · Organisation (admin)
+- Organisation: Overview · Cohorts · People
+- Cohort: Home · Team · Projects · Schedule (instructor) · My projects
+- Project: ‹ cohort · Scenes · Bible · Members
+- Account: Account · Home
+
+Roadmap rows (not in menus): project Settings; cohort Review queue, Budgets, Release; org Courses,
+Models, Credentials, Settings; project Edit, Deliver (Post-production).

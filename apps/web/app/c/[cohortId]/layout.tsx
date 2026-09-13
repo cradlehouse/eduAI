@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
-import { NavGroup, NavItem, NavSoon } from "@/components/NavItem";
+import { NavGroup, NavItem } from "@/components/NavItem";
 
 const SECTIONS = { "": "Home", team: "Team", projects: "Projects", schedule: "Schedule" };
 
@@ -34,10 +34,6 @@ export default async function CohortLayout({ children, params }: { children: Rea
           <NavItem href={`${base}/projects`} icon="Clapperboard">Projects</NavItem>
           {me.manage && <>
             <NavItem href={`${base}/schedule`} mark="instructor" icon="CalendarDays">Schedule</NavItem>
-            <NavSoon label="Review queue" when="Phase 2" icon="ListChecks" />
-            <NavSoon label="Budgets" when="Phase 2" icon="Coins" />
-            <NavSoon label="Release" when="Phase 3" icon="Send" />
-            <NavSoon label="Settings" when="soon" icon="Settings" />
           </>}
         </NavGroup>
         {mine.length > 0 && (

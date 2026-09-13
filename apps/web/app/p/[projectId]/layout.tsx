@@ -3,10 +3,10 @@ import { getProject } from "@/lib/projects/data";
 import { getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
-import { NavGroup, NavItem, NavSoon } from "@/components/NavItem";
+import { NavGroup, NavItem } from "@/components/NavItem";
 import { SidebarNote } from "@/components/Sidebar";
 
-const SECTIONS = { "": "Brief", bible: "Bible", scenes: "Scenes", shoot: "Shoot", shots: "Shoot", members: "Members" };
+const SECTIONS = { "": "Scenes", bible: "Bible", scenes: "Scenes", shoot: "Scenes", shots: "Scenes", members: "Members" };
 
 export default async function ProjectLayout({ children, params }: { children: React.ReactNode; params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -31,20 +31,10 @@ export default async function ProjectLayout({ children, params }: { children: Re
       budget={budget ? { spent: budget.spent_tokens ?? 0, total: budget.total_tokens ?? 0, scope: budget.scope } : null}
       sidebar={<>
         <NavItem href={`/c/${project.cohort_id}`} exact icon="ArrowLeft">{cohortName}</NavItem>
-        <NavGroup title="Pre-production">
-          <NavItem href={`${base}/bible`} icon="BookOpen">Bible</NavItem>
-          <NavItem href={`${base}/scenes`} icon="LayoutGrid">Scenes</NavItem>
-        </NavGroup>
-        <NavGroup title="Production">
-          <NavItem href={`${base}/shoot`} icon="Video">Shoot</NavItem>
-        </NavGroup>
-        <NavGroup title="Post-production">
-          <NavSoon label="Edit" when="Phase 3" icon="Scissors" />
-          <NavSoon label="Deliver" when="Phase 3" icon="PackageCheck" />
-        </NavGroup>
         <NavGroup title="Project">
-          <NavItem href={`${base}/members`} mark={manage ? "instructor" : undefined} icon="Users">Members</NavItem>
-          {manage && <NavSoon label="Settings" when="soon" icon="Settings" />}
+          <NavItem href={`${base}/scenes`} icon="LayoutGrid">Scenes</NavItem>
+          <NavItem href={`${base}/bible`} icon="BookOpen">Bible</NavItem>
+          <NavItem href={`${base}/members`} icon="Users">Members</NavItem>
         </NavGroup>
         {!isMember && <SidebarNote>You&apos;re not on this crew; you&apos;re here as {manage ? "an instructor" : "a viewer"}.</SidebarNote>}
       </>}>
