@@ -79,8 +79,8 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
       {ok && <p className="mb-3 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
       {error && <p className="mb-3 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
 
-      {(scenes ?? []).length > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-1.5">
+      {(scenes ?? []).length > 1 && (
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
           {(scenes ?? []).map((sc) => {
             const first = allShots.find((s) => s.scene_id === sc.id);
             const href = view === "list" ? `/p/${projectId}/scenes?view=list&scene=${sc.id}` : first ? `/p/${projectId}/scenes?cut=${first.id}` : `/p/${projectId}/scenes?scene=${sc.id}`;
@@ -90,14 +90,20 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
       )}
 
       {scene && (
-        <form action={updateScene} className="mb-4 flex flex-wrap items-center gap-2">
-          <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="scene_id" value={scene.id} />
-          <span className="label">Scene {scene.position}</span>
-          <input name="title" defaultValue={scene.title} className={`${input} display`} />
-          <input name="synopsis" defaultValue={scene.synopsis} placeholder="synopsis" className={`${input} min-w-64 flex-1`} />
-          <button className={btn}>Save</button>
-          <button formAction={deleteScene} className={`${btn} text-danger`}>Delete scene</button>
-        </form>
+        <details className="group mb-4">
+          <summary className="flex cursor-pointer list-none items-baseline gap-3">
+            <h2 className="display text-lg">Scene {scene.position} · {scene.title}</h2>
+            {scene.synopsis && <span className="truncate text-sm text-muted">{scene.synopsis}</span>}
+            <span className="ml-auto shrink-0 text-xs text-muted underline group-open:hidden">Edit scene</span>
+          </summary>
+          <form action={updateScene} className="mt-2 flex flex-wrap items-center gap-2">
+            <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="scene_id" value={scene.id} />
+            <input name="title" defaultValue={scene.title} className={`${input} display`} />
+            <input name="synopsis" defaultValue={scene.synopsis} placeholder="synopsis" className={`${input} min-w-64 flex-1`} />
+            <button className={btn}>Save</button>
+            <button formAction={deleteScene} className={`${btn} text-danger`}>Delete scene</button>
+          </form>
+        </details>
       )}
 
       {scene && view === "list" ? (
@@ -115,7 +121,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
                 const thumb = thumbFor(s.id); const lane = laneOf(s.id); const on = s.id === current?.id;
                 return (
                   <Link key={s.id} href={`/p/${projectId}/scenes?cut=${s.id}`} className={`card flex w-40 shrink-0 flex-col p-2 text-[11px] ${on ? "ring-2 ring-ink" : ""}`} style={{ borderRadius: 12 }}>
-                    <div className="flex items-center justify-between"><span className="mono">{s.label}</span><span className="mono text-muted">{s.duration_target_s != null ? `${s.duration_target_s.toFixed(1)}s` : "—"}</span></div>
+                    <div className="flex items-center justify-between"><span className="mono">Cut {s.label}</span><span className="mono text-muted">{s.duration_target_s != null ? `${s.duration_target_s.toFixed(1)}s` : "—"}</span></div>
                     <div className={`my-1.5 aspect-video overflow-hidden rounded-[8px] ${thumb ? "bg-ink" : "border border-dashed border-line"}`}>
                       {thumb && (thumb.kind === "video"
                         ? <video src={`/api/assets/${thumb.asset_id}`} muted playsInline preload="metadata" className="h-full w-full object-cover" />
