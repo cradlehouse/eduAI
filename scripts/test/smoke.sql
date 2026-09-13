@@ -57,7 +57,7 @@ declare r record; demo uuid := '00000000-0000-4000-8000-000000000001'; stu uuid 
   veo uuid := (select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2');
   flux uuid := (select id from public.deployment_profiles where slug = 'flux-2-dev@fal');
 begin
-  assert (select count(*) from public.deployment_profiles where approval_status = 'approved') = 3, 'three approved Phase 1 profiles';
+  assert (select count(*) from public.deployment_profiles where approval_status = 'approved') = 4, 'four approved Phase 1 profiles';
   assert (select count(*) from public.deployment_profiles where kind = 'self_hosted' and compute_provider = 'crusoe' and approval_status = 'draft') = 1, 'crusoe draft profile';
   assert (select resource_disclosure from public.model_versions where slug = 'kling-3') = 'C', 'closed vendor = C';
   assert (select count(*) from public.model_versions where resource_disclosure = 'A') = 0, 'nobody is tier A yet';
@@ -268,7 +268,7 @@ begin
   assert (select count(*) from public.job_receipts) = 0, 'outsider sees no demo receipts';
   assert (select count(*) from public.job_events where org_id = '00000000-0000-4000-8000-000000000001') = 0, 'outsider sees no demo events';
   assert (select count(*) from public.ledger) = 0, 'outsider sees no demo ledger';
-  assert (select count(*) from public.deployment_profiles) = 10, 'registry readable';
+  assert (select count(*) from public.deployment_profiles) = 11, 'registry readable';
   assert (select count(*) from public.org_model_profiles) = 1, 'sees own org allowlist only';
   assert (select count(*) from public.consent_releases) = 0, 'sees no demo releases';
   begin

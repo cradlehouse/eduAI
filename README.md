@@ -60,6 +60,7 @@ three Phase 1 routes are approved and allowlisted (time-bounded to 31 Dec 2026, 
 | profile | lanes | role |
 |---|---|---|
 | `veo-3.1-lite@fal-r2` | finish | the managed visual model; instructor-gated for release |
+| `ltx-2.5-pro@fal` | control, finish | full-quality LTX; same family as fast so previz carries into the finish pass |
 | `ltx-2.5-fast@fal` | explore, control | open-weight experimentation route (managed API now, self-hosted profile is Phase 4) |
 | `stable-audio-2.5@fal` | explore | SFX route |
 
