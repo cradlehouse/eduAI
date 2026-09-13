@@ -32,9 +32,9 @@ cameras/lighting/audio/laptops/software, and has apprentices make both individua
 | Media processing | **ffmpeg** in the render worker; **OTIO** for timelines; FCP7 XML / FCPXML / EDL writers | Export formats editors actually open | Phase 3 |
 | Model vendors | **fal.ai** (Veo 3.1 Lite, LTX 2.5, Stable Audio 3); Replicate (Chatterbox, Phase 2) | Registry-driven; a vendor is a row, never code | fal at P1-10 |
 | Self-hosted compute | **Crusoe Cloud** (stranded-energy + renewable GPUs) for the Phase 4 open-weight profiles | The only tier where energy is measurable; the sustainability differentiator vs CoreWeave/Lambda/RunPod | Phase 4, draft profile `ltx-2.5@crusoe` |
-| Prompt gate + assistants | **Anthropic Claude** | Content-tier prompt gate first (P1-14), seven assistants later | P1-14 |
+| Prompt gate + assistants | **Anthropic Claude** (`claude-haiku-4-5-20251001` via forced tool use) | Content-tier prompt gate: every prompt is classified against the effective tier (M forced for minors) before a vendor sees it; refusals release the tokens and carry a one-sentence reason a teacher can show; a route with `prompt_gate: required` fails closed when the classifier is unavailable. Assistants later | Live in the orchestrator 2026-09-13 |
 | Publishing | **Ayrshare** | One API for YouTube/TikTok/Instagram; org and personal profiles | Phase 3 |
-| Errors | **Sentry**, org `cradlehouse`, projects `eduai-orchestrator` (FastAPI; errors + logs) and `eduai-web` (Next.js). `send_default_pii=False` everywhere: users are mostly minors | | Projects created 2026-09-12; SDK wiring at P1-15 |
+| Errors | **Sentry**, org `cradlehouse`, projects `eduai-orchestrator` (FastAPI; errors + logs) and `eduai-web` (Next.js). `send_default_pii=False` everywhere: users are mostly minors | | Orchestrator wired 2026-09-13 (on when `SENTRY_DSN` is set); web SDK still to do (Workers runtime) |
 | CI | **GitHub Actions**: generated-file sync · migrations + RLS check + smoke on `postgres:17` · web lint/typecheck · orchestrator ruff/pytest | The db job is the one that matters; the last two skip until code exists | Live, green |
 | Repo | **GitHub `cradlehouse/eduAI`**, pnpm-workspace monorepo | | Live |
 

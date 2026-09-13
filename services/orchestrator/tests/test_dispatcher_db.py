@@ -7,6 +7,7 @@ import pytest
 
 from orchestrator.db import Db
 from orchestrator.dispatcher import Dispatcher
+from orchestrator.gate import GateDecision, PromptGate
 from orchestrator.providers.base import ProviderError, Submission, VendorStatus
 from orchestrator.settings import Settings
 from orchestrator.storage import MemoryStorage
@@ -51,6 +52,20 @@ async def insert_job(db: Db, inputs: dict, slug="ltx-2.5-fast@fal", lane="explor
     return str(row["id"])
 
 
+class FakeGate(PromptGate):
+    """Deterministic classifier: prompts containing 'gore' are refused at tier M."""
+
+    def __init__(self):
+        super().__init__("fake", "fake-model")
+        self.calls: list[tuple[str, str]] = []
+
+    async def classify(self, prompt, tier, layer=""):
+        self.calls.append((prompt, tier))
+        if "gore" in prompt:
+            return GateDecision(False, "graphic_violence", "Too graphic for tier M.", self.model)
+        return GateDecision(True, "ok", "", self.model)
+
+
 def cfg() -> Settings:
     return Settings(database_url=URL, job_kinds="generate", worker_name="test", fal_key="platform-key", poll_interval_s=0)
 
@@ -59,7 +74,8 @@ async def test_happy_path_settles_with_take_receipt_and_ledger():
     db = await Db.connect(URL)
     try:
         fake = FakeFal()
-        d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg())
+        gate = FakeGate()
+        d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg(), gate=gate)
         jid = await insert_job(db, {"prompt": "a quiet warehouse at dusk", "duration_s": 6, "camera_motion": "static"})
         await d.tick()
         job = await db.job(jid)
@@ -80,7 +96,9 @@ async def test_happy_path_settles_with_take_receipt_and_ledger():
         led = await db._all("select kind::text as kind, cents from public.ledger where job_id = %s order by created_at", jid)
         assert [(r["kind"], r["cents"]) for r in led] == [("reserve", 24), ("settle", 0)]
         ev = [r["event"] for r in await db._all("select event::text as event from public.job_events where job_id = %s order by at, id", jid)]
-        assert ev == ["queued", "claimed", "submitted", "accepted", "running", "output_received", "stored", "policy_approved", "settled", "unknown_cost"]
+        assert ev == ["queued", "claimed", "policy_approved", "submitted", "accepted", "running", "output_received", "stored", "policy_approved", "settled", "unknown_cost"]
+        assert gate.calls == [("a quiet warehouse at dusk", "M")]
+        assert rec["policy_decisions"]["prompt_gate"] == "allowed" and rec["policy_decisions"]["tier"] == "M"
         # replay: a second completion must not double-charge or duplicate the take
         assert (await db._one("select count(*)::int as n from public.takes where job_id = %s", jid))["n"] == 1
     finally:
@@ -90,7 +108,7 @@ async def test_happy_path_settles_with_take_receipt_and_ledger():
 async def test_bad_inputs_are_rejected_without_charge():
     db = await Db.connect(URL)
     try:
-        d = Dispatcher(db, MemoryStorage(), lambda name: FakeFal(), cfg())
+        d = Dispatcher(db, MemoryStorage(), lambda name: FakeFal(), cfg(), gate=FakeGate())
         jid = await insert_job(db, {"duration_s": 7})  # no prompt, bad enum
         await d.tick()
         job = await db.job(jid)
@@ -103,7 +121,7 @@ async def test_bad_inputs_are_rejected_without_charge():
 async def test_vendor_submit_failure_releases_reservation():
     db = await Db.connect(URL)
     try:
-        d = Dispatcher(db, MemoryStorage(), lambda name: FakeFal(fail_submit=True), cfg())
+        d = Dispatcher(db, MemoryStorage(), lambda name: FakeFal(fail_submit=True), cfg(), gate=FakeGate())
         jid = await insert_job(db, {"prompt": "x", "duration_s": 6})
         await d.tick()
         job = await db.job(jid)
@@ -119,7 +137,7 @@ async def test_timeout_releases():
     try:
         fake = FakeFal()
         fake.status = lambda sub, key: _queued()  # type: ignore[method-assign]
-        d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg())
+        d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg(), gate=FakeGate())
         jid = await insert_job(db, {"prompt": "x", "duration_s": 6})
         await d.tick()
         await db._exec("update public.jobs set submitted_at = now() - interval '2 hours' where id = %s", jid)
@@ -137,7 +155,7 @@ async def test_inbox_delivery_completes_job_and_is_deduped():
     db = await Db.connect(URL)
     try:
         fake = FakeFal()
-        d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg(), webhook_url="https://inbox.example/fal")
+        d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg(), webhook_url="https://inbox.example/fal", gate=FakeGate())
         jid = await insert_job(db, {"prompt": "x", "duration_s": 6})
         await d.submit_queued()
         job = await db.job(jid)
@@ -152,5 +170,34 @@ async def test_inbox_delivery_completes_job_and_is_deduped():
         row = await db._one("select processed_at, error from public.webhook_inbox where provider_request_id = %s", rid)
         assert row["processed_at"] is not None and row["error"] is None
         assert await d.drain_inbox() == 0
+    finally:
+        await db.close()
+
+
+async def test_prompt_gate_rejects_before_any_charge():
+    db = await Db.connect(URL)
+    try:
+        fake = FakeFal()
+        d = Dispatcher(db, MemoryStorage(), lambda name: fake, cfg(), gate=FakeGate())
+        jid = await insert_job(db, {"prompt": "gore everywhere", "duration_s": 6})
+        await d.tick()
+        job = await db.job(jid)
+        assert job["status"] == "rejected" and job["policy_rejection"] is True and "graphic_violence" in job["error"]
+        assert fake.submitted is None
+        assert (await db._one("select count(*)::int as n from public.ledger where job_id = %s", jid))["n"] == 0
+        ev = [r["event"] for r in await db._all("select event::text as event from public.job_events where job_id = %s order by at, id", jid)]
+        assert ev == ["queued", "claimed", "policy_rejected", "failed"] or ev[-2] == "policy_rejected"
+    finally:
+        await db.close()
+
+
+async def test_required_gate_without_classifier_fails_closed():
+    db = await Db.connect(URL)
+    try:
+        d = Dispatcher(db, MemoryStorage(), lambda name: FakeFal(), cfg(), gate=PromptGate("", "m"))
+        jid = await insert_job(db, {"prompt": "x", "duration_s": 6})
+        await d.tick()
+        job = await db.job(jid)
+        assert job["status"] == "failed" and "no classifier" in job["error"]
     finally:
         await db.close()

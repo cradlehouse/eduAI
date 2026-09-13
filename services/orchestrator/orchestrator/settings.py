@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     fal_key: str = ""
     replicate_api_token: str = ""
     sentry_dsn: str = ""
+    anthropic_api_key: str = ""
+    gate_model: str = Field(default="claude-haiku-4-5-20251001", description="prompt-gate classifier")
     job_kinds: str = Field(default="", description="comma list: generate, render. Empty ⇒ API only, no dispatcher")
     webhook_url: str = Field(default="", description="inbox Worker base, e.g. https://eduai-webhook-inbox.<acct>.workers.dev; empty ⇒ poll only")
     worker_name: str = Field(default_factory=lambda: socket.gethostname())

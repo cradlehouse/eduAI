@@ -15,6 +15,7 @@ from typing import Any
 
 from .db import Db, StoredOutput
 from .estimate import resource_estimate
+from .gate import GateDecision, PromptGate
 from .providers import Provider, ProviderError, Submission, make_provider
 from .registry import Route, asset_kind_for, ext_for, extract_outputs, map_inputs, validate_inputs
 from .settings import Settings
@@ -26,9 +27,10 @@ log = logging.getLogger("orchestrator")
 
 class Dispatcher:
     def __init__(self, db: Db, storage: Storage, provider_factory: Callable[[str], Provider] = make_provider,
-                 cfg: Settings = default_settings, webhook_url: str | None = None) -> None:
+                 cfg: Settings = default_settings, webhook_url: str | None = None, gate: PromptGate | None = None) -> None:
         self.db, self.storage, self.providers, self.cfg = db, storage, provider_factory, cfg
         self.webhook_url = webhook_url
+        self.gate = gate or PromptGate(cfg.anthropic_api_key, cfg.gate_model)
         self._provider_cache: dict[str, Provider] = {}
 
     def provider(self, name: str) -> Provider:
@@ -88,6 +90,9 @@ class Dispatcher:
         if not allowed:
             await self.db.release(jid, "rejected", f"route not allowed: {reason}")
             return
+        decision = await self.prompt_gate(job, route, inputs)
+        if decision is None:
+            return
         cents = await self.db.estimate_cents(route.profile_id, inputs)
         if cents is None:
             await self.db.release(jid, "failed", "no estimate for this route's cost model")
@@ -112,6 +117,36 @@ class Dispatcher:
         await self.db.event(jid, "accepted", {"provider": route.provider, "endpoint": route.endpoint, "request_id": sub.request_id,
                                               "status_url": sub.status_url, "response_url": sub.response_url,
                                               "vendor_fields": sorted(vendor_inputs.keys())})
+
+    async def prompt_gate(self, job: dict[str, Any], route: Route, inputs: dict[str, Any]) -> GateDecision | None:
+        """Classify the prompt against the effective tier. None ⇒ the job was released; the caller stops."""
+        jid = str(job["id"])
+        mode = route.safety.get("prompt_gate", "required")
+        text = " ".join(str(inputs.get(k) or "") for k in ("prompt", "text")).strip()
+        if mode == "none" or not text:
+            decision = GateDecision(True, "ok", "", "", ran=False)
+        elif not self.gate.available:
+            if mode == "required":
+                await self.db.release(jid, "failed", "prompt gate required for this route but no classifier is configured")
+                return None
+            decision = GateDecision(True, "ok", "", "", ran=False)
+        else:
+            tier = await self.db.effective_tier(str(job["org_id"]), str(job["requested_by"]))
+            try:
+                decision = await self.gate.classify(text, tier, str(job.get("layer") or ""))
+            except Exception as e:  # noqa: BLE001 — the gate failing closed is the safe default
+                await self.db.release(jid, "failed", f"prompt gate unavailable: {e}")
+                return None
+            decision.reason = decision.reason[:500]
+            payload = {"stage": "prompt", "tier": tier, **decision.as_dict()}
+            if not decision.allowed:
+                await self.db.event(jid, "policy_rejected", payload)
+                await self.db.release(jid, "rejected", f"prompt gate: {decision.category}. {decision.reason}".strip())
+                return None
+            await self.db.event(jid, "policy_approved", payload)
+            return decision
+        await self.db.event(jid, "policy_approved", {"stage": "prompt", **decision.as_dict()})
+        return decision
 
     async def resolve_asset_refs(self, route: Route, inputs: dict[str, Any], org_id: str) -> dict[str, Any]:
         out = dict(inputs)
@@ -195,10 +230,12 @@ class Dispatcher:
                             "job_id": jid, "lane": job.get("lane"), "layer": job.get("layer")}))
         await self.db.event(jid, "stored", {"hashes": [s.sha256 for s in stored]})
 
-        policy = {"prompt_gate": "not_run",  # P1-14
+        prompt_stage = await self.db.last_event_payload(jid, "policy_approved") or {}
+        policy = {"prompt_gate": prompt_stage.get("prompt_gate", "not_run"), "prompt_gate_category": prompt_stage.get("category"),
+                  "prompt_gate_model": prompt_stage.get("model"), "tier": prompt_stage.get("tier"),
                   "output_moderation": "vendor" if route.safety.get("output_moderation") else "none",
                   "safety_pipeline_version": route.safety_pipeline_version}
-        await self.db.event(jid, "policy_approved", policy)
+        await self.db.event(jid, "policy_approved", {"stage": "output", **policy})
 
         receipt = {
             "actual_cents": None,  # fal reports no per-request cost ⇒ settle at estimate, flagged cost_unknown

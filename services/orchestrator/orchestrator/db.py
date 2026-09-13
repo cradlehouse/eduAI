@@ -113,6 +113,11 @@ class Db:
                      model_id=str(r["model_id"]), input_schema=r["input_schema"] or {"type": "object"}, safety=r["safety"] or {},
                      safety_pipeline_version=r["safety_pipeline_version"] or "")
 
+    async def effective_tier(self, org_id: str, user_id: str) -> str:
+        """M for any minor regardless of the org setting (eduai.effective_content_tier)."""
+        r = await self._one("select eduai.effective_content_tier(%s, %s)::text as tier", org_id, user_id)
+        return (r or {}).get("tier") or "M"
+
     async def model_allowed(self, org_id: str, profile_id: str, lane: str, user_id: str) -> tuple[bool, str]:
         r = await self._one("select * from eduai.model_allowed(%s, %s, %s::public.lane, %s)", org_id, profile_id, lane, user_id)
         return (bool(r["allowed"]), r["reason"] or "") if r else (False, "no answer")

@@ -16,6 +16,17 @@ from .storage import make_storage
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("orchestrator")
 
+# P1-15: errors to Sentry when a DSN is set. send_default_pii=False: most users are minors; prompts and
+# emails never leave the platform this way. Import is optional so tests need no Sentry.
+if settings.sentry_dsn:
+    try:
+        import sentry_sdk
+
+        sentry_sdk.init(dsn=settings.sentry_dsn, send_default_pii=False, traces_sample_rate=0.0, environment="production")
+        log.info("sentry on")
+    except ImportError:  # pragma: no cover
+        log.warning("SENTRY_DSN set but sentry-sdk not installed")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

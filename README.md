@@ -90,7 +90,7 @@ Deploys are explicit; CI never deploys.
 
 ## Not done here, on purpose
 
-P1-12 onward. The orchestrator (P1-10) and the webhook inbox Worker (P1-11, live) are built and tested; the orchestrator is live on Render (eduai-orchestrator.onrender.com); the first real fal generation is the adapter test. Sign-in is password / Google (when configured) / emailed link; invite emails are not sent yet (links are copied from /org/people); Resend is on the platform list. Endpoints, cents and licence links in the registry CSVs are marked
+P1-16 (deploy smoke with two students) and the web Sentry SDK. Orchestrator, inbox Worker, takes UI, prompt gate and Sentry (orchestrator) are live; the first real fal generation succeeded on the LTX route 2026-09-13. Sign-in is password / Google (when configured) / emailed link; invite emails are not sent yet (links are copied from /org/people); Resend is on the platform list. Endpoints, cents and licence links in the registry CSVs are marked
 **UNVERIFIED** in their notes; confirm against vendor docs before P1-10. `adapter_tested_at` on the
 three approved profiles is a placeholder date — the approval check requires it, and P1-10 should
 overwrite it with the real test run.

@@ -22,6 +22,7 @@ an in-memory store (local only).
 | claim | `eduai.claim_job` (org-fair, SKIP LOCKED) | — |
 | validate `inputs` against `model_versions.input_schema` | — | `release_job(rejected)` |
 | gate | `eduai.model_allowed(org, profile, lane, requester)` | `release_job(rejected)` |
+| prompt gate | Claude classifies the prompt against `eduai.effective_content_tier` (`gate.py`); event `policy_approved`/`policy_rejected` with tier, category, model | `release_job(rejected)` with the reason; `failed` when a required gate has no classifier or the API is down |
 | price | `eduai.estimate_cents` (the single evaluator; Python never prices) | `release_job(failed)` |
 | reserve | `eduai.reserve_job` | `release_job(rejected)` "not enough budget" |
 | credential | `org_credentials` → Vault, or the platform key, per `credential_policy` | `release_job(failed)` |
@@ -33,7 +34,7 @@ an in-memory store (local only).
 | expire | `release_job(timed_out)` after `SUBMIT_TIMEOUT_MIN` | |
 
 The receipt carries `output_hashes`, `provenance` (provider, endpoint, request id, version, profile, vendor
-inputs), `policy_decisions` (`prompt_gate: not_run` until P1-14) and `resource_estimate` from the profile's
+inputs), `policy_decisions` (prompt-gate verdict, category, model, tier; output moderation) and `resource_estimate` from the profile's
 `resource_model` (`{}` when undisclosed; the settle function appends the disclosure tier).
 
 fal returns no per-request cost, so fal jobs settle at the estimate with `cost_unknown = true`.
