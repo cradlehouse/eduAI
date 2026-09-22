@@ -1,8 +1,11 @@
 {
   "cost_model": {
     "kind": "per_call",
-    "cents": 5,
-    "verified": false
+    "cents": 20,
+    "verified": true,
+    "verified_on": "2026-09-22",
+    "basis": "flat per clip, fal list price",
+    "source": "https://fal.ai/models/fal-ai/stable-audio-25/text-to-audio"
   },
   "retention": {
     "vendor_retains_inputs": false,

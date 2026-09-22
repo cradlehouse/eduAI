@@ -1,9 +1,12 @@
 {
   "cost_model": {
     "kind": "per_second",
-    "cents_per_second": 4,
+    "cents_per_second": 9,
     "duration_field": "duration_s",
-    "verified": false
+    "verified": true,
+    "verified_on": "2026-09-22",
+    "basis": "720p, fal list price",
+    "source": "https://fal.ai/models/lightricks/ltx-2.5/text-to-video/fast"
   },
   "retention": {
     "vendor_retains_inputs": false,

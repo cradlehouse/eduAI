@@ -3,7 +3,10 @@
     "kind": "per_second",
     "cents_per_second": 12,
     "duration_field": "duration_s",
-    "verified": false
+    "verified": true,
+    "verified_on": "2026-09-22",
+    "basis": "720p, fal list price",
+    "source": "https://fal.ai/models/lightricks/ltx-2.5/text-to-video/pro"
   },
   "retention": {
     "vendor_retains_inputs": false,

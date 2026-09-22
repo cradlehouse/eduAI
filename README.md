@@ -45,7 +45,7 @@ npx supabase gen types typescript --local > apps/web/lib/db/types.ts
   (+ `profiles/<version>@<route>.json` for cost + retention), then `pnpm seed:build`. A version or
   profile is selectable only when `approval_status = approved`, inside its approval window, AND an org
   has allowlisted it for a lane in `org_model_profiles`. Nothing in code names a model.
-- **Changing a used version/profile** — anything except approval/health/notes — is refused by a
+- **Changing a used version/profile** — anything except approval/health/notes/cost_model (jobs snapshot their cents) — is refused by a
   trigger once a job references it. Make a new slug instead; old jobs keep their receipt.
 - **Never edit** `0101_rls_policies.sql` or `seed/models.sql` by hand; both are generated and CI diffs them.
 
