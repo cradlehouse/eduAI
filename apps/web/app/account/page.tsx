@@ -21,7 +21,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     <Shell nav={nav} crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home", image: nav.org?.mark_url }, { label: "Account" }]}>
       <div className="max-w-md">
         <h1 className="display mb-1 text-2xl">Account</h1>
-        <p className="mb-6 text-sm text-muted">{nav.email}</p>
+        <p className="mb-6 text-sm text-dim">{nav.email}</p>
 
         <section className="card mb-4 p-4">
           <div className="label mb-2">Name</div>
@@ -29,16 +29,16 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
             <input name="display_name" defaultValue={me?.display_name ?? ""} placeholder="How your team sees you" className="input flex-1" maxLength={80} />
             <button className="btn" type="submit">Save</button>
           </form>
-          {saved === "name" && <p className="mt-2 text-xs text-money">Saved.</p>}
+          {saved === "name" && <p className="mt-2 text-xs text-gold">Saved.</p>}
         </section>
 
         <section className="card p-4">
           <div className="label mb-2">Password</div>
-          <p className="mb-3 text-xs text-muted">
+          <p className="mb-3 text-xs text-dim">
             {set === "password" ? "Choose a new password." : hasPassword ? "Change your password." : "Set a password so you can sign in without an emailed link."}
           </p>
           <PasswordForm />
-          {providers.includes("google") && <p className="mt-3 text-xs text-muted">Google sign-in is linked to this account.</p>}
+          {providers.includes("google") && <p className="mt-3 text-xs text-dim">Google sign-in is linked to this account.</p>}
         </section>
       </div>
     </Shell>

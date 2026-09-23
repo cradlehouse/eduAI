@@ -22,18 +22,18 @@ export function Crumb({ segs: given, base, sections }: { segs: CrumbSeg[]; base?
         const last = i === segs.length - 1;
         return (
           <span key={i} className="flex min-w-0 items-center gap-1">
-            {i > 0 && <span className="text-muted">›</span>}
+            {i > 0 && <span className="text-dim">›</span>}
             {s.siblings && s.siblings.length > 1 ? (
               <select aria-label={`Switch ${s.label}`} value={s.href ?? ""} onChange={(e) => router.push(e.target.value)}
-                      className="display max-w-[220px] truncate rounded-full border border-line bg-card px-2.5 py-0.5 text-xs">
+                      className="display max-w-[220px] truncate rounded-full border border-glass-edge bg-card px-2.5 py-0.5 text-xs">
                 {s.siblings.map((o) => <option key={o.id} value={o.href}>{o.label}</option>)}
               </select>
             ) : last || !s.href ? (
-              <span className={`flex min-w-0 items-center gap-1.5 truncate ${last ? "text-ink" : "text-muted"}`}>
+              <span className={`flex min-w-0 items-center gap-1.5 truncate ${last ? "text-ink" : "text-dim"}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 {s.image && <img src={s.image} alt="" className="h-5 w-5 shrink-0 object-contain" />}{s.label}</span>
             ) : (
-              <Link href={s.href} className="truncate rounded-full border border-line bg-card px-2.5 py-0.5 text-xs hover:bg-sand">{s.label}</Link>
+              <Link href={s.href} className="truncate rounded-full border border-glass-edge bg-card px-2.5 py-0.5 text-xs hover:bg-glass">{s.label}</Link>
             )}
           </span>
         );

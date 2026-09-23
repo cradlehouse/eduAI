@@ -34,7 +34,7 @@ export function AppTree({ nav, scope }: { nav: Nav; scope: Scope }) {
             </div>
           );
         })}
-        {nav.cohorts.length === 0 && <div className="px-3 text-xs text-muted">No cohort yet.</div>}
+        {nav.cohorts.length === 0 && <div className="px-3 text-xs text-dim">No cohort yet.</div>}
       </NavGroup>
     </nav>
   );

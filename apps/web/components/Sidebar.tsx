@@ -17,5 +17,5 @@ export function Sidebar({ budget, rail, children }: { budget?: Budget | null; ra
 }
 
 export function SidebarNote({ children }: { children: React.ReactNode }) {
-  return <div className="mt-3 hidden px-3 text-[11px] text-muted lg:block">{children}</div>;
+  return <div className="mt-3 hidden px-3 text-[11px] text-dim lg:block">{children}</div>;
 }

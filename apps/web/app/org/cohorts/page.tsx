@@ -17,11 +17,11 @@ export default async function CohortsPage({ searchParams }: { searchParams: Prom
   return (
     <div className="max-w-4xl">
       <h1 className="display mb-1 text-2xl">Cohorts</h1>
-      <p className="mb-6 text-sm text-muted">A cohort is one run of a course: a term, a class, a programme intake. Each has its own schedule, instructors and projects.</p>
-      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      <p className="mb-6 text-sm text-dim">A cohort is one run of a course: a term, a class, a programme intake. Each has its own schedule, instructors and projects.</p>
+      {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
 
-      <form action={createCohort} className="card mb-8 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_130px_130px_1fr_auto]" style={{ borderRadius: 22 }}>
+      <form action={createCohort} className="card mb-8 grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_130px_130px_1fr_auto]" style={{ borderRadius: 10 }}>
         <label className="text-sm"><span className="label">Name</span><br /><input name="name" required className="input w-full" placeholder="Spring 2027" /></label>
         <label className="text-sm"><span className="label">Course</span><br />
           <select name="course_id" className="input w-full" defaultValue={courses?.[0]?.id ?? ""}>{(courses ?? []).map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}</select>
@@ -32,21 +32,21 @@ export default async function CohortsPage({ searchParams }: { searchParams: Prom
           <select name="instructor_id" className="input w-full" defaultValue=""><option value="">assign later</option>{(instructors ?? []).map((i) => <option key={i.user_id} value={i.user_id}>{name(i.users)}</option>)}</select>
         </label>
         <div className="flex items-end"><button className="btn-primary">+ New cohort</button></div>
-        <p className="text-xs text-muted sm:col-span-2 lg:col-span-6">The module schedule is laid out weekly from the start date; adjust it on the cohort&apos;s Schedule page.</p>
+        <p className="text-xs text-dim sm:col-span-2 lg:col-span-6">The module schedule is laid out weekly from the start date; adjust it on the cohort&apos;s Schedule page.</p>
       </form>
 
-      {(cohorts ?? []).length === 0 ? <p className="text-sm text-muted">No cohorts yet.</p> : (
+      {(cohorts ?? []).length === 0 ? <p className="text-sm text-dim">No cohorts yet.</p> : (
         <ul className="flex flex-col gap-3">
           {(cohorts ?? []).map((c) => (
             <li key={c.id} className="card p-4">
               <div className="flex items-baseline justify-between">
                 <Link href={`/c/${c.id}`} className="display text-lg hover:underline">{c.name}</Link>
-                <span className="text-xs text-muted">{c.starts_on ?? "no start"}{c.ends_on ? ` → ${c.ends_on}` : ""}</span>
+                <span className="text-xs text-dim">{c.starts_on ?? "no start"}{c.ends_on ? ` → ${c.ends_on}` : ""}</span>
               </div>
-              <div className="mt-1 text-sm text-muted">{c.courses?.title} · {c.enrolments?.[0]?.count ?? 0} enrolled · {c.projects.length} project(s)</div>
+              <div className="mt-1 text-sm text-dim">{c.courses?.title} · {c.enrolments?.[0]?.count ?? 0} enrolled · {c.projects.length} project(s)</div>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
-                <span className="text-xs text-muted">Instructors:</span>
-                {c.cohort_instructors.map((i) => <span key={i.user_id} className="pill bg-sand">{name(i.users)}</span>)}
+                <span className="text-xs text-dim">Instructors:</span>
+                {c.cohort_instructors.map((i) => <span key={i.user_id} className="pill bg-glass">{name(i.users)}</span>)}
                 <form action={setInstructor} className="flex items-center gap-1">
                   <input type="hidden" name="cohort_id" value={c.id} />
                   <select name="user_id" className="input" defaultValue="" aria-label="Add an instructor"><option value="">choose an instructor…</option>{(instructors ?? []).filter((i) => !c.cohort_instructors.some((x) => x.user_id === i.user_id)).map((i) => <option key={i.user_id} value={i.user_id}>{name(i.users)}</option>)}</select>

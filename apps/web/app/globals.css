@@ -1,44 +1,72 @@
 @import "tailwindcss";
 
-/* Chosen direction: Darkroom layout, Playbook colour. Light-only by design (dark was never the brief). */
+/* Imaje workspace scheme (docs/DESIGN.md). Dark, one family, three meaning colours:
+   gold = pinned / primary action / selected route; cyan = the chosen take; coral = something is wrong.
+   Nothing else is coloured. No pure black or white anywhere. */
 @theme {
-  --color-paper: #f6f1ea;     /* page ground */
-  --color-sand: #efe8de;      /* rails, panels */
-  --color-card: #ffffff;
-  --color-line: #e2d8c9;
-  --color-ink: #23212b;
-  --color-muted: #7a7466;
-  --color-explore: #e8654a;   /* lane colours carry through take, route, counter, shutter */
-  --color-control: #2a9d8f;
-  --color-finish: #6f5bd6;
-  --color-money: #f0b429;     /* tokens only; cost always reads the same */
-  --color-integrity: #3f7cac;
-  --color-danger: #c4453c;
-  --color-accent: #e8654a;
-  --font-sans: var(--font-body), "Source Sans 3", "Segoe UI", Arial, sans-serif;
-  --font-display: var(--font-display), Nunito, "Trebuchet MS", sans-serif;
-  --font-mono: var(--font-mono), "JetBrains Mono", "SF Mono", Menlo, monospace;
-  --radius-card: 18px;
-  --radius-field: 12px;
+  --color-bg: #0f1013;                    /* the canvas */
+  --color-bg-deep: #08090b;               /* app shell behind the canvas, modal backdrop */
+  --color-grid: rgba(255, 255, 255, 0.06);
+  --color-glass: rgba(24, 26, 31, 0.78);  /* floating panels; always with backdrop-blur */
+  --color-glass-edge: rgba(255, 255, 255, 0.10);
+  --color-card: #1a1c21;                  /* image card fallback before media loads */
+  --color-card-edge: rgba(255, 255, 255, 0.14);
+  --color-field: rgba(255, 255, 255, 0.04);
+  --color-ink: #f2f0eb;
+  --color-dim: rgba(242, 240, 235, 0.55);
+  --color-mute: rgba(242, 240, 235, 0.32);
+  --color-gold: #f2b441;
+  --color-gold-wash: rgba(242, 180, 65, 0.06);
+  --color-chosen: #69d2ff;
+  --color-chosen-wash: rgba(105, 210, 255, 0.12);
+  --color-drift: #ff7a59;
+  --color-ok: #7fd3a6;
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "SF Mono", Menlo, Consolas, monospace;
+  --radius-panel: 10px;
+  --radius-card: 8px;
+  --radius-field: 6px;
 }
 
-:root { color-scheme: light; }
-html { font-size: 16px; }
-body { background: var(--color-paper); color: var(--color-ink); font-family: var(--font-sans); }
+:root { color-scheme: dark; }
+html { font-size: 13px; }
+body { background: var(--color-bg-deep); color: var(--color-ink); font-family: var(--font-sans); line-height: 1.35; font-weight: 400; }
+b, strong { font-weight: 500; }
+h1, h2, h3 { font-weight: 400; }
+::selection { background: rgba(242, 180, 65, 0.3); }
+:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
+
+.canvas { background-color: var(--color-bg); background-image: radial-gradient(var(--color-grid) 1px, transparent 1px); background-size: 22px 22px; }
 
 @layer components {
-  .display { font-family: var(--font-display); font-weight: 800; }
-  .mono { font-family: var(--font-mono); }
-  .card { background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-card); }
-  .panel { background: var(--color-sand); border-radius: var(--radius-card); }
-  .input { background: var(--color-card); border: 1px solid var(--color-line); border-radius: var(--radius-field); padding: 0.4rem 0.7rem; font-size: 0.875rem; color: var(--color-ink); }
-  .input:focus { outline: 2px solid var(--color-explore); outline-offset: 1px; }
-  .btn { border: 1px solid var(--color-line); border-radius: 999px; padding: 0.3rem 0.8rem; font-size: 0.8rem; background: var(--color-card); }
-  .btn:hover { background: var(--color-sand); }
-  .btn-primary { background: var(--color-ink); color: var(--color-paper); border-radius: 999px; padding: 0.55rem 1.1rem; font-family: var(--font-display); font-weight: 800; font-size: 0.875rem; }
+  .display { font-weight: 500; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .glass, .card, .panel { background: var(--color-glass); border: 1px solid var(--color-glass-edge); border-radius: var(--radius-panel); backdrop-filter: blur(10px); }
+  .imgcard { background: var(--color-card); border: 1px solid var(--color-card-edge); border-radius: var(--radius-card); overflow: hidden; transition: border-color 160ms ease-out; }
+  .imgcard:hover { border-color: rgba(255, 255, 255, 0.28); }
+  .imgcard.chosen { border-color: var(--color-chosen); box-shadow: 0 0 0 1px var(--color-chosen), 0 12px 30px rgba(0, 0, 0, 0.5); }
+  .imgcard.generating { animation: pulse-gold 2s ease-in-out infinite; }
+  .input { background: var(--color-field); border: 1px solid var(--color-card-edge); border-radius: var(--radius-field); padding: 0.45rem 0.7rem; font-size: 12px; color: var(--color-ink); }
+  .input::placeholder { color: var(--color-mute); }
+  .input:focus { outline: 2px solid var(--color-gold); outline-offset: 1px; }
+  .btn { border: 1px solid var(--color-card-edge); border-radius: var(--radius-field); padding: 0.4rem 0.8rem; font-size: 12px; color: var(--color-ink); background: transparent; transition: border-color 160ms ease-out; }
+  .btn:hover { border-color: rgba(255, 255, 255, 0.28); }
+  .btn-primary { background: var(--color-gold); color: #1a1408; border-radius: var(--radius-field); padding: 0.5rem 0.85rem; font-size: 12px; font-weight: 500; }
   .btn-primary:disabled { opacity: 0.4; }
-  .pill { border-radius: 999px; padding: 0.2rem 0.7rem; font-size: 0.75rem; font-weight: 600; }
-  .label { font-family: var(--font-display); font-weight: 800; font-size: 0.7rem; letter-spacing: 0.06em; color: var(--color-muted); text-transform: uppercase; }
+  .pill { border-radius: 999px; padding: 0.3rem 0.7rem; font-size: 12px; border: 1px solid var(--color-card-edge); }
+  .pill.pinned { border-color: var(--color-gold); background: var(--color-gold-wash); }
+  .label { font-size: 11px; color: var(--color-mute); }
+  .sect { font-size: 11px; color: var(--color-mute); margin: 10px 0 4px; }
+  .kv { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+  .bar { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--color-gold); transition: width 160ms ease-out; }
+  .bar.over > i { background: var(--color-drift); }
+}
+
+@keyframes pulse-gold { 0%, 100% { border-color: var(--color-card-edge); } 50% { border-color: rgba(242, 180, 65, 0.3); } }
+@media (prefers-reduced-motion: reduce) {
+  .imgcard.generating { animation: none; border-color: rgba(242, 180, 65, 0.3); }
+  * { transition-duration: 0ms !important; }
 }
 
 /* A sidebar in rail mode is icons only at every width (a project panel is open beside it). */

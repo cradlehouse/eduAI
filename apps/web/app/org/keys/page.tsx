@@ -20,23 +20,23 @@ export default async function KeysPage({ searchParams }: { searchParams: Promise
   return (
     <div className="max-w-3xl">
       <h1 className="display mb-1 text-2xl">Your own keys</h1>
-      <p className="mb-6 max-w-[62ch] text-sm text-muted">
+      <p className="mb-6 max-w-[62ch] text-sm text-dim">
         Add a vendor key and the school pays that vendor directly for generation on its routes, instead of drawing on the plan&apos;s allowance.
         Keys are stored encrypted, never shown again, and can be revoked here at any time. Students see nothing change: routes, tokens and receipts work the same.
       </p>
-      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
 
       <div className="grid gap-4 sm:grid-cols-2">
         {PROVIDERS.map((p) => {
           const cur = active.find((c) => c.provider === p.key);
           return (
-            <section key={p.key} className="card p-4" style={{ borderRadius: 18 }}>
-              <div className="flex items-baseline justify-between"><h2 className="display">{p.label}</h2>{cur ? <span className="pill bg-control/15 text-control text-xs">your key</span> : <span className="pill text-xs text-muted">platform key</span>}</div>
+            <section key={p.key} className="card p-4" style={{ borderRadius: 10 }}>
+              <div className="flex items-baseline justify-between"><h2 className="display">{p.label}</h2>{cur ? <span className="pill bg-ok/15 text-ok text-xs">your key</span> : <span className="pill text-xs text-dim">platform key</span>}</div>
               {cur ? (
                 <div className="mt-2 text-sm">
-                  <div>{cur.label || "unlabelled"} <span className="text-xs text-muted">· added {new Date(cur.created_at).toLocaleDateString()} by {cur.users?.email ?? "?"}</span></div>
-                  <form action={revokeKey} className="mt-3"><input type="hidden" name="id" value={cur.id} /><button className="btn text-xs text-danger">Revoke</button></form>
+                  <div>{cur.label || "unlabelled"} <span className="text-xs text-dim">· added {new Date(cur.created_at).toLocaleDateString()} by {cur.users?.email ?? "?"}</span></div>
+                  <form action={revokeKey} className="mt-3"><input type="hidden" name="id" value={cur.id} /><button className="btn text-xs text-drift">Revoke</button></form>
                 </div>
               ) : (
                 <form action={addKey} className="mt-2 flex flex-col gap-2 text-sm">
@@ -51,7 +51,7 @@ export default async function KeysPage({ searchParams }: { searchParams: Promise
       </div>
 
       {(creds ?? []).some((c) => c.revoked_at) && (
-        <section className="mt-6 text-xs text-muted">
+        <section className="mt-6 text-xs text-dim">
           <div className="label mb-1">Revoked</div>
           <ul>{(creds ?? []).filter((c) => c.revoked_at).map((c) => <li key={c.id}>{c.provider} · {c.label || "unlabelled"} · revoked {new Date(c.revoked_at!).toLocaleDateString()}</li>)}</ul>
         </section>

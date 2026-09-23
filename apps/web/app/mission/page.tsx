@@ -16,15 +16,15 @@ export default function Mission() {
       <h2 className="display mb-3 text-2xl">Three promises</h2>
       <div className="mb-10 grid gap-4 sm:grid-cols-3">
         <section className="card p-5">
-          <div className="label mb-2 text-explore">Creative</div>
+          <div className="label mb-2 text-dim">Creative</div>
           <p className="text-sm leading-relaxed">Students write the brief, draw the board, choose the look, and direct the take. Explore cheaply, compare honestly, finish deliberately. The messy first takes are the lesson, not a mistake.</p>
         </section>
         <section className="card p-5">
-          <div className="label mb-2 text-control">Integrity</div>
+          <div className="label mb-2 text-ok">Integrity</div>
           <p className="text-sm leading-relaxed">Every model is rated on what it was trained on, what its licence allows, where it runs, and what it discloses. Every real person has a signed release before they appear. Every take has a receipt.</p>
         </section>
         <section className="card p-5">
-          <div className="label mb-2 text-finish">Resource-neutral</div>
+          <div className="label mb-2 text-dim">Resource-neutral</div>
           <p className="text-sm leading-relaxed">We don&apos;t invent a carbon number for a closed model. We rate disclosure, run on a carbon-neutral cloud region, prefer open weights we can measure ourselves, and teach that a shorter take is a cheaper take.</p>
         </section>
       </div>

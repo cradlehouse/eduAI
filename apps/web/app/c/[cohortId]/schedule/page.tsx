@@ -19,10 +19,10 @@ export default async function SchedulePage({ params, searchParams }: { params: P
     <div className="max-w-4xl">
       <div className="mb-1 label">{cohort.name}</div>
       <h1 className="display mb-4 text-2xl">Schedule</h1>
-      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
       <section className="card p-5">
-        <p className="mb-3 text-xs text-muted">Students see a module once it opens. “Open now” opens it today and clears any instructor gate.</p>
+        <p className="mb-3 text-xs text-dim">Students see a module once it opens. “Open now” opens it today and clears any instructor gate.</p>
         <table className="w-full text-sm">
           <thead><tr className="label text-left"><th className="py-1">Module</th><th>Opens</th><th>Due</th><th>On</th><th>State</th><th></th></tr></thead>
           <tbody>
@@ -30,7 +30,7 @@ export default async function SchedulePage({ params, searchParams }: { params: P
               const opens = m.opens_at ? new Date(m.opens_at).getTime() : null;
               const state = !m.enabled ? "disabled" : opens && opens > now ? "upcoming" : m.modules!.gate_kind === "instructor" && !m.gate_unlocked_at ? "gated" : "open";
               return (
-                <tr key={m.id} className="border-t border-line">
+                <tr key={m.id} className="border-t border-glass-edge">
                   <td className="py-2">{m.modules!.position}. {m.modules!.title}</td>
                   <td colSpan={3}>
                     <form action={setModuleDates} className="flex flex-wrap items-center gap-2">
@@ -42,7 +42,7 @@ export default async function SchedulePage({ params, searchParams }: { params: P
                       <button className="btn">Save</button>
                     </form>
                   </td>
-                  <td className={state === "open" ? "text-control" : "text-muted"}>{state}</td>
+                  <td className={state === "open" ? "text-ok" : "text-dim"}>{state}</td>
                   <td>
                     {state !== "open" && (
                       <form action={openModuleNow}><input type="hidden" name="cohort_id" value={cohortId} /><input type="hidden" name="id" value={m.id} /><button className="btn">Open now</button></form>

@@ -30,8 +30,8 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
       <div className="mb-1 mt-2"><BibleChip state={e.requires_consent ? e.consent_state : "not_required"} /></div>
       <h1 className="display text-2xl">{e.name}</h1>
       <p className="mb-4 text-xs opacity-60">{e.kind}{e.likeness_of ? ` · likeness of ${e.likeness_of}` : ""}</p>
-      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
 
       <div className="grid gap-6 md:grid-cols-[1fr_260px]">
         <form action={updateEntry} className="grid gap-3">
@@ -47,8 +47,8 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
         <div>
           {e.reference_asset_id ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={`/api/assets/${e.reference_asset_id}`} alt={`Reference for ${e.name}`} className="w-full rounded-[12px] border border-line" />
-          ) : <div className="flex h-40 items-center justify-center rounded-[12px] border border-dashed border-line text-xs text-muted">no reference yet</div>}
+            <img src={`/api/assets/${e.reference_asset_id}`} alt={`Reference for ${e.name}`} className="w-full rounded-[6px] border border-glass-edge" />
+          ) : <div className="flex h-40 items-center justify-center rounded-[6px] border border-dashed border-glass-edge text-xs text-dim">no reference yet</div>}
           {laneStates.length > 0 && e.requires_consent && (
             <dl className="mt-3 grid grid-cols-2 gap-x-2 gap-y-1 text-xs">
               {laneStates.map(([lane, st]) => <div key={lane} className="contents"><dt className="opacity-60">{lane}</dt><dd>{String(st ?? "")}</dd></div>)}
@@ -57,7 +57,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
           <form action={deleteEntry} className="mt-4">
             <input type="hidden" name="project_id" value={projectId} />
             <input type="hidden" name="entry_id" value={entryId} />
-            <button className={`${btn} text-danger`}>Delete entry</button>
+            <button className={`${btn} text-drift`}>Delete entry</button>
           </form>
         </div>
       </div>
@@ -89,7 +89,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
                         <input type="hidden" name="entry_id" value={entryId} />
                         <input type="hidden" name="release_id" value={r.id} />
                         <input name="reason" placeholder="reason" className={input} />
-                        <button className={`${btn} text-danger`}>Revoke</button>
+                        <button className={`${btn} text-drift`}>Revoke</button>
                       </form>
                     )}
                   </div>

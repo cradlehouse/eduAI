@@ -9,7 +9,7 @@ import { JobWatcher } from "./JobWatcher";
 const input = "input";
 const btn = "btn";
 const LANES = ["explore", "control", "finish", "voice_likeness"] as const;
-const LANE_DOT: Record<string, string> = { explore: "bg-explore", control: "bg-control", finish: "bg-finish" };
+const LANE_DOT: Record<string, string> = { explore: "bg-glass-edge", control: "bg-glass-edge", finish: "bg-glass-edge" };
 type Intent = { objective?: string; continuity?: string; continuity_notes?: string; match_cuts?: string[]; camera_language?: string; dialogue?: string; no_bible_assets?: boolean };
 
 // The storyboard: a filmstrip of cuts per scene, the selected cut large with its takes and the prompt
@@ -73,7 +73,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
       <JobWatcher active={busy} />
       <div className="mb-3 flex flex-wrap items-baseline gap-4">
         <h1 className="display text-2xl">Scenes</h1>
-        <span className="text-sm text-muted">{allShots.length} cuts · {Math.floor(total / 60)}:{String(Math.round(total % 60)).padStart(2, "0")} planned</span>
+        <span className="text-sm text-dim">{allShots.length} cuts · {Math.floor(total / 60)}:{String(Math.round(total % 60)).padStart(2, "0")} planned</span>
         <form action={setLook} className="ml-auto flex items-center gap-1.5 text-xs">
           <input type="hidden" name="project_id" value={projectId} />
           <input type="hidden" name="back" value={`/p/${projectId}/scenes${current ? `?cut=${current.id}` : ""}`} />
@@ -84,20 +84,20 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
           </select>
           <button className="btn text-xs">Set</button>
         </form>
-        <div className="flex gap-1 rounded-full bg-sand p-0.5 text-xs">
-          <Link href={`/p/${projectId}/scenes${current ? `?cut=${current.id}` : ""}`} className={`rounded-full px-3 py-1 ${view !== "list" ? "bg-ink text-paper" : ""}`}>Filmstrip</Link>
-          <Link href={`/p/${projectId}/scenes?view=list${scene ? `&scene=${scene.id}` : ""}`} className={`rounded-full px-3 py-1 ${view === "list" ? "bg-ink text-paper" : ""}`}>E-conte</Link>
+        <div className="flex gap-1 rounded-full bg-glass p-0.5 text-xs">
+          <Link href={`/p/${projectId}/scenes${current ? `?cut=${current.id}` : ""}`} className={`rounded-full px-3 py-1 ${view !== "list" ? "bg-field text-gold" : "text-dim"}`}>Filmstrip</Link>
+          <Link href={`/p/${projectId}/scenes?view=list${scene ? `&scene=${scene.id}` : ""}`} className={`rounded-full px-3 py-1 ${view === "list" ? "bg-field text-gold" : "text-dim"}`}>E-conte</Link>
         </div>
       </div>
-      {ok && <p className="mb-3 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-3 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-3 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-3 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
 
       {(scenes ?? []).length > 1 && (
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
           {(scenes ?? []).map((sc) => {
             const first = allShots.find((s) => s.scene_id === sc.id);
             const href = view === "list" ? `/p/${projectId}/scenes?view=list&scene=${sc.id}` : first ? `/p/${projectId}/scenes?cut=${first.id}` : `/p/${projectId}/scenes?scene=${sc.id}`;
-            return <Link key={sc.id} href={href} className={`pill ${sc.id === scene?.id ? "bg-ink text-paper" : "bg-card"}`}>Scene {sc.position} · {sc.title}</Link>;
+            return <Link key={sc.id} href={href} className={`pill ${sc.id === scene?.id ? "pinned" : "text-dim"}`}>Scene {sc.position} · {sc.title}</Link>;
           })}
         </div>
       )}
@@ -106,17 +106,17 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
         <details key={scene.id} className="group mb-4">
           <summary className="flex cursor-pointer list-none items-baseline gap-3">
             <h2 className="display text-lg">Scene {scene.position} · {scene.title}</h2>
-            {scene.synopsis && <span className="truncate text-sm text-muted">{scene.synopsis}</span>}
-            <span className="ml-auto shrink-0 text-xs text-muted underline group-open:hidden">Edit scene · add a scene</span>
+            {scene.synopsis && <span className="truncate text-sm text-dim">{scene.synopsis}</span>}
+            <span className="ml-auto shrink-0 text-xs text-dim underline group-open:hidden">Edit scene · add a scene</span>
           </summary>
           <form action={updateScene} className="mt-2 flex flex-wrap items-center gap-2">
             <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="scene_id" value={scene.id} />
             <input name="title" defaultValue={scene.title} className={`${input} display`} />
             <input name="synopsis" defaultValue={scene.synopsis} placeholder="synopsis" className={`${input} min-w-64 flex-1`} />
             <button className={btn}>Save</button>
-            <button formAction={deleteScene} className={`${btn} text-danger`}>Delete scene</button>
+            <button formAction={deleteScene} className={`${btn} text-drift`}>Delete scene</button>
           </form>
-          <form action={createScene} className="mt-2 flex flex-wrap items-center gap-2 border-t border-line pt-2">
+          <form action={createScene} className="mt-2 flex flex-wrap items-center gap-2 border-t border-glass-edge pt-2">
             <input type="hidden" name="project_id" value={projectId} />
             <span className="label">Next scene</span>
             <input name="title" placeholder="title" className={input} />
@@ -135,7 +135,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
       )}
 
       {scene && view === "list" ? (
-        <section className="card mb-6 p-5" style={{ borderRadius: 22 }}>
+        <section className="card mb-6 p-5" style={{ borderRadius: 10 }}>
           <EConte projectId={projectId} cuts={cuts} takes={takes} laneOf={laneOf} links={links} />
         </section>
       ) : scene ? (
@@ -148,19 +148,19 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
                 const complete = !!(i.objective && i.continuity && i.camera_language);
                 const thumb = thumbFor(s.id); const lane = laneOf(s.id); const on = s.id === current?.id;
                 return (
-                  <Link key={s.id} href={`/p/${projectId}/scenes?cut=${s.id}`} className={`card flex w-40 shrink-0 flex-col p-2 text-[11px] ${on ? "ring-2 ring-ink" : ""}`} style={{ borderRadius: 12 }}>
-                    <div className="flex items-center justify-between"><span className="mono">Cut {s.label}</span><span className="mono text-muted">{s.duration_target_s != null ? `${s.duration_target_s.toFixed(1)}s` : "—"}</span></div>
-                    <div className={`my-1.5 aspect-video overflow-hidden rounded-[8px] ${thumb ? "bg-ink" : "border border-dashed border-line"}`}>
+                  <Link key={s.id} href={`/p/${projectId}/scenes?cut=${s.id}`} className={`card flex w-40 shrink-0 flex-col p-2 text-[11px] ${on ? "ring-1 ring-chosen" : ""}`} style={{ borderRadius: 8 }}>
+                    <div className="flex items-center justify-between"><span className="mono">Cut {s.label}</span><span className="mono text-dim">{s.duration_target_s != null ? `${s.duration_target_s.toFixed(1)}s` : "—"}</span></div>
+                    <div className={`my-1.5 aspect-video overflow-hidden rounded-[8px] ${thumb ? "bg-card" : "border border-dashed border-glass-edge"}`}>
                       {thumb && (thumb.kind === "video"
                         ? <video src={`/api/assets/${thumb.asset_id}`} muted playsInline preload="metadata" className="h-full w-full object-cover" />
                         // eslint-disable-next-line @next/next/no-img-element
                         : <img src={`/api/assets/${thumb.asset_id}`} alt="" className="h-full w-full object-cover" />)}
                     </div>
-                    <div className="flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${lane ? LANE_DOT[lane] : "bg-line"}`} /><span className="truncate text-muted">{s.description || (complete ? "" : "notes incomplete")}</span></div>
+                    <div className="flex items-center gap-1"><span className={`h-2 w-2 rounded-full ${lane ? LANE_DOT[lane] : "bg-glass-edge"}`} /><span className="truncate text-dim">{s.description || (complete ? "" : "notes incomplete")}</span></div>
                   </Link>
                 );
               })}
-              <form action={createShot} className="card flex w-40 shrink-0 flex-col justify-center gap-1 p-2 text-[11px]" style={{ borderRadius: 12 }}>
+              <form action={createShot} className="card flex w-40 shrink-0 flex-col justify-center gap-1 p-2 text-[11px]" style={{ borderRadius: 8 }}>
                 <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="scene_id" value={scene.id} />
                 <input name="description" placeholder="what happens in this cut" className={`${input} w-full text-xs`} />
                 <div className="flex gap-1"><input name="duration_target_s" type="number" min={1} max={60} placeholder="s" className={`${input} w-14 text-xs`} /><button className="btn-primary flex-1 text-xs">+ Add cut</button></div>
@@ -171,25 +171,25 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
               <CutWorkspace key={current.id} projectId={projectId} shot={{ id: current.id, label: current.label, selected_take_id: current.selected_take_id, plate_take_id: current.plate_take_id }}
                             takes={allTakes.filter((t) => t.shot_id === current.id)} optionsByLane={optionsByLane} readiness={readiness}
                             promptSeed={promptSeed} dialogueSeed={intent.dialogue ?? ""} assets={assetOptions} look={look} />
-            ) : <p className="text-sm text-muted">Add the first cut of this scene above.</p>}
+            ) : <p className="text-sm text-dim">Add the first cut of this scene above.</p>}
           </div>
 
           {/* inspector */}
           {current && (
             <aside className="flex flex-col gap-4">
-              <form key={current.id} action={updateShot} className="card grid gap-2 p-4" style={{ borderRadius: 18 }}>
+              <form key={current.id} action={updateShot} className="card grid gap-2 p-4" style={{ borderRadius: 10 }}>
                 <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="shot_id" value={current.id} />
-                <div className="flex items-baseline justify-between"><h2 className="display">Cut {current.label}</h2><span className="text-[11px] text-muted">e-conte notes</span></div>
+                <div className="flex items-baseline justify-between"><h2 className="display">Cut {current.label}</h2><span className="text-[11px] text-dim">e-conte notes</span></div>
                 <div className="grid grid-cols-[64px_1fr] gap-2">
                   <label className="text-xs"><span className="label">Cut</span><input name="label" defaultValue={current.label} className={`${input} w-full`} /></label>
                   <label className="text-xs"><span className="label">Action</span><input name="description" defaultValue={current.description} className={`${input} w-full`} /></label>
                 </div>
                 <label className="text-xs"><span className="label">Objective</span><textarea name="objective" rows={2} defaultValue={intent.objective ?? ""} className={`${input} w-full`} placeholder="what this cut must achieve" /></label>
-                <fieldset className="rounded-[12px] border border-line p-2 text-xs">
+                <fieldset className="rounded-[6px] border border-glass-edge p-2 text-xs">
                   <legend className="label px-1">Continuity · what this cut must match</legend>
                   {cuts.filter((c) => c.id !== current.id).length > 0 && (
                     <div className="mb-1.5">
-                      <div className="mb-1 text-[11px] text-muted">Cuts</div>
+                      <div className="mb-1 text-[11px] text-dim">Cuts</div>
                       <div className="flex flex-wrap gap-1">
                         {cuts.filter((c) => c.id !== current.id).map((c) => (
                           <label key={c.id} className="pill flex cursor-pointer items-center gap-1 bg-card"><input type="checkbox" name="match_cut" value={c.id} defaultChecked={(intent.match_cuts ?? []).includes(c.id)} /> Cut {c.label}</label>
@@ -197,47 +197,47 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
                       </div>
                     </div>
                   )}
-                  <div className="mb-1 text-[11px] text-muted">Bible entries in this cut</div>
-                  {entryList.length === 0 ? <p className="text-muted">Nothing in the bible yet. <Link href={`/p/${projectId}/bible`} className="underline">Add a location or character</Link>, then pick it here.</p> : (
+                  <div className="mb-1 text-[11px] text-dim">Bible entries in this cut</div>
+                  {entryList.length === 0 ? <p className="text-dim">Nothing in the bible yet. <Link href={`/p/${projectId}/bible`} className="underline">Add a location or character</Link>, then pick it here.</p> : (
                     <div className="flex flex-wrap gap-1">
                       {entryList.map((e) => (
                         <label key={e.id} className="pill flex cursor-pointer items-center gap-1 bg-card">
-                          <input type="checkbox" name="entry" value={e.id} defaultChecked={linkedIds.has(e.id)} /> {e.name} <span className="text-muted">{e.kind}</span>
+                          <input type="checkbox" name="entry" value={e.id} defaultChecked={linkedIds.has(e.id)} /> {e.name} <span className="text-dim">{e.kind}</span>
                           {e.requires_consent && <BibleChip state={e.consent_state} />}
                         </label>
                       ))}
                     </div>
                   )}
-                  <label className="mt-1.5 block"><span className="text-[11px] text-muted">Notes</span><textarea name="continuity" rows={2} defaultValue={intent.continuity_notes ?? intent.continuity ?? ""} className={`${input} w-full`} placeholder="lighting, props, position, or: none" /></label>
+                  <label className="mt-1.5 block"><span className="text-[11px] text-dim">Notes</span><textarea name="continuity" rows={2} defaultValue={intent.continuity_notes ?? intent.continuity ?? ""} className={`${input} w-full`} placeholder="lighting, props, position, or: none" /></label>
                   <label className="mt-1 flex items-center gap-2"><input type="checkbox" name="no_bible_assets" defaultChecked={!!intent.no_bible_assets} /> This cut uses nothing from the bible</label>
                 </fieldset>
                 <label className="text-xs"><span className="label">Camera</span><input name="camera_language" defaultValue={intent.camera_language ?? ""} className={`${input} w-full`} /></label>
                 <label className="text-xs"><span className="label">Dialogue</span><input name="dialogue" defaultValue={intent.dialogue ?? ""} className={`${input} w-full`} placeholder="ANA: That wasn't there." /></label>
                 <label className="text-xs"><span className="label">Seconds</span><input name="duration_target_s" type="number" min={1} max={60} defaultValue={current.duration_target_s ?? ""} className={`${input} w-20`} /></label>
-                <div className="flex gap-2"><button className="btn-primary text-xs">Save notes</button><button formAction={deleteShot} className={`${btn} text-xs text-danger`}>Delete cut</button></div>
+                <div className="flex gap-2"><button className="btn-primary text-xs">Save notes</button><button formAction={deleteShot} className={`${btn} text-xs text-drift`}>Delete cut</button></div>
               </form>
 
-              <section className="panel p-4" style={{ borderRadius: 18 }}>
+              <section className="panel p-4" style={{ borderRadius: 10 }}>
                 <h2 className="display mb-2 text-sm">Generations</h2>
-                {cutJobs.length === 0 ? <p className="text-xs text-muted">Nothing generated for this cut yet.</p> : (
+                {cutJobs.length === 0 ? <p className="text-xs text-dim">Nothing generated for this cut yet.</p> : (
                   <ul className="flex flex-col gap-1.5 text-xs">
                     {cutJobs.map((j) => (
                       <li key={j.job_id} className="card px-2.5 py-1.5">
                         <div className="flex justify-between"><span className="font-semibold">{j.layer} · {j.lane}</span><span className="mono">{(j.actual_tokens ?? j.estimated_tokens ?? 0).toLocaleString()} tk</span></div>
-                        <div className="text-muted">{j.status}{j.created_at ? ` · ${new Date(j.created_at).toLocaleTimeString()}` : ""}</div>
-                        {j.error && <div className="mt-0.5 text-danger">{j.error}</div>}
+                        <div className="text-dim">{j.status}{j.created_at ? ` · ${new Date(j.created_at).toLocaleTimeString()}` : ""}</div>
+                        {j.error && <div className="mt-0.5 text-drift">{j.error}</div>}
                       </li>
                     ))}
                   </ul>
                 )}
-                <p className="mt-2 text-[11px] text-muted">Tokens are reserved when a job starts and returned if it fails.</p>
+                <p className="mt-2 text-[11px] text-dim">Tokens are reserved when a job starts and returned if it fails.</p>
               </section>
             </aside>
           )}
         </div>
       ) : null}
 
-      <p className="mt-3 text-xs text-muted">Cuts read left to right as the film. Music is scored to the locked cut at the timeline stage.</p>
+      <p className="mt-3 text-xs text-dim">Cuts read left to right as the film. Music is scored to the locked cut at the timeline stage.</p>
     </div>
   );
 }

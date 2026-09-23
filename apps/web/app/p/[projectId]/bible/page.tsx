@@ -18,8 +18,8 @@ export default async function BiblePage({ params, searchParams }: { params: Prom
     <div className="max-w-4xl">
       <h1 className="mb-1 display text-2xl">Bible</h1>
       <p className="mb-6 text-sm opacity-70">Characters, locations, props, styles and voices. Anything depicting a real person needs a signed release before it can be generated.</p>
-      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
 
       {KINDS.map((kind) => {
         const rows = (entries ?? []).filter((e) => e.kind === kind);
@@ -30,7 +30,7 @@ export default async function BiblePage({ params, searchParams }: { params: Prom
             <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {rows.map((e) => (
                 <li key={e.id}>
-                  <Link href={`/p/${projectId}/bible/${e.id}`} className="block card p-3 hover:bg-sand">
+                  <Link href={`/p/${projectId}/bible/${e.id}`} className="block card p-3 hover:bg-glass">
                     <div className="mb-1"><BibleChip state={e.requires_consent ? e.consent_state : "not_required"} /></div>
                     {e.reference_asset_id && (
                       // eslint-disable-next-line @next/next/no-img-element

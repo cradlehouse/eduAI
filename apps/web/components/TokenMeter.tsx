@@ -8,9 +8,9 @@ export function TokenRing({ spent, total, size = 34 }: { spent: number; total: n
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`${pct}% of tokens used`}>
       <circle cx={mid} cy={mid} r={r} fill="none" stroke="currentColor" strokeOpacity="0.15" strokeWidth="4" />
-      <circle cx={mid} cy={mid} r={r} fill="none" stroke="var(--color-money)" strokeWidth="4" strokeLinecap="round"
+      <circle cx={mid} cy={mid} r={r} fill="none" stroke="var(--color-gold)" strokeWidth="4" strokeLinecap="round"
               strokeDasharray={c} strokeDashoffset={c * (1 - pct / 100)} transform={`rotate(-90 ${mid} ${mid})`} />
-      <text x={mid} y={mid + 3.5} textAnchor="middle" fontSize="9" fontWeight="600" fill="currentColor">{pct}%</text>
+      <text x={mid} y={mid + 3.5} textAnchor="middle" fontSize="9" fontWeight="500" fill="currentColor">{pct}%</text>
     </svg>
   );
 }
@@ -20,14 +20,14 @@ export function TokenBar({ spent, total, scope }: Budget) {
   const fmt = (n: number) => n.toLocaleString();
   return (
     <div className="text-xs" aria-label={`${scope} budget: ${fmt(spent)} of ${fmt(total)} tokens used`}>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-ink/10">
-        <div className="h-full rounded-full bg-money" style={{ width: `${pct}%` }} />
+      <div className="h-2 w-full overflow-hidden rounded-full bg-field">
+        <div className="h-full rounded-full bg-gold" style={{ width: `${pct}%` }} />
       </div>
-      <div className="mt-1 flex justify-between text-muted">
+      <div className="mt-1 flex justify-between text-dim">
         <span><span className="font-medium text-ink">{fmt(spent)}</span> used</span>
         <span><span className="font-medium text-ink">{fmt(total - spent)}</span> left</span>
       </div>
-      <div className="text-[10px] text-muted">{fmt(total)} tokens · {scope === "project" ? "project budget" : "your budget"}</div>
+      <div className="text-[10px] text-dim">{fmt(total)} tokens · {scope === "project" ? "project budget" : "your budget"}</div>
     </div>
   );
 }

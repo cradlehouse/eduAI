@@ -30,7 +30,7 @@ export default async function CohortHome({ params }: { params: Promise<{ cohortI
         <img src={nav.org.logo_url} alt={nav.org.name} className="mb-4 h-12 w-auto" />
       )}
       <h1 className="display mb-1 text-2xl">{cohort.name}</h1>
-      <p className="mb-6 text-sm text-muted">{cohort.courses?.title}{cohort.starts_on ? ` · ${cohort.starts_on}` : ""}{cohort.ends_on ? ` → ${cohort.ends_on}` : ""}</p>
+      <p className="mb-6 text-sm text-dim">{cohort.courses?.title}{cohort.starts_on ? ` · ${cohort.starts_on}` : ""}{cohort.ends_on ? ` → ${cohort.ends_on}` : ""}</p>
 
       <div className="mb-4 grid gap-4 md:grid-cols-2">
         <section className="card p-4">
@@ -38,15 +38,15 @@ export default async function CohortHome({ params }: { params: Promise<{ cohortI
           {week ? (
             <>
               <div className="display">Module {week.module.position}: {week.module.title}</div>
-              <div className="text-xs text-muted">{week.state === "open" && week.due_at ? `due ${new Date(week.due_at).toLocaleDateString()}` : week.reason ?? ""}</div>
+              <div className="text-xs text-dim">{week.state === "open" && week.due_at ? `due ${new Date(week.due_at).toLocaleDateString()}` : week.reason ?? ""}</div>
               {mine[0] && <Link href={`/p/${mine[0].id}/brief`} className="mt-2 inline-block text-sm underline">Read the brief</Link>}
             </>
-          ) : <p className="text-sm text-muted">No modules scheduled.</p>}
+          ) : <p className="text-sm text-dim">No modules scheduled.</p>}
         </section>
         <section className="card p-4">
           <div className="label mb-1">Team</div>
           <div className="display">{(enrolled ?? []).length} apprentices</div>
-          <div className="truncate text-xs text-muted">{(enrolled ?? []).slice(0, 6).map((e) => name(e.users)).join(", ")}{(enrolled ?? []).length > 6 ? ", …" : ""}</div>
+          <div className="truncate text-xs text-dim">{(enrolled ?? []).slice(0, 6).map((e) => name(e.users)).join(", ")}{(enrolled ?? []).length > 6 ? ", …" : ""}</div>
           <Link href={`/c/${cohortId}/team`} className="mt-2 inline-block text-sm underline">See the team</Link>
         </section>
       </div>
@@ -55,12 +55,12 @@ export default async function CohortHome({ params }: { params: Promise<{ cohortI
         <section className="card p-4">
           <div className="label mb-1">{manage ? "Projects" : "My projects"}</div>
           {(manage ? projects ?? [] : mine).length === 0 ? (
-            <p className="text-sm text-muted">{manage ? "Nothing posted yet." : "You're not on a project yet."}</p>
+            <p className="text-sm text-dim">{manage ? "Nothing posted yet." : "You're not on a project yet."}</p>
           ) : (
             <ul className="text-sm">
               {manage
-                ? (projects ?? []).map((p) => <li key={p.id}><Link href={`/p/${p.id}`} className="underline">{p.title}</Link> <span className="text-muted">· {p.status} · {p.project_members.length} crew</span></li>)
-                : mine.map((p) => <li key={p.id}><Link href={`/p/${p.id}`} className="underline">{p.title}</Link> <span className="text-muted">· {p.roles.join(", ")}</span></li>)}
+                ? (projects ?? []).map((p) => <li key={p.id}><Link href={`/p/${p.id}`} className="underline">{p.title}</Link> <span className="text-dim">· {p.status} · {p.project_members.length} crew</span></li>)
+                : mine.map((p) => <li key={p.id}><Link href={`/p/${p.id}`} className="underline">{p.title}</Link> <span className="text-dim">· {p.roles.join(", ")}</span></li>)}
             </ul>
           )}
         </section>
@@ -68,8 +68,8 @@ export default async function CohortHome({ params }: { params: Promise<{ cohortI
           <div className="label mb-1">{manage ? "Needs attention" : "Open for sign-up"}</div>
           {manage ? (
             <p className="text-sm">{(pending ?? []).length} sign-up(s) awaiting approval · {(enrolled ?? []).filter((e) => !(projects ?? []).some((p) => p.project_members.some((m) => m.user_id === e.user_id))).length} not on a project</p>
-          ) : open.length === 0 ? <p className="text-sm text-muted">Nothing open right now.</p> : (
-            <ul className="text-sm">{open.map((p) => <li key={p.id}>{p.title} <span className="text-muted">· needs {p.roles_needed.join(", ") || "crew"}</span></li>)}</ul>
+          ) : open.length === 0 ? <p className="text-sm text-dim">Nothing open right now.</p> : (
+            <ul className="text-sm">{open.map((p) => <li key={p.id}>{p.title} <span className="text-dim">· needs {p.roles_needed.join(", ") || "crew"}</span></li>)}</ul>
           )}
           <Link href={`/c/${cohortId}/projects`} className="mt-2 inline-block text-sm underline">See projects</Link>
         </section>

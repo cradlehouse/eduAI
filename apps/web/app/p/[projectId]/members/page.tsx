@@ -19,30 +19,30 @@ export default async function MembersPage({ params, searchParams }: { params: Pr
   return (
     <div className="max-w-3xl">
       <h1 className="display mb-1 text-2xl">Members</h1>
-      <p className="mb-4 text-sm text-muted">The crew and their roles. Roles are credits, not permissions; you can hold more than one.</p>
-      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      <p className="mb-4 text-sm text-dim">The crew and their roles. Roles are credits, not permissions; you can hold more than one.</p>
+      {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
       <ul className="flex flex-col gap-3">
         {data.members.map((m) => {
           const editable = manage || m.user_id === nav.userId;
           return (
             <li key={m.user_id} className="card p-4">
-              <div className="flex items-baseline justify-between"><span className="font-semibold">{name(m.users)}</span><span className="text-xs text-muted">{m.roles.join(" · ")}</span></div>
+              <div className="flex items-baseline justify-between"><span className="font-semibold">{name(m.users)}</span><span className="text-xs text-dim">{m.roles.join(" · ")}</span></div>
               {editable && (
                 <form action={setRoles} className="mt-2 flex flex-wrap items-center gap-3 text-xs">
                   <input type="hidden" name="project_id" value={projectId} />
                   <input type="hidden" name="user_id" value={m.user_id} />
                   {roleList.map((r) => <label key={r} className="flex items-center gap-1"><input type="checkbox" name="roles" value={r} defaultChecked={m.roles.includes(r)} /> {r}</label>)}
                   <button className="btn">Save roles</button>
-                  {manage && <button formAction={removeMember} className="btn text-danger">Remove</button>}
+                  {manage && <button formAction={removeMember} className="btn text-drift">Remove</button>}
                 </form>
               )}
             </li>
           );
         })}
-        {data.members.length === 0 && <p className="text-sm text-muted">Nobody on this crew yet.</p>}
+        {data.members.length === 0 && <p className="text-sm text-dim">Nobody on this crew yet.</p>}
       </ul>
-      {manage && <p className="mt-4 text-xs text-muted">Add people from the cohort&apos;s Team page or approve their sign-ups under Projects.</p>}
+      {manage && <p className="mt-4 text-xs text-dim">Add people from the cohort&apos;s Team page or approve their sign-ups under Projects.</p>}
     </div>
   );
 }

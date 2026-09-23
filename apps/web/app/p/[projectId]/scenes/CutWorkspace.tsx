@@ -20,9 +20,9 @@ const LANES: { id: Lane; label: string; blurb: string }[] = [
 ];
 // Literal class names on purpose: Tailwind only emits classes it can see in source.
 const LANE_STYLE: Record<Lane, { solid: string; text: string; ring: string }> = {
-  explore: { solid: "bg-explore text-white", text: "text-explore", ring: "ring-explore" },
-  control: { solid: "bg-control text-white", text: "text-control", ring: "ring-control" },
-  finish:  { solid: "bg-finish text-white",  text: "text-finish",  ring: "ring-finish" },
+  explore: { solid: "bg-gold text-bg-deep", text: "text-dim", ring: "ring-gold" },
+  control: { solid: "bg-gold text-bg-deep", text: "text-dim", ring: "ring-gold" },
+  finish:  { solid: "bg-gold text-bg-deep", text: "text-dim", ring: "ring-gold" },
 };
 const LAYERS: { id: Layer; label: string; short: string; modalities: string[]; help: string }[] = [
   { id: "background", label: "Background", short: "BG", modalities: ["text_to_image", "text_to_video", "image_to_video"], help: "The location plate. Reused across every cut in the scene." },
@@ -182,60 +182,60 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
       <div className="flex flex-wrap items-center gap-1.5">
         {LAYERS.map((l) => (
           <button key={l.id} type="button" onClick={() => { setLayer(l.id); setFocus(null); }}
-                  className={`pill display ${layer === l.id ? "bg-ink text-paper" : "bg-sand text-ink hover:bg-line"}`}>
+                  className={`pill display ${layer === l.id ? "pinned" : "text-dim hover:bg-field"}`}>
             {l.label}{counts[l.id] ? <span className="ml-1 opacity-70">{counts[l.id]}</span> : null}
           </button>
         ))}
-        <span className="ml-auto text-xs text-muted">{layerDef.help}</span>
+        <span className="ml-auto text-xs text-dim">{layerDef.help}</span>
       </div>
 
-      <div className="card overflow-hidden" style={{ borderRadius: 18 }}>
+      <div className="card overflow-hidden" style={{ borderRadius: 10 }}>
         <div className={`grid ${layerTakes.length > 0 ? "grid-cols-[128px_minmax(0,1fr)]" : "grid-cols-1"}`}>
           {/* the bin: takes down the left, tick to choose, × to kill */}
           {layerTakes.length > 0 && (
-            <div className="flex max-h-[520px] flex-col gap-2 overflow-y-auto border-r border-line bg-sand p-2">
+            <div className="flex max-h-[520px] flex-col gap-2 overflow-y-auto border-r border-glass-edge bg-glass p-2">
               {layerTakes.map((t) => {
                 const isMain = main?.id === t.id; const isChosen = t.id === chosenId;
                 return (
-                  <div key={t.id} className={`group relative shrink-0 overflow-hidden rounded-[8px] bg-ink ring-2 ${isMain ? "ring-ink" : "ring-transparent"}`}>
+                  <div key={t.id} className={`group relative shrink-0 overflow-hidden rounded-[8px] bg-card ring-2 ${isMain ? "ring-gold" : "ring-transparent"}`}>
                     <button type="button" onClick={() => setFocus(t.id)} className="block h-[68px] w-full" title={new Date(t.created_at).toLocaleString()}><Media take={t} /></button>
                     {canChoose && (
                       <button type="button" onClick={() => toggleChoose(t)} aria-pressed={isChosen} aria-label={isChosen ? "Chosen · click to unchoose" : "Choose this take"} title={isChosen ? "Chosen · click to unchoose" : (layer === "background" ? "Use as plate" : "Choose this take")}
-                              className={`absolute bottom-1 right-1 grid h-6 w-6 place-items-center rounded-full text-[13px] font-bold ${isChosen ? "bg-money text-ink" : "bg-black/55 text-paper opacity-0 hover:bg-money hover:text-ink group-hover:opacity-100"}`}>✓</button>
+                              className={`absolute bottom-1 right-1 grid h-6 w-6 place-items-center rounded-full text-[13px] font-bold ${isChosen ? "bg-gold text-ink" : "bg-black/55 text-ink opacity-0 hover:bg-gold hover:text-ink group-hover:opacity-100"}`}>✓</button>
                     )}
                   </div>
                 );
               })}
             </div>
           )}
-          <div className={`relative bg-ink ${layer === "dialogue" || layer === "sfx" ? "h-24" : "aspect-video"}`}>
+          <div className={`relative bg-card ${layer === "dialogue" || layer === "sfx" ? "h-24" : "aspect-video"}`}>
             {main ? <Media take={main} big /> : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-sm text-paper/70">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-sm text-dim">
                 <span>No {layerDef.label.toLowerCase()} take yet.</span>
-                <span className="text-xs text-paper/50">Write the prompt below and generate.</span>
+                <span className="text-xs text-mute">Write the prompt below and generate.</span>
               </div>
             )}
             {main && (
-              <button type="button" onClick={() => setLife(main, "killed")} className="absolute bottom-3 right-3 rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] text-paper hover:bg-danger">Kill take</button>
+              <button type="button" onClick={() => setLife(main, "killed")} className="absolute bottom-3 right-3 rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] text-ink hover:bg-drift">Kill take</button>
             )}
             {main && (
               <div className="absolute left-3 top-3 flex gap-1.5">
-                {main.id === chosenId && <span className="rounded-full bg-money px-2 py-0.5 text-[11px] font-semibold text-ink">✓ {layer === "background" ? "plate for this cut" : "chosen for this cut"}</span>}
-                <span className="rounded-full bg-black/55 px-2 py-0.5 text-[11px] text-paper">{layerDef.short}{main.duration_s ? ` · ${main.duration_s.toFixed(1)} s` : ""}</span>
+                {main.id === chosenId && <span className="rounded-full bg-gold px-2 py-0.5 text-[11px] font-semibold text-ink">✓ {layer === "background" ? "plate for this cut" : "chosen for this cut"}</span>}
+                <span className="rounded-full bg-black/55 px-2 py-0.5 text-[11px] text-ink">{layerDef.short}{main.duration_s ? ` · ${main.duration_s.toFixed(1)} s` : ""}</span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {binMsg && <p className="text-xs text-danger">{binMsg}</p>}
+      {binMsg && <p className="text-xs text-drift">{binMsg}</p>}
       {killed.length > 0 && (
-        <details className="text-xs text-muted">
+        <details className="text-xs text-dim">
           <summary className="cursor-pointer select-none">Killed takes on this layer ({killed.length}) · nothing is ever deleted</summary>
           <div className="mt-2 flex flex-wrap gap-2">
             {killed.map((t) => (
-              <div key={t.id} className="flex items-center gap-2 rounded-[10px] border border-line bg-card p-1.5">
-                <div className="h-12 w-20 overflow-hidden rounded-[6px] bg-ink opacity-60"><Media take={t} /></div>
+              <div key={t.id} className="flex items-center gap-2 rounded-[8px] border border-glass-edge bg-card p-1.5">
+                <div className="h-12 w-20 overflow-hidden rounded-[6px] bg-card opacity-60"><Media take={t} /></div>
                 <button type="button" onClick={() => setLife(t, "live")} className="btn text-xs">Restore</button>
               </div>
             ))}
@@ -244,17 +244,17 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
       )}
 
       {/* ---- the dock: prompt on top, everything else as chips, cost on the button */}
-      <div className="card p-3 shadow-[0_14px_36px_rgba(35,33,43,0.10)]" style={{ borderRadius: 18 }}>
+      <div className="card p-3 shadow-[0_14px_36px_rgba(35,33,43,0.10)]" style={{ borderRadius: 10 }}>
         <textarea rows={2} maxLength={schema.properties?.[promptKey]?.maxLength} value={String(inputs[promptKey] ?? "")} onChange={(e) => set(promptKey, e.target.value)}
                   placeholder={layer === "dialogue" ? "The line to voice, from the notes" : layer === "sfx" ? "Describe the sound: rain on a tin roof, distant traffic" : "Describe the picture for this cut"}
-                  className="w-full resize-none border-0 bg-transparent px-1 py-1 text-[15px] leading-snug outline-none placeholder:text-muted" />
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-line pt-2">
+                  className="w-full resize-none border-0 bg-transparent px-1 py-1 text-[15px] leading-snug outline-none placeholder:text-dim" />
+        <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-glass-edge pt-2">
           {["background", "character", "merged"].includes(layer) && (
             look
-              ? <span className="pill bg-sand text-xs" title={`Every picture prompt in this project starts with: ${look.prompt}`}>Look · {look.label}</span>
-              : <span className="pill border-dashed text-xs text-muted" title="Set the project's look at the top of the page">Look · not set</span>
+              ? <span className="pill bg-glass text-xs" title={`Every picture prompt in this project starts with: ${look.prompt}`}>Look · {look.label}</span>
+              : <span className="pill border-dashed text-xs text-dim" title="Set the project's look at the top of the page">Look · not set</span>
           )}
-          <div className="flex rounded-full bg-sand p-0.5">
+          <div className="flex rounded-full bg-glass p-0.5">
             {LANES.map((l) => { const r = readiness.find((x) => x.lane === l.id); return (
               <button key={l.id} type="button" onClick={() => setLane(l.id)} title={r && !r.ready ? `blocked: ${r.missing.join(", ")}` : l.blurb}
                       className={`display rounded-full px-2.5 py-1 text-xs ${lane === l.id ? LANE_STYLE[l.id].solid : LANE_STYLE[l.id].text}`}>{l.label}</button>
@@ -264,22 +264,22 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
           <details className="relative">
             <summary className="pill flex cursor-pointer list-none items-center gap-1.5 bg-card text-xs">
               <span className="font-semibold">{selected ? routeLabel(selected) : "Route"}</span>
-              {selected && <span className="text-muted">{selected.compute_provider} · {selected.integrity_rating} · {selected.resource_disclosure}</span>}
+              {selected && <span className="text-dim">{selected.compute_provider} · {selected.integrity_rating} · {selected.resource_disclosure}</span>}
               <span className="opacity-60">▾</span>
             </summary>
             <div className="card absolute left-0 z-20 mt-1 w-80 p-2 text-sm">
               <div className="label mb-1 px-2">Route · cost before you commit</div>
-              {picker.length === 0 && <div className="px-2 py-1 text-xs text-muted">Your school has no route for this layer yet.</div>}
+              {picker.length === 0 && <div className="px-2 py-1 text-xs text-dim">Your school has no route for this layer yet.</div>}
               {picker.map(({ o, lane: l }) => { const est = estimates[o.profile_id]; const usable = o.allowed || l !== lane; return (
                 <button key={o.profile_id} type="button" disabled={!usable}
                         onClick={(e) => { setLane(l); setProfileId(o.profile_id); (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); }}
-                        className={`flex w-full items-center justify-between rounded-[10px] px-2 py-1.5 text-left hover:bg-sand ${usable ? "" : "opacity-45"} ${selected?.profile_id === o.profile_id ? "bg-sand" : ""}`}>
-                  <span><span className="font-semibold">{routeLabel(o)}</span> <span className={`ml-1 rounded-full px-1.5 text-[10px] ${LANE_STYLE[l].text} bg-sand`}>{l}</span>
-                    <span className="block text-xs text-muted">{o.compute_provider} · integrity {o.integrity_rating} · energy {o.resource_disclosure}{!o.allowed && l === lane ? ` · ${REASON[o.reason ?? ""] ?? o.reason}` : ""}</span></span>
-                  <span className={`mono ml-2 shrink-0 text-xs ${usable ? "text-money" : "text-muted"}`}>{est != null ? est.toLocaleString() : "…"}</span>
+                        className={`flex w-full items-center justify-between rounded-[8px] px-2 py-1.5 text-left hover:bg-glass ${usable ? "" : "opacity-45"} ${selected?.profile_id === o.profile_id ? "bg-glass" : ""}`}>
+                  <span><span className="font-semibold">{routeLabel(o)}</span> <span className={`ml-1 rounded-full px-1.5 text-[10px] ${LANE_STYLE[l].text} bg-glass`}>{l}</span>
+                    <span className="block text-xs text-dim">{o.compute_provider} · integrity {o.integrity_rating} · energy {o.resource_disclosure}{!o.allowed && l === lane ? ` · ${REASON[o.reason ?? ""] ?? o.reason}` : ""}</span></span>
+                  <span className={`mono ml-2 shrink-0 text-xs ${usable ? "text-gold" : "text-dim"}`}>{est != null ? est.toLocaleString() : "…"}</span>
                 </button>
               ); })}
-              {selected?.limitations && <div className="mt-1 px-2 text-xs text-muted">{selected.limitations}</div>}
+              {selected?.limitations && <div className="mt-1 px-2 text-xs text-dim">{selected.limitations}</div>}
             </div>
           </details>
 
@@ -289,7 +289,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
             const chip = "pill flex items-center gap-1 bg-card text-xs";
             if (p.format === "asset-ref") {
               const accept = p["x-ui"]?.accept ?? "image";
-              return <label key={k} className={chip} title={name}><span className="text-muted">{name}</span>
+              return <label key={k} className={chip} title={name}><span className="text-dim">{name}</span>
                 <select className="bg-transparent outline-none" value={String(v ?? "")} onChange={(e) => set(k, e.target.value || null)}>
                   <option value="">none</option>{assets.filter((a) => a.kind === accept).map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}</select></label>;
             }
@@ -299,13 +299,13 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
                   {p.enum.map((opt) => <option key={String(opt)} value={String(opt)}>{k === "duration_s" ? `${opt} s` : String(opt)}</option>)}</select></label>;
             }
             if (p.type === "boolean") {
-              return <button key={k} type="button" onClick={() => set(k, !v)} className={`${chip} ${v ? "bg-ink text-paper" : ""}`}>{name}</button>;
+              return <button key={k} type="button" onClick={() => set(k, !v)} className={`${chip} ${v ? "pinned" : ""}`}>{name}</button>;
             }
             if (p.type === "integer" || p.type === "number") {
-              return <label key={k} className={chip} title={name}><span className="text-muted">{name}</span>
+              return <label key={k} className={chip} title={name}><span className="text-dim">{name}</span>
                 <input type="number" className="w-14 bg-transparent outline-none" min={p.minimum} max={p.maximum} step={p.type === "integer" ? 1 : "any"} value={v == null ? "" : String(v)} onChange={(e) => set(k, e.target.value === "" ? null : Number(e.target.value))} /></label>;
             }
-            return <label key={k} className={chip} title={name}><span className="text-muted">{name}</span>
+            return <label key={k} className={chip} title={name}><span className="text-dim">{name}</span>
               <input className="w-28 bg-transparent outline-none" maxLength={p.maxLength} value={String(v ?? "")} onChange={(e) => set(k, e.target.value)} placeholder="…" /></label>;
           })}
 
@@ -317,7 +317,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
         {gate && !gate.ready && (
           <p className="mt-2 text-xs"><b>Not ready.</b> {gateLane === "voice_likeness" ? "Dialogue in a real voice needs a voice release." : `This cut still needs ${gate.missing.map((m) => MISSING[m] ?? m).join(", ")}.`} Save the notes on the right and this unlocks.</p>
         )}
-        {msg && <p className={`mt-2 text-xs ${msg.kind === "ok" ? "text-control" : "text-danger"}`}>{msg.text}</p>}
+        {msg && <p className={`mt-2 text-xs ${msg.kind === "ok" ? "text-ok" : "text-drift"}`}>{msg.text}</p>}
       </div>
     </div>
   );

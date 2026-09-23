@@ -24,8 +24,8 @@ export function PasswordForm() {
       <input type="password" required minLength={8} autoComplete="new-password" placeholder="Again" value={again} onChange={(e) => setAgain(e.target.value)} className="input" />
       <div className="flex items-center gap-3">
         <button type="submit" disabled={state === "busy"} className="btn-primary">{state === "busy" ? "…" : "Save password"}</button>
-        {state === "done" && <span className="text-xs text-money">Saved. Use it next time you sign in.</span>}
-        {state === "error" && <span className="text-xs text-danger">{message}</span>}
+        {state === "done" && <span className="text-xs text-gold">Saved. Use it next time you sign in.</span>}
+        {state === "error" && <span className="text-xs text-drift">{message}</span>}
       </div>
     </form>
   );

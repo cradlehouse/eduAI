@@ -33,20 +33,20 @@ export default async function OrgPage({ searchParams }: { searchParams: Promise<
     <div className="max-w-3xl">
       <h1 className="mb-1 display text-2xl">{org.name}</h1>
       <p className="mb-6 text-sm opacity-70">/{org.slug} · content tier {org.content_tier} · {org.has_minors ? "has minors" : "no minors flagged"} · you are {org.role}</p>
-      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
 
-      <section className="mb-8 card p-5" style={{ borderRadius: 18 }}>
+      <section className="mb-8 card p-5" style={{ borderRadius: 10 }}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div><div className="label">Your plan</div><h2 className="display text-xl">{plan ? `${plan.name} · ${money(plan.monthly_cents)} a month` : "No plan set"}</h2></div>
-          {orgRow?.plan_started_on && <span className="text-xs text-muted">since {orgRow.plan_started_on}</span>}
+          {orgRow?.plan_started_on && <span className="text-xs text-dim">since {orgRow.plan_started_on}</span>}
         </div>
-        {plan && <p className="mt-1 text-sm text-muted">{plan.blurb}</p>}
+        {plan && <p className="mt-1 text-sm text-dim">{plan.blurb}</p>}
         {plan && (
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-            <div className="rounded-[12px] bg-sand p-3"><dt className="label">People</dt><dd className="text-xl">{members ?? 0} <span className="text-sm text-muted">of {plan.seats}</span></dd></div>
-            <div className="rounded-[12px] bg-sand p-3"><dt className="label">Generation this month</dt><dd className="text-xl">{money(spentThisMonth)} <span className="text-sm text-muted">of {money(plan.token_cents_per_month)}</span></dd><dd className="text-xs text-muted">{tokens(spentThisMonth)} of {tokens(plan.token_cents_per_month)} tokens</dd></div>
-            <div className="rounded-[12px] bg-sand p-3"><dt className="label">Card on file</dt><dd className="text-xl">{orgRow?.card_on_file ? "yes" : "none"}</dd><dd className="text-xs text-muted">{orgRow?.overage_allowed ? "overages allowed" : "stops at the allowance"}</dd></div>
+            <div className="rounded-[6px] bg-glass p-3"><dt className="label">People</dt><dd className="text-xl">{members ?? 0} <span className="text-sm text-dim">of {plan.seats}</span></dd></div>
+            <div className="rounded-[6px] bg-glass p-3"><dt className="label">Generation this month</dt><dd className="text-xl">{money(spentThisMonth)} <span className="text-sm text-dim">of {money(plan.token_cents_per_month)}</span></dd><dd className="text-xs text-dim">{tokens(spentThisMonth)} of {tokens(plan.token_cents_per_month)} tokens</dd></div>
+            <div className="rounded-[6px] bg-glass p-3"><dt className="label">Card on file</dt><dd className="text-xl">{orgRow?.card_on_file ? "yes" : "none"}</dd><dd className="text-xs text-dim">{orgRow?.overage_allowed ? "overages allowed" : "stops at the allowance"}</dd></div>
           </dl>
         )}
         <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -59,7 +59,7 @@ export default async function OrgPage({ searchParams }: { searchParams: Promise<
           <Link href="/org/keys" className="btn">Use your own vendor keys</Link>
           <button className="btn opacity-60" disabled title="Card payments are not connected yet; plans are invoiced.">Add a card · coming</button>
         </div>
-        <form action={setBilling} className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-3 text-sm">
+        <form action={setBilling} className="mt-4 flex flex-wrap items-center gap-3 border-t border-glass-edge pt-3 text-sm">
           <label className="flex items-center gap-2"><span className="label">Billing email</span><input name="billing_email" type="email" defaultValue={orgRow?.billing_email ?? ""} placeholder="finance@school.org" className="input w-64" /></label>
           <label className="flex items-center gap-2"><input type="checkbox" name="overage_allowed" defaultChecked={!!orgRow?.overage_allowed} /> allow generation past the monthly allowance (needs a card)</label>
           <button className="btn">Save</button>
@@ -69,7 +69,7 @@ export default async function OrgPage({ searchParams }: { searchParams: Promise<
       <dl className="mb-8 grid grid-cols-3 gap-4 text-sm">
         <div className="card p-4"><dt className="opacity-60">Members</dt><dd className="text-2xl">{members ?? 0}</dd></div>
         <div className="card p-4"><dt className="opacity-60">Pending invites</dt><dd className="text-2xl">{pending ?? 0}</dd></div>
-        <Link href="/org/cohorts" className="card p-4 hover:bg-sand"><dt className="opacity-60">Cohorts</dt><dd className="text-2xl">{cohorts ?? 0}</dd></Link>
+        <Link href="/org/cohorts" className="card p-4 hover:bg-glass"><dt className="opacity-60">Cohorts</dt><dd className="text-2xl">{cohorts ?? 0}</dd></Link>
       </dl>
 
       <section className="mb-8 card p-4">
@@ -77,7 +77,7 @@ export default async function OrgPage({ searchParams }: { searchParams: Promise<
         <p className="mb-3 text-xs opacity-70">Only admins see money. Everyone else sees tokens. Changing the rate rescales how existing budgets display; it does not move money.</p>
         <form action={setTokenRate} className="flex items-center gap-2 text-sm">
           $1 =
-          <input name="tokens_per_dollar" type="number" min={1} step={1} defaultValue={org.tokens_per_dollar} className="w-28 rounded border border-ink/20 bg-white px-2 py-1 text-ink" />
+          <input name="tokens_per_dollar" type="number" min={1} step={1} defaultValue={org.tokens_per_dollar} className="w-28 rounded border border-card-edge bg-card px-2 py-1 text-ink" />
           tokens
           <button className="btn">Save</button>
         </form>
@@ -91,7 +91,7 @@ export default async function OrgPage({ searchParams }: { searchParams: Promise<
             <thead className="label text-left"><tr><th className="py-1">Project</th><th>Allocated</th><th>Spent</th><th>Reserved</th><th>Remaining</th><th>Tokens</th></tr></thead>
             <tbody>
               {(budgets ?? []).map((b) => (
-                <tr key={b.project_id} className="border-t border-line">
+                <tr key={b.project_id} className="border-t border-glass-edge">
                   <td className="py-1">{title(b.project_id!)}</td>
                   <td>{money(b.total_cents)}</td><td>{money(b.spent_cents)}</td><td>{money(b.reserved_open_cents)}</td><td>{money(b.remaining_cents)}</td>
                   <td className="opacity-70">{(b.spent_tokens ?? 0).toLocaleString()} / {(b.total_tokens ?? 0).toLocaleString()}</td>

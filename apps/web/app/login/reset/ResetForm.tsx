@@ -24,8 +24,8 @@ export function ResetForm({ initialEmail }: { initialEmail: string }) {
       <label className="text-sm font-medium" htmlFor="email">Email</label>
       <input id="email" type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input" />
       <button type="submit" disabled={state === "busy"} className="btn-primary">{state === "busy" ? "…" : "Send reset link"}</button>
-      {state === "error" && <p className="text-sm text-danger">{message}</p>}
-      <a href="/login" className="text-xs text-muted underline">Back to sign in</a>
+      {state === "error" && <p className="text-sm text-drift">{message}</p>}
+      <a href="/login" className="text-xs text-dim underline">Back to sign in</a>
     </form>
   );
 }

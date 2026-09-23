@@ -28,8 +28,8 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
   return (
     <div className="max-w-4xl">
       <h1 className="mb-6 display text-2xl">People</h1>
-      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
 
       <section className="mb-10 card p-4">
         <h2 className="mb-1 font-medium">Invite</h2>
@@ -74,7 +74,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
             <thead className="label text-left"><tr><th className="py-1">Email</th><th>Role</th><th>Cohort / project</th><th>Expires</th><th></th></tr></thead>
             <tbody>
               {pending.map((i) => (
-                <tr key={i.id} className="border-t border-line">
+                <tr key={i.id} className="border-t border-glass-edge">
                   <td className="py-2">{i.email}{i.is_minor && <span className="ml-1 text-xs opacity-60">minor</span>}</td>
                   <td>{i.role}</td>
                   <td className="opacity-80">{i.cohorts?.name ?? "—"}{i.projects?.title ? ` / ${i.projects.title}` : ""}</td>
@@ -98,7 +98,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
             {(members ?? []).map((m) => {
               const locked = m.role === "owner" || (m.role === "admin" && !canInviteAdmins);
               return (
-                <tr key={m.id} className="border-t border-line">
+                <tr key={m.id} className="border-t border-glass-edge">
                   <td className="py-2">{m.users?.display_name ?? m.users?.email}<div className="text-xs opacity-60">{m.users?.email}</div></td>
                   <td>
                     {locked ? m.role : (
@@ -134,7 +134,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
                       <button className={btn}>{m.is_minor ? "Yes · clear" : "No · mark"}</button>
                     </form>
                   </td>
-                  <td>{!locked && <form action={removeMember}><input type="hidden" name="id" value={m.id} /><button className={`${btn} text-danger`}>Remove</button></form>}</td>
+                  <td>{!locked && <form action={removeMember}><input type="hidden" name="id" value={m.id} /><button className={`${btn} text-drift`}>Remove</button></form>}</td>
                 </tr>
               );
             })}

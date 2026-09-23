@@ -35,23 +35,23 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
   return (
     <div className="max-w-4xl">
       <h1 className="display mb-1 text-2xl">Team</h1>
-      <p className="mb-4 text-sm text-muted">
+      <p className="mb-4 text-sm text-dim">
         {(enrolled ?? []).length} apprentices · {(instructors ?? []).length} instructor(s) · {(projects ?? []).length} project(s)
-        {manage && <> · <span className="text-danger">{notOn} not on a project · {(pending ?? []).length} awaiting approval</span></>}
+        {manage && <> · <span className="text-drift">{notOn} not on a project · {(pending ?? []).length} awaiting approval</span></>}
       </p>
-      {ok && <p className="mb-4 rounded-[12px] bg-control/10 p-2 text-sm text-control">{ok}</p>}
-      {error && <p className="mb-4 rounded-[12px] bg-danger/10 p-2 text-sm text-danger">{error}</p>}
+      {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
+      {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
       {manage && <a className="btn mb-3 inline-block" href={`data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`} download={`team-${cohortId.slice(0, 8)}.csv`}>Export CSV</a>}
 
       <table className="w-full text-sm">
         <thead><tr className="label text-left"><th className="py-1">Person</th><th>Project</th><th>Roles</th>{manage && <th>Status</th>}{manage && <th></th>}</tr></thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className="border-t border-line">
+            <tr key={i} className="border-t border-glass-edge">
               <td className="py-2">{r.person}</td>
-              <td>{r.projectId ? <Link href={`/p/${r.projectId}`} className="underline">{r.project}</Link> : <span className="text-muted">{r.project ?? "—"}</span>}</td>
-              <td>{r.roles.join(" · ") || <span className="text-muted">—</span>}</td>
-              {manage && <td className={r.status === "active" ? "text-muted" : "text-danger"}>{r.status === "active" ? "active" : r.status === "pending" ? "awaiting approval" : "not on a project"}</td>}
+              <td>{r.projectId ? <Link href={`/p/${r.projectId}`} className="underline">{r.project}</Link> : <span className="text-dim">{r.project ?? "—"}</span>}</td>
+              <td>{r.roles.join(" · ") || <span className="text-dim">—</span>}</td>
+              {manage && <td className={r.status === "active" ? "text-dim" : "text-drift"}>{r.status === "active" ? "active" : r.status === "pending" ? "awaiting approval" : "not on a project"}</td>}
               {manage && (
                 <td>
                   <details>
@@ -68,7 +68,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
                       </div>
                       <div className="flex gap-2">
                         <button className="btn">Save</button>
-                        {r.projectId && <button formAction={unassign} className="btn text-danger"><input type="hidden" name="project_id" value={r.projectId} />Remove</button>}
+                        {r.projectId && <button formAction={unassign} className="btn text-drift"><input type="hidden" name="project_id" value={r.projectId} />Remove</button>}
                       </div>
                     </form>
                   </details>
@@ -77,7 +77,7 @@ export default async function TeamPage({ params, searchParams }: { params: Promi
             </tr>
           ))}
           {(instructors ?? []).map((i) => (
-            <tr key={i.user_id} className="border-t border-line text-muted"><td className="py-2">{name(i.users)}</td><td colSpan={manage ? 4 : 2}>instructor</td></tr>
+            <tr key={i.user_id} className="border-t border-glass-edge text-dim"><td className="py-2">{name(i.users)}</td><td colSpan={manage ? 4 : 2}>instructor</td></tr>
           ))}
         </tbody>
       </table>

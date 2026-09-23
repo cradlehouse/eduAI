@@ -30,9 +30,9 @@ export default function HowItWorks() {
 
       <h2 className="display mb-3 text-2xl">Three lanes, one film</h2>
       <div className="mb-10 grid gap-3 sm:grid-cols-3">
-        <section className="card p-4"><div className="label mb-1 text-explore">Explore</div><p className="text-sm leading-relaxed">Quick, cheap tests. Ten takes to find the shot. Previz, in film terms.</p></section>
-        <section className="card p-4"><div className="label mb-1 text-control">Control</div><p className="text-sm leading-relaxed">References, seeds, settings. Reproducible, so a good result can be made again.</p></section>
-        <section className="card p-4"><div className="label mb-1 text-finish">Finish</div><p className="text-sm leading-relaxed">Release quality for the cut you keep. Same model family as explore where possible, so the look carries.</p></section>
+        <section className="card p-4"><div className="label mb-1 text-dim">Explore</div><p className="text-sm leading-relaxed">Quick, cheap tests. Ten takes to find the shot. Previz, in film terms.</p></section>
+        <section className="card p-4"><div className="label mb-1 text-ok">Control</div><p className="text-sm leading-relaxed">References, seeds, settings. Reproducible, so a good result can be made again.</p></section>
+        <section className="card p-4"><div className="label mb-1 text-dim">Finish</div><p className="text-sm leading-relaxed">Release quality for the cut you keep. Same model family as explore where possible, so the look carries.</p></section>
       </div>
 
       <h2 className="display mb-3 text-2xl">Routes and tokens</h2>
