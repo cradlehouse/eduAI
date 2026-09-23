@@ -1,3 +1,5 @@
+> Correction (later report): Wan 2.7 is API-only, not open weights; the last open Wan is 2.2. See continuity-one-family-2026-09.md.
+
 # Character Continuity for Imaje — research report (Sep 2026)
 
 ## 1. "OmniChar" — it exists, and it's exactly the thing
