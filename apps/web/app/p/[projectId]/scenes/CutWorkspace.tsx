@@ -18,12 +18,6 @@ const LANES: { id: Lane; label: string; blurb: string }[] = [
   { id: "control", label: "Control", blurb: "References, settings, reproducible." },
   { id: "finish", label: "Finish", blurb: "Release quality. Costs the most; use it for the cut you keep." },
 ];
-// Literal class names on purpose: Tailwind only emits classes it can see in source.
-const LANE_STYLE: Record<Lane, { solid: string; text: string; ring: string }> = {
-  explore: { solid: "bg-gold text-bg-deep", text: "text-dim", ring: "ring-gold" },
-  control: { solid: "bg-gold text-bg-deep", text: "text-dim", ring: "ring-gold" },
-  finish:  { solid: "bg-gold text-bg-deep", text: "text-dim", ring: "ring-gold" },
-};
 const LAYERS: { id: Layer; label: string; short: string; modalities: string[]; help: string }[] = [
   { id: "background", label: "Background", short: "BG", modalities: ["text_to_image", "text_to_video", "image_to_video"], help: "The location plate. Reused across every cut in the scene." },
   { id: "character", label: "Character", short: "Char", modalities: ["image_to_video", "text_to_video"], help: "The consent-bearing pass. Uses the plate frame as reference." },
@@ -39,8 +33,9 @@ const REASON: Record<string, string> = {
 const PROMPT_KEYS = ["prompt", "text"];
 const MISSING: Record<string, string> = {
   objective: "an objective", continuity: "continuity", camera_language: "a camera note",
-  bible_assets: "a bible entry ticked under Continuity (or 'uses nothing from the bible')", consent: "a signed release for a linked entry",
+  bible_assets: "a bible entry pinned from the rail (or 'uses nothing from the bible')", consent: "a signed release for a linked entry",
 };
+const HIDDEN = ["profile_not_approved", "version_not_approved", "not_in_org_allowlist", "profile_approval_expired", "allowlist_expired", "allowlist_not_started"];
 
 // "LTX 2.5 fast" rather than "LTX" twice: family name + the version's own part of its slug.
 function routeLabel(o: Option): string {
@@ -48,7 +43,6 @@ function routeLabel(o: Option): string {
   const v = o.version_slug.startsWith(family) ? o.version_slug.slice(family.length) : o.version_slug;
   return `${o.display_name} ${v.replace(/-/g, " ")}`;
 }
-
 function defaultsFor(schema: Schema, seed: Record<string, Json>): Record<string, Json> {
   const out: Record<string, Json> = {};
   for (const [k, p] of Object.entries(schema.properties ?? {})) {
@@ -57,7 +51,6 @@ function defaultsFor(schema: Schema, seed: Record<string, Json>): Record<string,
   }
   return out;
 }
-
 function Media({ take, big }: { take: TakeRow; big?: boolean }) {
   const src = `/api/assets/${take.asset_id}`;
   if (take.kind === "video") return <video src={src} controls={big} muted={!big} playsInline preload="metadata" className="h-full w-full object-cover" />;
@@ -66,7 +59,10 @@ function Media({ take, big }: { take: TakeRow; big?: boolean }) {
   return <img src={src} alt="" className="h-full w-full object-cover" />;
 }
 
-export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness, promptSeed, dialogueSeed, assets, look }: {
+// The selected cut's working panel (docs/DESIGN.md §4.3): the take bin and the current take, the
+// layer tabs, the shot prompt with its chips and "Another take"; beside it the Route panel with a
+// price per lane and the price of this take, then whatever the page passes as the inspector.
+export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness, promptSeed, dialogueSeed, assets, look, inspector }: {
   projectId: string;
   shot: { id: string; label: string; selected_take_id: string | null; plate_take_id: string | null };
   takes: TakeRow[];
@@ -75,6 +71,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   promptSeed: string; dialogueSeed: string;
   assets: { id: string; kind: string; label: string }[];
   look: { key: string; label: string; prompt: string } | null;
+  inspector?: React.ReactNode;
 }) {
   const countOf = (rows: TakeRow[]) => { const c: Record<string, number> = {}; for (const t of rows) c[t.layer] = (c[t.layer] ?? 0) + 1; return c; };
   const serverCounts = countOf(takes.filter((t) => t.lifecycle === "live"));
@@ -88,7 +85,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   const [focus, setFocus] = useState<string | null>(null);
   const [pending, start] = useTransition();
   // Bin state is local and optimistic: a tick or a kill changes this view immediately and the server
-  // catches up; nothing reloads, nothing jumps. Server truth arrives on the next render of the page.
+  // catches up; nothing reloads, nothing jumps.
   const [chosen, setChosen] = useState<{ background: string | null; merged: string | null }>({ background: shot.plate_take_id, merged: shot.selected_take_id });
   const [lifecycle, setLifecycle] = useState<Record<string, string>>(() => Object.fromEntries(takes.map((t) => [t.id, t.lifecycle])));
   const [binMsg, setBinMsg] = useState<string | null>(null);
@@ -113,9 +110,7 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   const counts = countOf(live);
   const layerDef = LAYERS.find((l) => l.id === layer)!;
   const options = useMemo(() => optionsByLane[lane].filter((o) => layerDef.modalities.includes(o.modality)), [optionsByLane, lane, layerDef]);
-  // The picker lists every route the school has for this layer, across lanes, and picking one sets the
-  // lane. Drafts and routes the school hasn't enabled don't appear at all.
-  const HIDDEN = ["profile_not_approved", "version_not_approved", "not_in_org_allowlist", "profile_approval_expired", "allowlist_expired", "allowlist_not_started"];
+  // Every route the school has for this layer, across lanes; picking one sets the lane.
   const picker = useMemo(() => {
     const seen = new Map<string, { o: Option; lane: Lane }>();
     for (const l of ["explore", "control", "finish"] as Lane[]) {
@@ -126,7 +121,6 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
       }
     }
     return [...seen.values()].sort((a, b) => (a.lane === lane ? -1 : 1) - (b.lane === lane ? -1 : 1));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [optionsByLane, layerDef, lane]);
   const selected = options.find((o) => o.profile_id === profileId) ?? options.find((o) => o.allowed) ?? null;
   const schema = (selected?.input_schema ?? { type: "object" }) as Schema;
@@ -156,8 +150,12 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
   }, [picker, inputs]);
 
   const estimate = selected ? estimates[selected.profile_id] ?? null : null;
+  // The price a lane would cost: its cheapest allowed route for this layer.
+  const laneEstimate = (l: Lane) => {
+    const ids = optionsByLane[l].filter((o) => o.allowed && layerDef.modalities.includes(o.modality)).map((o) => estimates[o.profile_id]).filter((n): n is number => n != null);
+    return ids.length ? Math.min(...ids) : null;
+  };
   const canGenerate = !!selected?.allowed && !!gate?.ready && !pending;
-  const ls = LANE_STYLE[lane];
   const set = (k: string, v: Json) => setInputs((s) => ({ ...s, [k]: v }));
 
   function submit() {
@@ -170,154 +168,150 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
     });
   }
 
-  // ---- stage: the takes of the current layer, chosen one large
   const layerTakes = live.filter((t) => t.layer === layer);
   const killed = takes.filter((t) => t.layer === layer && (lifecycle[t.id] ?? t.lifecycle) === "killed");
   const chosenId = layer === "background" ? chosen.background : layer === "merged" ? chosen.merged : null;
   const main = layerTakes.find((t) => t.id === focus) ?? layerTakes.find((t) => t.id === chosenId) ?? layerTakes[0] ?? null;
   const canChoose = layer === "background" || layer === "merged";
+  const chip = "pill flex items-center gap-1 text-[11px]";
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-1.5">
-        {LAYERS.map((l) => (
-          <button key={l.id} type="button" onClick={() => { setLayer(l.id); setFocus(null); }}
-                  className={`pill display ${layer === l.id ? "pinned" : "text-dim hover:bg-field"}`}>
-            {l.label}{counts[l.id] ? <span className="ml-1 opacity-70">{counts[l.id]}</span> : null}
-          </button>
-        ))}
-        <span className="ml-auto text-xs text-dim">{layerDef.help}</span>
-      </div>
-
-      <div className="card overflow-hidden" style={{ borderRadius: 10 }}>
-        <div className={`grid ${layerTakes.length > 0 ? "grid-cols-[128px_minmax(0,1fr)]" : "grid-cols-1"}`}>
-          {/* the bin: takes down the left, tick to choose, × to kill */}
-          {layerTakes.length > 0 && (
-            <div className="flex max-h-[520px] flex-col gap-2 overflow-y-auto border-r border-glass-edge bg-glass p-2">
-              {layerTakes.map((t) => {
-                const isMain = main?.id === t.id; const isChosen = t.id === chosenId;
-                return (
-                  <div key={t.id} className={`group relative shrink-0 overflow-hidden rounded-[8px] bg-card ring-2 ${isMain ? "ring-gold" : "ring-transparent"}`}>
-                    <button type="button" onClick={() => setFocus(t.id)} className="block h-[68px] w-full" title={new Date(t.created_at).toLocaleString()}><Media take={t} /></button>
-                    {canChoose && (
-                      <button type="button" onClick={() => toggleChoose(t)} aria-pressed={isChosen} aria-label={isChosen ? "Chosen · click to unchoose" : "Choose this take"} title={isChosen ? "Chosen · click to unchoose" : (layer === "background" ? "Use as plate" : "Choose this take")}
-                              className={`absolute bottom-1 right-1 grid h-6 w-6 place-items-center rounded-full text-[13px] font-bold ${isChosen ? "bg-gold text-ink" : "bg-black/55 text-ink opacity-0 hover:bg-gold hover:text-ink group-hover:opacity-100"}`}>✓</button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          <div className={`relative bg-card ${layer === "dialogue" || layer === "sfx" ? "h-24" : "aspect-video"}`}>
-            {main ? <Media take={main} big /> : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-sm text-dim">
-                <span>No {layerDef.label.toLowerCase()} take yet.</span>
-                <span className="text-xs text-mute">Write the prompt below and generate.</span>
-              </div>
-            )}
-            {main && (
-              <button type="button" onClick={() => setLife(main, "killed")} className="absolute bottom-3 right-3 rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] text-ink hover:bg-drift">Kill take</button>
-            )}
-            {main && (
-              <div className="absolute left-3 top-3 flex gap-1.5">
-                {main.id === chosenId && <span className="rounded-full bg-gold px-2 py-0.5 text-[11px] font-semibold text-ink">✓ {layer === "background" ? "plate for this cut" : "chosen for this cut"}</span>}
-                <span className="rounded-full bg-black/55 px-2 py-0.5 text-[11px] text-ink">{layerDef.short}{main.duration_s ? ` · ${main.duration_s.toFixed(1)} s` : ""}</span>
-              </div>
-            )}
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_302px]">
+      <div className="flex min-w-0 flex-col gap-3">
+        {/* the stage: bin down the left, current take large */}
+        <div className="glass overflow-hidden rounded-[10px]">
+          <div className="flex items-center gap-1 border-b border-glass-edge px-2 py-1.5">
+            {LAYERS.map((l) => (
+              <button key={l.id} type="button" onClick={() => { setLayer(l.id); setFocus(null); }}
+                      className={`rounded-[6px] px-2.5 py-1 text-[12px] transition-colors ${layer === l.id ? "bg-field text-gold" : "text-dim hover:bg-field"}`}>
+                {l.label}{counts[l.id] ? <span className="ml-1 text-mute">{counts[l.id]}</span> : null}
+              </button>
+            ))}
+            <span className="ml-auto truncate text-[11px] text-mute">{layerDef.help}</span>
           </div>
+          <div className={`grid ${layerTakes.length > 0 ? "grid-cols-[92px_minmax(0,1fr)]" : "grid-cols-1"}`}>
+            {layerTakes.length > 0 && (
+              <div className="flex max-h-[420px] flex-col gap-1.5 overflow-y-auto border-r border-glass-edge p-1.5">
+                {layerTakes.map((t, i) => {
+                  const isMain = main?.id === t.id; const isChosen = t.id === chosenId;
+                  return (
+                    <div key={t.id} className={`group relative shrink-0 overflow-hidden rounded-[5px] border bg-card transition-all ${isChosen ? "border-chosen" : isMain ? "border-card-edge" : "border-transparent opacity-60 hover:opacity-100"}`}>
+                      <button type="button" onClick={() => setFocus(t.id)} onDoubleClick={() => canChoose && toggleChoose(t)} className="block h-[46px] w-full" title={new Date(t.created_at).toLocaleString()}><Media take={t} /></button>
+                      <span className="pointer-events-none absolute left-1 top-0.5 text-[10px] text-ink [text-shadow:0_1px_2px_#000]">{i + 1}</span>
+                      {canChoose && (
+                        <button type="button" onClick={() => toggleChoose(t)} aria-pressed={isChosen} aria-label={isChosen ? "Chosen · click to unchoose" : "Choose this take"}
+                                className={`absolute bottom-0.5 right-0.5 grid h-5 w-5 place-items-center rounded-full text-[11px] ${isChosen ? "bg-chosen text-bg-deep" : "bg-black/55 text-ink opacity-0 hover:bg-chosen hover:text-bg-deep group-hover:opacity-100"}`}>✓</button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            <div className={`relative bg-card ${layer === "dialogue" || layer === "sfx" ? "h-24" : "aspect-video"}`}>
+              {main ? <Media take={main} big /> : (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-[12px] text-dim">
+                  <span>No {layerDef.label.toLowerCase()} take yet.</span>
+                  <span className="text-[11px] text-mute">Write the shot below and generate.</span>
+                </div>
+              )}
+              {main && (
+                <div className="absolute left-2.5 top-2 flex gap-1.5 text-[11px]">
+                  {main.id === chosenId && <span className="rounded-full bg-chosen px-2 py-0.5 text-bg-deep">chosen{layer === "background" ? " · plate" : ""}</span>}
+                  <span className="rounded-full bg-black/55 px-2 py-0.5 text-ink">{layerDef.short}{main.duration_s ? ` · ${main.duration_s.toFixed(1)} s` : ""}</span>
+                </div>
+              )}
+              {main && <button type="button" onClick={() => setLife(main, "killed")} className="absolute bottom-2.5 right-2.5 rounded-full bg-black/55 px-2.5 py-0.5 text-[11px] text-ink hover:bg-drift hover:text-bg-deep">Kill take</button>}
+            </div>
+          </div>
+          {binMsg && <p className="px-3 py-1.5 text-[11px] text-drift">{binMsg}</p>}
+          {killed.length > 0 && (
+            <details className="border-t border-glass-edge px-3 py-1.5 text-[11px] text-dim">
+              <summary className="cursor-pointer select-none">Killed takes on this layer ({killed.length}) · nothing is ever deleted</summary>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {killed.map((t) => (
+                  <div key={t.id} className="flex items-center gap-2 rounded-[6px] border border-card-edge p-1">
+                    <div className="h-10 w-[68px] overflow-hidden rounded-[4px] bg-card opacity-60"><Media take={t} /></div>
+                    <button type="button" onClick={() => setLife(t, "live")} className="btn text-[11px]">Restore</button>
+                  </div>
+                ))}
+              </div>
+            </details>
+          )}
+        </div>
+
+        {/* the shot: prompt, chips, another take */}
+        <div className="glass rounded-[10px] p-3">
+          <div className="sect mt-0">Shot</div>
+          <textarea rows={2} maxLength={schema.properties?.[promptKey]?.maxLength} value={String(inputs[promptKey] ?? "")} onChange={(e) => set(promptKey, e.target.value)}
+                    placeholder={layer === "dialogue" ? "The line to voice, from the notes" : layer === "sfx" ? "Describe the sound: rain on a tin roof, distant traffic" : "Write the shot…"}
+                    className="input w-full resize-none text-[13px] leading-snug" />
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {["background", "character", "merged"].includes(layer) && (
+              look ? <span className={`${chip} text-dim`} title={`Every picture prompt in this project starts with: ${look.prompt}`}>Look · {look.label}</span>
+                   : <span className={`${chip} border-dashed text-mute`} title="Set the project's look in the scene header">Look · not set</span>
+            )}
+            {Object.entries(schema.properties ?? {}).filter(([k]) => !PROMPT_KEYS.includes(k)).map(([k, p]) => {
+              const v = inputs[k];
+              const name = p.title ?? k.replace(/_/g, " ");
+              if (p.format === "asset-ref") {
+                const accept = p["x-ui"]?.accept ?? "image";
+                return <label key={k} className={chip} title={name}><span className="text-mute">{name}</span>
+                  <select className="bg-transparent outline-none" value={String(v ?? "")} onChange={(e) => set(k, e.target.value || null)}>
+                    <option value="">none</option>{assets.filter((a) => a.kind === accept).map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}</select></label>;
+              }
+              if (p.enum) {
+                return <label key={k} className={chip} title={name}>
+                  <select className="bg-transparent outline-none" value={String(v ?? "")} onChange={(e) => set(k, p.type === "integer" || p.type === "number" ? Number(e.target.value) : e.target.value)}>
+                    {p.enum.map((opt) => <option key={String(opt)} value={String(opt)}>{k === "duration_s" ? `${opt} s` : String(opt)}</option>)}</select></label>;
+              }
+              if (p.type === "boolean") return <button key={k} type="button" onClick={() => set(k, !v)} className={`${chip} ${v ? "pinned" : "text-dim"}`}>{name}</button>;
+              if (p.type === "integer" || p.type === "number") {
+                return <label key={k} className={chip} title={name}><span className="text-mute">{name}</span>
+                  <input type="number" className="w-12 bg-transparent outline-none" min={p.minimum} max={p.maximum} step={p.type === "integer" ? 1 : "any"} value={v == null ? "" : String(v)} onChange={(e) => set(k, e.target.value === "" ? null : Number(e.target.value))} /></label>;
+              }
+              return <label key={k} className={chip} title={name}><span className="text-mute">{name}</span>
+                <input className="w-24 bg-transparent outline-none" maxLength={p.maxLength} value={String(v ?? "")} onChange={(e) => set(k, e.target.value)} placeholder="…" /></label>;
+            })}
+            <button type="button" onClick={submit} disabled={!canGenerate} className="btn-primary ml-auto flex items-center gap-2 disabled:opacity-40">
+              <span>{pending ? "…" : layerTakes.length ? "Another take" : "Generate"}</span>
+              {estimate != null && <span className="mono text-[11px] opacity-80">{estimate.toLocaleString()}</span>}
+            </button>
+          </div>
+          {gate && !gate.ready && (
+            <p className="mt-2 text-[11px] text-drift">Not ready. {gateLane === "voice_likeness" ? "Dialogue in a real voice needs a voice release." : `This cut still needs ${gate.missing.map((m) => MISSING[m] ?? m).join(", ")}.`}</p>
+          )}
+          {msg && <p className={`mt-2 text-[11px] ${msg.kind === "ok" ? "text-ok" : "text-drift"}`}>{msg.text}</p>}
         </div>
       </div>
 
-      {binMsg && <p className="text-xs text-drift">{binMsg}</p>}
-      {killed.length > 0 && (
-        <details className="text-xs text-dim">
-          <summary className="cursor-pointer select-none">Killed takes on this layer ({killed.length}) · nothing is ever deleted</summary>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {killed.map((t) => (
-              <div key={t.id} className="flex items-center gap-2 rounded-[8px] border border-glass-edge bg-card p-1.5">
-                <div className="h-12 w-20 overflow-hidden rounded-[6px] bg-card opacity-60"><Media take={t} /></div>
-                <button type="button" onClick={() => setLife(t, "live")} className="btn text-xs">Restore</button>
-              </div>
-            ))}
-          </div>
-        </details>
-      )}
-
-      {/* ---- the dock: prompt on top, everything else as chips, cost on the button */}
-      <div className="card p-3 shadow-[0_14px_36px_rgba(35,33,43,0.10)]" style={{ borderRadius: 10 }}>
-        <textarea rows={2} maxLength={schema.properties?.[promptKey]?.maxLength} value={String(inputs[promptKey] ?? "")} onChange={(e) => set(promptKey, e.target.value)}
-                  placeholder={layer === "dialogue" ? "The line to voice, from the notes" : layer === "sfx" ? "Describe the sound: rain on a tin roof, distant traffic" : "Describe the picture for this cut"}
-                  className="w-full resize-none border-0 bg-transparent px-1 py-1 text-[15px] leading-snug outline-none placeholder:text-dim" />
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-glass-edge pt-2">
-          {["background", "character", "merged"].includes(layer) && (
-            look
-              ? <span className="pill bg-glass text-xs" title={`Every picture prompt in this project starts with: ${look.prompt}`}>Look · {look.label}</span>
-              : <span className="pill border-dashed text-xs text-dim" title="Set the project's look at the top of the page">Look · not set</span>
-          )}
-          <div className="flex rounded-full bg-glass p-0.5">
-            {LANES.map((l) => { const r = readiness.find((x) => x.lane === l.id); return (
-              <button key={l.id} type="button" onClick={() => setLane(l.id)} title={r && !r.ready ? `blocked: ${r.missing.join(", ")}` : l.blurb}
-                      className={`display rounded-full px-2.5 py-1 text-xs ${lane === l.id ? LANE_STYLE[l.id].solid : LANE_STYLE[l.id].text}`}>{l.label}</button>
-            ); })}
-          </div>
-
-          <details className="relative">
-            <summary className="pill flex cursor-pointer list-none items-center gap-1.5 bg-card text-xs">
-              <span className="font-semibold">{selected ? routeLabel(selected) : "Route"}</span>
-              {selected && <span className="text-dim">{selected.compute_provider} · {selected.integrity_rating} · {selected.resource_disclosure}</span>}
-              <span className="opacity-60">▾</span>
-            </summary>
-            <div className="card absolute left-0 z-20 mt-1 w-80 p-2 text-sm">
-              <div className="label mb-1 px-2">Route · cost before you commit</div>
-              {picker.length === 0 && <div className="px-2 py-1 text-xs text-dim">Your school has no route for this layer yet.</div>}
+      <div className="flex flex-col gap-4">
+        {/* route panel: a price per lane, this take's price, the screening note */}
+        <div className="glass rounded-[10px] p-3">
+          <div className="text-[12px] font-medium">Route</div>
+          {LANES.map((l) => { const r = readiness.find((x) => x.lane === l.id); const est = laneEstimate(l.id); const on = lane === l.id; return (
+            <button key={l.id} type="button" onClick={() => setLane(l.id)} title={r && !r.ready ? `blocked: ${r.missing.join(", ")}` : l.blurb}
+                    className={`kv w-full rounded-[6px] px-1 text-left transition-colors hover:bg-field ${on ? "text-gold" : ""}`}>
+              <span>{l.label}</span><span className={`mono ${on ? "" : "text-mute"}`}>{est != null ? est.toLocaleString() : "—"}</span>
+            </button>
+          ); })}
+          <details className="mt-1">
+            <summary className="cursor-pointer list-none text-[11px] text-mute hover:text-dim">{selected ? routeLabel(selected) : "no route"} · change</summary>
+            <div className="mt-1 flex flex-col">
+              {picker.length === 0 && <div className="py-1 text-[11px] text-mute">Your school has no route for this layer yet.</div>}
               {picker.map(({ o, lane: l }) => { const est = estimates[o.profile_id]; const usable = o.allowed || l !== lane; return (
-                <button key={o.profile_id} type="button" disabled={!usable}
-                        onClick={(e) => { setLane(l); setProfileId(o.profile_id); (e.currentTarget.closest("details") as HTMLDetailsElement | null)?.removeAttribute("open"); }}
-                        className={`flex w-full items-center justify-between rounded-[8px] px-2 py-1.5 text-left hover:bg-glass ${usable ? "" : "opacity-45"} ${selected?.profile_id === o.profile_id ? "bg-glass" : ""}`}>
-                  <span><span className="font-semibold">{routeLabel(o)}</span> <span className={`ml-1 rounded-full px-1.5 text-[10px] ${LANE_STYLE[l].text} bg-glass`}>{l}</span>
-                    <span className="block text-xs text-dim">{o.compute_provider} · integrity {o.integrity_rating} · energy {o.resource_disclosure}{!o.allowed && l === lane ? ` · ${REASON[o.reason ?? ""] ?? o.reason}` : ""}</span></span>
-                  <span className={`mono ml-2 shrink-0 text-xs ${usable ? "text-gold" : "text-dim"}`}>{est != null ? est.toLocaleString() : "…"}</span>
+                <button key={o.profile_id} type="button" disabled={!usable} onClick={() => { setLane(l); setProfileId(o.profile_id); }}
+                        className={`flex w-full items-center justify-between rounded-[6px] px-1.5 py-1 text-left text-[11px] hover:bg-field ${usable ? "" : "opacity-45"} ${selected?.profile_id === o.profile_id ? "text-gold" : ""}`}>
+                  <span>{routeLabel(o)} <span className="text-mute">· {l}{!o.allowed && l === lane ? ` · ${REASON[o.reason ?? ""] ?? o.reason}` : ""}</span></span>
+                  <span className="mono ml-2 shrink-0 text-mute">{est != null ? est.toLocaleString() : "…"}</span>
                 </button>
               ); })}
-              {selected?.limitations && <div className="mt-1 px-2 text-xs text-dim">{selected.limitations}</div>}
+              {selected?.limitations && <div className="mt-1 text-[11px] text-mute">{selected.limitations}</div>}
             </div>
           </details>
-
-          {Object.entries(schema.properties ?? {}).filter(([k]) => !PROMPT_KEYS.includes(k)).map(([k, p]) => {
-            const v = inputs[k];
-            const name = p.title ?? k.replace(/_/g, " ");
-            const chip = "pill flex items-center gap-1 bg-card text-xs";
-            if (p.format === "asset-ref") {
-              const accept = p["x-ui"]?.accept ?? "image";
-              return <label key={k} className={chip} title={name}><span className="text-dim">{name}</span>
-                <select className="bg-transparent outline-none" value={String(v ?? "")} onChange={(e) => set(k, e.target.value || null)}>
-                  <option value="">none</option>{assets.filter((a) => a.kind === accept).map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}</select></label>;
-            }
-            if (p.enum) {
-              return <label key={k} className={chip} title={name}>
-                <select className="bg-transparent outline-none" value={String(v ?? "")} onChange={(e) => set(k, p.type === "integer" || p.type === "number" ? Number(e.target.value) : e.target.value)}>
-                  {p.enum.map((opt) => <option key={String(opt)} value={String(opt)}>{k === "duration_s" ? `${opt} s` : String(opt)}</option>)}</select></label>;
-            }
-            if (p.type === "boolean") {
-              return <button key={k} type="button" onClick={() => set(k, !v)} className={`${chip} ${v ? "pinned" : ""}`}>{name}</button>;
-            }
-            if (p.type === "integer" || p.type === "number") {
-              return <label key={k} className={chip} title={name}><span className="text-dim">{name}</span>
-                <input type="number" className="w-14 bg-transparent outline-none" min={p.minimum} max={p.maximum} step={p.type === "integer" ? 1 : "any"} value={v == null ? "" : String(v)} onChange={(e) => set(k, e.target.value === "" ? null : Number(e.target.value))} /></label>;
-            }
-            return <label key={k} className={chip} title={name}><span className="text-dim">{name}</span>
-              <input className="w-28 bg-transparent outline-none" maxLength={p.maxLength} value={String(v ?? "")} onChange={(e) => set(k, e.target.value)} placeholder="…" /></label>;
-          })}
-
-          <button type="button" onClick={submit} disabled={!canGenerate}
-                  className={`display ml-auto rounded-full px-4 py-1.5 text-sm shadow-[0_4px_0_rgba(0,0,0,0.18)] disabled:opacity-40 ${ls.solid}`}>
-            {pending ? "…" : "Generate"}{estimate != null && <span className="mono ml-2 font-normal opacity-90">{estimate.toLocaleString()}</span>}
-          </button>
+          <div className="kv mt-2 border-t border-glass-edge pt-2 text-[16px]"><span>This take</span><span className="mono">{estimate != null ? estimate.toLocaleString() : "—"}</span></div>
+          <div className="text-[11px] text-mute">tokens · screened before it runs · refusals cost nothing</div>
         </div>
-        {gate && !gate.ready && (
-          <p className="mt-2 text-xs"><b>Not ready.</b> {gateLane === "voice_likeness" ? "Dialogue in a real voice needs a voice release." : `This cut still needs ${gate.missing.map((m) => MISSING[m] ?? m).join(", ")}.`} Save the notes on the right and this unlocks.</p>
-        )}
-        {msg && <p className={`mt-2 text-xs ${msg.kind === "ok" ? "text-ok" : "text-drift"}`}>{msg.text}</p>}
+        {inspector}
       </div>
     </div>
   );
