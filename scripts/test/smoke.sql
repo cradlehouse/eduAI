@@ -308,10 +308,10 @@ begin
   assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'explore') = 'signed', 'lane-aware consent rpc (explore)';
   assert public.bible_consent_state_for('50000000-0000-4000-8000-000000000001', 'finish') = 'lane_not_permitted', 'lane-aware consent rpc (finish)';
   assert (select ready from public.shot_ready_for('40000000-0000-4000-8000-000000000001', 'explore')), 'shot_ready_for explore';
-  -- estimates: ltx 4c/s × 5s = 20c = 200 tokens; veo 15c/s × 8s = 120c = 1200 tokens; sfx per_call 5c = 50
-  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'ltx-2.5-fast@fal'), '{"duration_s":5}') = 200, 'ltx estimate';
-  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2'), '{"duration_s":8}') = 1200, 'veo estimate';
-  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'stable-audio-2.5@fal'), '{}') = 50, 'sfx estimate';
+  -- estimates (fal list, verified 2026-09-22): ltx 9c/s × 5s = 45c = 450 tokens; veo 5c/s × 8s = 40c = 400 tokens; sfx per_call 20c = 200
+  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'ltx-2.5-fast@fal'), '{"duration_s":5}') = 450, 'ltx estimate';
+  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2'), '{"duration_s":8}') = 400, 'veo estimate';
+  assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'stable-audio-2.5@fal'), '{}') = 200, 'sfx estimate';
   assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore')) = 8, 'model_options lists every profile';
   assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where allowed) = 2, 'explore: ltx + sfx allowed';
   assert (select reason from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where profile_slug = 'veo-3.1-lite@fal-r2') = 'lane_not_supported', 'veo not an explore route';
