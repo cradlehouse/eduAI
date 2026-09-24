@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       assets: {
@@ -201,6 +226,8 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string
+          fixed: Json
+          forked_from: string | null
           id: string
           kind: Database["public"]["Enums"]["bible_kind"]
           likeness_of: string | null
@@ -215,6 +242,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string
+          fixed?: Json
+          forked_from?: string | null
           id?: string
           kind: Database["public"]["Enums"]["bible_kind"]
           likeness_of?: string | null
@@ -229,6 +258,8 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string
+          fixed?: Json
+          forked_from?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["bible_kind"]
           likeness_of?: string | null
@@ -245,6 +276,20 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bible_entries_forked_from_fkey"
+            columns: ["forked_from"]
+            isOneToOne: false
+            referencedRelation: "bible_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bible_entries_forked_from_fkey"
+            columns: ["forked_from"]
+            isOneToOne: false
+            referencedRelation: "bible_entry_status"
             referencedColumns: ["id"]
           },
           {
@@ -266,6 +311,97 @@ export type Database = {
             columns: ["org_id", "reference_asset_id"]
             isOneToOne: false
             referencedRelation: "assets"
+            referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
+      bible_entry_assets: {
+        Row: {
+          asset_id: string
+          bible_entry_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          job_id: string | null
+          label: string
+          lifecycle: Database["public"]["Enums"]["take_lifecycle"]
+          org_id: string
+          params: Json
+          position: number
+          project_id: string
+          role: string
+        }
+        Insert: {
+          asset_id: string
+          bible_entry_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          job_id?: string | null
+          label?: string
+          lifecycle?: Database["public"]["Enums"]["take_lifecycle"]
+          org_id: string
+          params?: Json
+          position?: number
+          project_id: string
+          role: string
+        }
+        Update: {
+          asset_id?: string
+          bible_entry_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          job_id?: string | null
+          label?: string
+          lifecycle?: Database["public"]["Enums"]["take_lifecycle"]
+          org_id?: string
+          params?: Json
+          position?: number
+          project_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bible_entry_assets_org_id_asset_id_fkey"
+            columns: ["org_id", "asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "bible_entry_assets_org_id_bible_entry_id_fkey"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entries"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "bible_entry_assets_org_id_bible_entry_id_fkey"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entry_status"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "bible_entry_assets_org_id_job_id_fkey"
+            columns: ["org_id", "job_id"]
+            isOneToOne: false
+            referencedRelation: "job_tokens"
+            referencedColumns: ["org_id", "job_id"]
+          },
+          {
+            foreignKeyName: "bible_entry_assets_org_id_job_id_fkey"
+            columns: ["org_id", "job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "bible_entry_assets_org_id_project_id_fkey"
+            columns: ["org_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["org_id", "id"]
           },
         ]
@@ -993,6 +1129,7 @@ export type Database = {
         Row: {
           actual_cents: number | null
           attempts: number
+          bible_entry_id: string | null
           claimed_at: string | null
           claimed_by: string | null
           cohort_id: string
@@ -1000,6 +1137,7 @@ export type Database = {
           cost_unknown: boolean
           created_at: string
           deployment_profile_id: string | null
+          entry_role: string | null
           error: string | null
           estimated_cents: number | null
           id: string
@@ -1024,6 +1162,7 @@ export type Database = {
         Insert: {
           actual_cents?: number | null
           attempts?: number
+          bible_entry_id?: string | null
           claimed_at?: string | null
           claimed_by?: string | null
           cohort_id: string
@@ -1031,6 +1170,7 @@ export type Database = {
           cost_unknown?: boolean
           created_at?: string
           deployment_profile_id?: string | null
+          entry_role?: string | null
           error?: string | null
           estimated_cents?: number | null
           id?: string
@@ -1055,6 +1195,7 @@ export type Database = {
         Update: {
           actual_cents?: number | null
           attempts?: number
+          bible_entry_id?: string | null
           claimed_at?: string | null
           claimed_by?: string | null
           cohort_id?: string
@@ -1062,6 +1203,7 @@ export type Database = {
           cost_unknown?: boolean
           created_at?: string
           deployment_profile_id?: string | null
+          entry_role?: string | null
           error?: string | null
           estimated_cents?: number | null
           id?: string
@@ -1084,6 +1226,20 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "jobs_bible_entry_fk"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entries"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "jobs_bible_entry_fk"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entry_status"
+            referencedColumns: ["org_id", "id"]
+          },
           {
             foreignKeyName: "jobs_deployment_profile_id_fkey"
             columns: ["deployment_profile_id"]
@@ -2732,8 +2888,10 @@ export type Database = {
       job_tokens: {
         Row: {
           actual_tokens: number | null
+          bible_entry_id: string | null
           cost_unknown: boolean | null
           created_at: string | null
+          entry_role: string | null
           error: string | null
           estimated_tokens: number | null
           job_id: string | null
@@ -2745,6 +2903,20 @@ export type Database = {
           status: Database["public"]["Enums"]["job_status"] | null
         }
         Relationships: [
+          {
+            foreignKeyName: "jobs_bible_entry_fk"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entries"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "jobs_bible_entry_fk"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entry_status"
+            referencedColumns: ["org_id", "id"]
+          },
           {
             foreignKeyName: "jobs_org_id_fkey"
             columns: ["org_id"]
@@ -3311,6 +3483,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       approval_status: ["draft", "approved", "suspended", "retired"],

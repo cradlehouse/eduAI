@@ -48,3 +48,32 @@ export async function generate(input: { projectId: string; shotId: string; profi
   revalidatePath(`/p/${input.projectId}`);
   return { ok: true, jobId: job.id, tokens: est ?? null };
 }
+
+// Generate for a bible entry (an angle of an environment, a reference of a character). No cut, so
+// no shot readiness; the prompt gate still runs in the orchestrator. Outputs land in bible_entry_assets.
+export async function generateForEntry(input: { projectId: string; entryId: string; role: string; profileId: string; lane: Lane; layer: Layer; inputs: Record<string, Json> }) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Not signed in." };
+  const { data: opts } = await supabase.rpc("model_options", { p_project: input.projectId, p_lane: input.lane });
+  const opt = (opts ?? []).find((o) => o.profile_id === input.profileId);
+  if (!opt) return { error: "Unknown route." };
+  if (!opt.allowed) return { error: `Route not allowed: ${opt.reason}.` };
+  const { data: est } = await supabase.rpc("estimate_tokens", { p_profile: input.profileId, p_inputs: input.inputs });
+  const { data: budget } = await supabase.from("project_tokens").select("remaining_tokens").eq("project_id", input.projectId).maybeSingle();
+  if (budget && est != null && est > (budget.remaining_tokens ?? 0)) return { error: `Not enough tokens: this needs ${est.toLocaleString()} and ${(budget.remaining_tokens ?? 0).toLocaleString()} are left.` };
+  const { data: project } = await supabase.from("projects").select("org_id, cohort_id, look, orgs(looks)").eq("id", input.projectId).maybeSingle();
+  if (!project) return { error: "Project not found." };
+  const inputs = { ...input.inputs };
+  const looks = (project.orgs?.looks ?? []) as { key: string; label: string; prompt: string }[];
+  const look = looks.find((l) => l.key === project.look);
+  if (look && typeof inputs.prompt === "string") inputs.prompt = `${look.prompt}. ${inputs.prompt}`;
+  const { data: job, error } = await supabase.from("jobs").insert({
+    org_id: project.org_id, cohort_id: project.cohort_id, requested_by: user.id,
+    project_id: input.projectId, bible_entry_id: input.entryId, entry_role: input.role, deployment_profile_id: input.profileId,
+    lane: input.lane, layer: input.layer, inputs,
+  }).select("id").single();
+  if (error) return { error: error.message };
+  revalidatePath(`/p/${input.projectId}/bible/${input.entryId}`);
+  return { ok: true, jobId: job.id, tokens: est ?? null };
+}

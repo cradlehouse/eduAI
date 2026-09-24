@@ -182,12 +182,24 @@ class Db:
                         (job["org_id"], job["project_id"], o.kind, o.r2_key, o.sha256, o.mime, o.bytes, o.duration_s, o.width, o.height,
                          job["id"], prev, chain_hash(prev, o.sha256, prov), Jsonb(prov), job["requested_by"]))
                     asset_ids.append(str((await cur.fetchone())["id"]))
-                for aid in asset_ids:
-                    await c.execute(
-                        "insert into public.takes (org_id, project_id, shot_id, job_id, asset_id, model_version_id, deployment_profile_id, layer) "
-                        "values (%s,%s,%s,%s,%s,%s,%s,%s::public.layer)",
-                        (job["org_id"], job["project_id"], job["shot_id"], job["id"], aid, job["model_version_id"], job["deployment_profile_id"],
-                         job.get("layer") or "merged"))
+                # A job aimed at a bible entry (an angle, a reference) lands in bible_entry_assets; a job
+                # aimed at a cut lands in takes. Both keep the job id so the receipt is one hop away.
+                if job.get("bible_entry_id"):
+                    inputs = job.get("inputs") or {}
+                    params = {k: v for k, v in inputs.items() if k in ("horizontal_angle", "vertical_angle", "zoom", "prompt", "additional_prompt", "image", "references", "seed")}
+                    for i, aid in enumerate(asset_ids):
+                        await c.execute(
+                            "insert into public.bible_entry_assets (org_id, project_id, bible_entry_id, asset_id, role, label, params, position, job_id, created_by) "
+                            "values (%s,%s,%s,%s,%s,%s,%s,(select coalesce(max(position),0)+1 from public.bible_entry_assets where bible_entry_id=%s),%s,%s)",
+                            (job["org_id"], job["project_id"], job["bible_entry_id"], aid, job.get("entry_role") or "test", str(inputs.get("label") or ""),
+                             Jsonb(params), job["bible_entry_id"], job["id"], job["requested_by"]))
+                else:
+                    for aid in asset_ids:
+                        await c.execute(
+                            "insert into public.takes (org_id, project_id, shot_id, job_id, asset_id, model_version_id, deployment_profile_id, layer) "
+                            "values (%s,%s,%s,%s,%s,%s,%s,%s::public.layer)",
+                            (job["org_id"], job["project_id"], job["shot_id"], job["id"], aid, job["model_version_id"], job["deployment_profile_id"],
+                             job.get("layer") or "merged"))
                 cur = await c.execute("select eduai.settle_job(%s, %s, %s) as ok", (job["id"], receipt.get("actual_cents"), Jsonb(receipt)))
                 ok = bool((await cur.fetchone())["ok"])
                 if not ok:
