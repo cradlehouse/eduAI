@@ -268,7 +268,7 @@ begin
   assert (select count(*) from public.job_receipts) = 0, 'outsider sees no demo receipts';
   assert (select count(*) from public.job_events where org_id = '00000000-0000-4000-8000-000000000001') = 0, 'outsider sees no demo events';
   assert (select count(*) from public.ledger) = 0, 'outsider sees no demo ledger';
-  assert (select count(*) from public.deployment_profiles) = 11, 'registry readable';
+  assert (select count(*) from public.deployment_profiles) = 13, 'registry readable';
   assert (select count(*) from public.org_model_profiles) = 1, 'sees own org allowlist only';
   assert (select count(*) from public.consent_releases) = 0, 'sees no demo releases';
   begin
