@@ -37,11 +37,12 @@ const MISSING: Record<string, string> = {
 };
 const HIDDEN = ["profile_not_approved", "version_not_approved", "not_in_org_allowlist", "profile_approval_expired", "allowlist_expired", "allowlist_not_started"];
 
-// "LTX 2.5 fast" rather than "LTX" twice: family name + the version's own part of its slug.
+// "LTX 2.5 fast" rather than "LTX" twice: family name + the version's own part of its slug. When the
+// version slug doesn't start with the family (still routes), the family name alone is the label.
 function routeLabel(o: Option): string {
   const family = o.display_name.toLowerCase().replace(/\s+/g, "-") + "-";
-  const v = o.version_slug.startsWith(family) ? o.version_slug.slice(family.length) : o.version_slug;
-  return `${o.display_name} ${v.replace(/-/g, " ")}`;
+  if (!o.version_slug.startsWith(family)) return o.display_name;
+  return `${o.display_name} ${o.version_slug.slice(family.length).replace(/-/g, " ")}`;
 }
 function defaultsFor(schema: Schema, seed: Record<string, Json>): Record<string, Json> {
   const out: Record<string, Json> = {};
