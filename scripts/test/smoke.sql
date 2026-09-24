@@ -57,7 +57,7 @@ declare r record; demo uuid := '00000000-0000-4000-8000-000000000001'; stu uuid 
   veo uuid := (select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2');
   flux uuid := (select id from public.deployment_profiles where slug = 'flux-2-dev@fal');
 begin
-  assert (select count(*) from public.deployment_profiles where approval_status = 'approved') = 4, 'four approved Phase 1 profiles';
+  assert (select count(*) from public.deployment_profiles where approval_status = 'approved') = 6, 'six approved profiles: four Phase 1 routes + two still routes';
   assert (select count(*) from public.deployment_profiles where kind = 'self_hosted' and compute_provider = 'crusoe' and approval_status = 'draft') = 1, 'crusoe draft profile';
   assert (select resource_disclosure from public.model_versions where slug = 'kling-3') = 'C', 'closed vendor = C';
   assert (select count(*) from public.model_versions where resource_disclosure = 'A') = 0, 'nobody is tier A yet';

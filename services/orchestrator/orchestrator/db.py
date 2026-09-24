@@ -187,7 +187,7 @@ class Db:
                 if job.get("bible_entry_id"):
                     inputs = job.get("inputs") or {}
                     params = {k: v for k, v in inputs.items() if k in ("horizontal_angle", "vertical_angle", "zoom", "prompt", "additional_prompt", "image", "references", "seed")}
-                    for i, aid in enumerate(asset_ids):
+                    for aid in asset_ids:
                         await c.execute(
                             "insert into public.bible_entry_assets (org_id, project_id, bible_entry_id, asset_id, role, label, params, position, job_id, created_by) "
                             "values (%s,%s,%s,%s,%s,%s,%s,(select coalesce(max(position),0)+1 from public.bible_entry_assets where bible_entry_id=%s),%s,%s)",
