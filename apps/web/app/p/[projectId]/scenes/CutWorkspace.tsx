@@ -11,7 +11,7 @@ export type Option = Database["public"]["Functions"]["model_options"]["Returns"]
 export type Readiness = { lane: string; ready: boolean; missing: string[] };
 export type TakeRow = { id: string; layer: Layer; asset_id: string; created_at: string; lifecycle: string; mime: string; kind: string; duration_s: number | null };
 type Schema = { type?: string; required?: string[]; properties?: Record<string, SchemaProp> };
-type SchemaProp = { type?: string; title?: string; enum?: (string | number)[]; default?: Json; minimum?: number; maximum?: number; maxLength?: number; format?: string; "x-ui"?: { widget?: string; accept?: string } };
+type SchemaProp = { type?: string; title?: string; enum?: (string | number)[]; default?: Json; minimum?: number; maximum?: number; maxLength?: number; format?: string; items?: { format?: string }; "x-ui"?: { widget?: string; accept?: string } };
 
 const LANES: { id: Lane; label: string; blurb: string }[] = [
   { id: "explore", label: "Explore", blurb: "Quick, cheap tests and variations." },
@@ -19,8 +19,8 @@ const LANES: { id: Lane; label: string; blurb: string }[] = [
   { id: "finish", label: "Finish", blurb: "Release quality. Costs the most; use it for the cut you keep." },
 ];
 const LAYERS: { id: Layer; label: string; short: string; modalities: string[]; help: string }[] = [
-  { id: "background", label: "Background", short: "BG", modalities: ["text_to_image", "text_to_video", "image_to_video"], help: "The location plate. Reused across every cut in the scene." },
-  { id: "character", label: "Character", short: "Char", modalities: ["image_to_video", "text_to_video"], help: "The consent-bearing pass. Uses the plate frame as reference." },
+  { id: "background", label: "Background", short: "BG", modalities: ["text_to_image", "image_edit", "text_to_video", "image_to_video"], help: "The location plate. Reused across every cut in the scene." },
+  { id: "character", label: "Character", short: "Char", modalities: ["image_edit", "image_to_video", "text_to_video"], help: "The consent-bearing pass. Uses the plate frame as reference." },
   { id: "merged", label: "Merged", short: "Merged", modalities: ["image_to_video", "text_to_video"], help: "The take you compare and choose." },
   { id: "dialogue", label: "Dialogue", short: "Dialogue", modalities: ["text_to_speech"], help: "The line from the notes, in a consented voice." },
   { id: "sfx", label: "SFX", short: "SFX", modalities: ["sound_effects"], help: "Foley and ambience for this cut." },
@@ -253,6 +253,15 @@ export function CutWorkspace({ projectId, shot, takes, optionsByLane, readiness,
             {Object.entries(schema.properties ?? {}).filter(([k]) => !PROMPT_KEYS.includes(k)).map(([k, p]) => {
               const v = inputs[k];
               const name = p.title ?? k.replace(/_/g, " ");
+              if (p.type === "array" && p.items?.format === "asset-ref") {
+                const accept = p["x-ui"]?.accept ?? "image";
+                const picked = Array.isArray(v) ? (v as string[]) : [];
+                return <label key={k} className={chip} title={`${name} · hold ⌘/Ctrl to pick several`}><span className="text-mute">{name}</span>
+                  <select multiple size={Math.min(4, Math.max(2, assets.filter((a) => a.kind === accept).length))} className="bg-transparent text-[11px] outline-none" value={picked}
+                          onChange={(e) => set(k, Array.from(e.target.selectedOptions).map((o) => o.value))}>
+                    {assets.filter((a) => a.kind === accept).map((a) => <option key={a.id} value={a.id}>{a.label}</option>)}</select>
+                  {picked.length > 0 && <span className="text-mute">{picked.length}</span>}</label>;
+              }
               if (p.format === "asset-ref") {
                 const accept = p["x-ui"]?.accept ?? "image";
                 return <label key={k} className={chip} title={name}><span className="text-mute">{name}</span>

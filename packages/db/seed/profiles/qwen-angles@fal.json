@@ -1,0 +1,33 @@
+{
+  "cost_model": {
+    "kind": "per_call",
+    "cents": 4,
+    "multiplier_field": "num_images",
+    "verified": true,
+    "verified_on": "2026-09-24",
+    "basis": "$0.035 per megapixel; ~1 MP at landscape_16_9",
+    "source": "https://fal.ai/models/fal-ai/qwen-image-edit-2511-multiple-angles"
+  },
+  "retention": {
+    "vendor_retains_inputs": false,
+    "vendor_retention_days": 0,
+    "platform_input_days": 90,
+    "platform_output_days": 365
+  },
+  "energy_profile": {
+    "grid": "unknown",
+    "region": "us",
+    "claim": "fal.ai does not publish data-centre energy sourcing.",
+    "verifiable": false,
+    "source": ""
+  },
+  "resource_model": {
+    "basis": "undisclosed"
+  },
+  "adapter": {
+    "input_map": { "image": { "to": "image_urls", "list": true } },
+    "fixed": { "output_format": "png", "acceleration": "regular" },
+    "outputs": ["images"],
+    "verified": false
+  }
+}

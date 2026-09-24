@@ -155,10 +155,14 @@ class Dispatcher:
             if not ref:
                 out.pop(f, None)
                 continue
-            key = await self.db.asset_key(org_id, str(ref))
-            if not key:
-                raise ValueError(f"asset {ref} for '{f}' not found in this org")
-            out[f] = await self.storage.presigned_get(key, self.cfg.asset_url_ttl_s)
+            refs = ref if isinstance(ref, list) else [ref]
+            urls = []
+            for r in refs:
+                key = await self.db.asset_key(org_id, str(r))
+                if not key:
+                    raise ValueError(f"asset {r} for '{f}' not found in this org")
+                urls.append(await self.storage.presigned_get(key, self.cfg.asset_url_ttl_s))
+            out[f] = urls if isinstance(ref, list) else urls[0]
         return out
 
     # ---- submitted / running → succeeded --------------------------------

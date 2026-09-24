@@ -1,0 +1,21 @@
+{
+  "input_schema": {
+    "type": "object",
+    "required": ["prompt", "references"],
+    "properties": {
+      "prompt": { "type": "string", "maxLength": 2000, "x-ui": { "widget": "textarea" } },
+      "references": {
+        "type": "array", "minItems": 1, "maxItems": 9,
+        "items": { "type": "string", "format": "asset-ref" },
+        "title": "references", "x-ui": { "widget": "asset-multi", "accept": "image" }
+      },
+      "image_size": {
+        "type": "string",
+        "enum": ["landscape_16_9", "portrait_16_9", "square_hd", "landscape_4_3", "portrait_4_3"],
+        "default": "landscape_16_9", "title": "frame"
+      },
+      "seed": { "type": "integer", "minimum": 0, "maximum": 2147483647, "title": "seed" }
+    }
+  },
+  "safety": { "output_moderation": false, "prompt_gate": "required" }
+}

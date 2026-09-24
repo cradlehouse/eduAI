@@ -5,3 +5,5 @@ veo,Veo,text_to_video,Release-quality text-to-video with optional audio. Expensi
 flux,FLUX,text_to_image,Stills: storyboards, references, start frames. Each version has its own licence.
 chatterbox,Chatterbox,text_to_speech,Scratch dialogue and permitted voice work. Voice cloning is locked behind consent.
 stable-audio,Stable Audio,sound_effects,Foley, ambience and sound-design iterations. Licensed training data.
+flux-edit,FLUX edit,image_edit,Keyframes from references: the character sheet and the set angle go in, the still for a cut comes out. The in-class loop.
+qwen-angles,Qwen angles,image_edit,New camera angles of an existing still. Trained on 3D renders; turns a master wide into a set board. Reverse angles still invent the unseen wall.

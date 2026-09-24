@@ -47,3 +47,19 @@ def test_kind_and_ext():
 def test_extract_outputs_plain_url_string():
     files = extract_outputs({"outputs": ["audio"]}, {"audio": "https://f/x.wav", "seed": 1})
     assert len(files) == 1 and files[0].content_type == "audio/wav" and files[0].key == "audio"
+
+
+def test_map_inputs_list_wraps_single_value():
+    adapter = {"input_map": {"image": {"to": "image_urls", "list": True}, "references": "image_urls"}}
+    assert map_inputs(adapter, {"image": "https://a/x.png"}) == {"image_urls": ["https://a/x.png"]}
+    assert map_inputs(adapter, {"references": ["https://a/1.png", "https://a/2.png"]}) == {"image_urls": ["https://a/1.png", "https://a/2.png"]}
+
+
+def test_asset_ref_fields_include_arrays():
+    from orchestrator.registry import Route
+    schema = {"properties": {"image": {"type": "string", "format": "asset-ref"},
+                             "references": {"type": "array", "items": {"type": "string", "format": "asset-ref"}},
+                             "prompt": {"type": "string"}}}
+    r = Route.__new__(Route)
+    r.input_schema = schema
+    assert set(r.asset_ref_fields) == {"image", "references"}

@@ -1,0 +1,23 @@
+{
+  "input_schema": {
+    "type": "object",
+    "required": ["image"],
+    "properties": {
+      "image": { "type": "string", "format": "asset-ref", "title": "from this still", "x-ui": { "widget": "asset", "accept": "image" } },
+      "horizontal_angle": {
+        "type": "number", "enum": [0, 45, 90, 135, 180, 225, 270, 315], "default": 45,
+        "title": "turn", "description": "0 = as shot, 90 = right side, 180 = reverse, 270 = left side"
+      },
+      "vertical_angle": {
+        "type": "number", "enum": [-30, 0, 30, 60], "default": 0,
+        "title": "height", "description": "-30 low, 0 eye level, 30 elevated, 60 high"
+      },
+      "zoom": { "type": "number", "enum": [0, 2, 5, 8, 10], "default": 0, "title": "distance", "description": "0 wide, 5 medium, 10 close" },
+      "additional_prompt": { "type": "string", "maxLength": 500, "title": "notes" },
+      "image_size": { "type": "string", "enum": ["landscape_16_9", "portrait_16_9", "square_hd"], "default": "landscape_16_9", "title": "frame" },
+      "num_images": { "type": "integer", "minimum": 1, "maximum": 4, "default": 1, "title": "how many" },
+      "seed": { "type": "integer", "minimum": 0, "maximum": 2147483647, "title": "seed" }
+    }
+  },
+  "safety": { "output_moderation": false, "prompt_gate": "optional" }
+}

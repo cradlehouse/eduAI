@@ -27,12 +27,20 @@ class Route:
 
     @property
     def asset_ref_fields(self) -> list[str]:
+        """Fields holding our asset ids: a single `format: asset-ref` string or an array of them."""
         props = self.input_schema.get("properties", {})
-        return [k for k, v in props.items() if isinstance(v, dict) and v.get("format") == "asset-ref"]
+        return [k for k, v in props.items() if isinstance(v, dict) and _is_asset_ref(v)]
 
     @property
     def duration_field(self) -> str:
         return self.cost_model.get("duration_field") or "duration_s"
+
+
+def _is_asset_ref(prop: dict[str, Any]) -> bool:
+    if prop.get("format") == "asset-ref":
+        return True
+    items = prop.get("items")
+    return prop.get("type") == "array" and isinstance(items, dict) and items.get("format") == "asset-ref"
 
 
 def validate_inputs(schema: dict[str, Any], inputs: dict[str, Any]) -> list[str]:
@@ -42,7 +50,8 @@ def validate_inputs(schema: dict[str, Any], inputs: dict[str, Any]) -> list[str]
 
 
 def map_inputs(adapter: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
-    """Our field names → the vendor's. string = rename; {to, prefix?, suffix?} = rename + format; null = drop."""
+    """Our field names → the vendor's. string = rename; {to, prefix?, suffix?, list?} = rename + format
+    (list wraps a single value in a one-element array, for vendors that take `image_urls`); null = drop."""
     imap: dict[str, Any] = adapter.get("input_map") or {}
     out: dict[str, Any] = {}
     for k, v in inputs.items():
@@ -58,6 +67,8 @@ def map_inputs(adapter: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any
         to = rule.get("to", k)
         if v is not None and (rule.get("prefix") or rule.get("suffix") is not None):
             v = f"{rule.get('prefix', '')}{v}{rule.get('suffix', '')}"
+        if rule.get("list") and v is not None and not isinstance(v, list):
+            v = [v]
         out[to] = v
     for k, v in (adapter.get("fixed") or {}).items():
         out.setdefault(k, v)

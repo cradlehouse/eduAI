@@ -312,8 +312,8 @@ begin
   assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'ltx-2.5-fast@fal'), '{"duration_s":5}') = 450, 'ltx estimate';
   assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2'), '{"duration_s":8}') = 400, 'veo estimate';
   assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'stable-audio-2.5@fal'), '{}') = 200, 'sfx estimate';
-  assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore')) = 8, 'model_options lists every profile';
-  assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where allowed) = 2, 'explore: ltx + sfx allowed';
+  assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore')) = 10, 'model_options lists every profile';
+  assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where allowed) = 4, 'explore: ltx + sfx + two still routes allowed';
   assert (select reason from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where profile_slug = 'veo-3.1-lite@fal-r2') = 'lane_not_supported', 'veo not an explore route';
   assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000031', 'explore')) = 0, 'no options for a project I cannot access';
   assert (select missing from public.shot_ready_for('40000000-0000-4000-8000-000000000001', 'finish')) = '{consent}', 'shot_ready_for finish blocked by consent';
