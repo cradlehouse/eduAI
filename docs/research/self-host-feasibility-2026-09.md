@@ -104,3 +104,18 @@ Total ≈ $180–220 incl. storage; upgrade to a 5090 RunPod pod for a cost-floo
 - ltx.io blog pages (403); Patreon Ingredients guide (fetch failed).
 - LTX-2.5 fp8 checkpoint (only int8-convrot + NVFP4 published; runtime `fp8-cast` exists).
 - Whether Hunyuan EU/UK exclusion matters — assumed all students are in the US.
+
+---
+
+## Addendum (23 Sep 2026, after review with Tim): overnight batch changes the economics
+
+The cost model above assumed a warm pool so a clip returns in minutes during class. Tim's model is a
+render queue: students lock stills in class, queue the video shots, and review "dailies" next morning.
+
+- No warm pool, no cold-start problem; interruptible/spot GPUs ($0.75–1/h) are fine because nobody waits.
+- Cost falls to the compute floor, ~1–3¢ per clip (30 s/clip unverified). 20 schools × 4,000 clips/night ≈ $40–120/night.
+- The in-class loop moves to keyframes (image edit: seconds, pennies) plus an optional low-res preview render.
+- Ops: a night queue has no audience, so "on-call" becomes "did it all render by 7am". Self-healing plumbing
+  (health checks, requeue on worker loss, retry budgets) + a scheduled night-shift agent (retry, restart, roll
+  back to last good image, morning report) + escalation to a human only for spend/security/model changes.
+- Unchanged: the reverse-angle problem is about what the model knows, not speed.
