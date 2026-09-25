@@ -4,11 +4,11 @@ import { TokenBar, TokenRing, type Budget } from "./TokenMeter";
 
 // The slide-out for a project: the cohort's projects (current one open) with the project's pages
 // underneath, the project's token meter, and below it whatever the layout adds (the bible rail).
-export function ProjectPanel({ nav, cohortId, projectId, budget, note, children }: { nav: Nav; cohortId: string; projectId: string; budget?: Budget | null; note?: React.ReactNode; children?: React.ReactNode }) {
+export function ProjectPanel({ nav, cohortId, projectId, budget, note, inline, children }: { nav: Nav; cohortId: string; projectId: string; budget?: Budget | null; note?: React.ReactNode; inline?: boolean; children?: React.ReactNode }) {
   const projects = nav.projectsByCohort[cohortId] ?? [];
   const cohort = nav.cohorts.find((c) => c.id === cohortId);
   return (
-    <aside className="panel my-3 mr-3 flex w-[230px] shrink-0 flex-col p-3">
+    <aside className={inline ? "flex flex-col" : "panel my-3 mr-3 flex w-[230px] shrink-0 flex-col p-3"}>
       {budget && <div className="mb-2 flex items-center gap-3 rounded-[8px] bg-field p-2.5"><TokenRing spent={budget.spent} total={budget.total} size={36} /><div className="min-w-0 flex-1"><TokenBar {...budget} /></div></div>}
       <NavGroup title={`${cohort?.name ?? "Cohort"} · projects`}>
         {projects.map((p) => {

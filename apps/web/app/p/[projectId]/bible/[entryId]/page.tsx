@@ -84,7 +84,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
       {/* ENVIRONMENT: master wide + angles made from it */}
       {e.kind === "location" && (
         <div className="flex flex-wrap items-start gap-4">
-          <div className="imgcard chosen relative h-[260px] w-[460px]">
+          <div className="imgcard chosen relative aspect-video w-full max-w-[460px]">
             {e.reference_asset_id ? img(e.reference_asset_id, "h-full w-full object-cover") : (
               <form action={addReference} className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-[11px] text-mute">
                 <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="entry_id" value={entryId} /><input type="hidden" name="role" value="master" />
@@ -97,7 +97,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
           </div>
           <div className="grid grid-cols-2 gap-3">
             {angles.map((a) => (
-              <div key={a.id} className="imgcard group relative h-[124px] w-[216px]">
+              <div key={a.id} className="imgcard group relative aspect-video w-[216px] max-w-full">
                 {img(a.asset_id, "h-full w-full object-cover")}
                 <span className="absolute left-2 top-1.5 text-[11px] text-ink [text-shadow:0_1px_2px_#000]">{a.label || angleLabel(a.params)}</span>
                 <div className="absolute bottom-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100">{masterForm(a.asset_id)}{killForm(a.id, "killed")}</div>

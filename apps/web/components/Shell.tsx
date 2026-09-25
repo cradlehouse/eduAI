@@ -34,16 +34,26 @@ export function Shell({ nav, crumbs, base, sections, scope = {}, note, budget, p
           </div>
         </details>
       </header>
+      {/* Phones: the rails would leave no room, so the same tree and panel live in a Menu at the top. */}
+      <details className="glass m-3 mb-0 rounded-[10px] px-3 py-2 md:hidden">
+        <summary className="cursor-pointer select-none text-[12px] text-dim">Menu</summary>
+        <div className="mt-2 flex flex-col gap-3">
+          <AppTree nav={nav} scope={scope} />
+          {scope.projectId && scope.cohortId && <ProjectPanel nav={nav} cohortId={scope.cohortId} projectId={scope.projectId} budget={budget} note={note} inline>{panel}</ProjectPanel>}
+        </div>
+      </details>
       <div className="flex flex-1">
-        {scope.projectId && scope.cohortId ? (
-          <>
-            <Sidebar rail><AppTree nav={nav} scope={scope} /></Sidebar>
-            <ProjectPanel nav={nav} cohortId={scope.cohortId} projectId={scope.projectId} budget={budget} note={note}>{panel}</ProjectPanel>
-          </>
-        ) : (
-          <Sidebar budget={budget}><AppTree nav={nav} scope={scope} />{note}</Sidebar>
-        )}
-        <main className={`min-w-0 flex-1 ${flush ? "canvas my-3 mr-3 rounded-[10px] border border-glass-edge p-5" : "p-8"}`}>{children}</main>
+        <div className="hidden md:contents">
+          {scope.projectId && scope.cohortId ? (
+            <>
+              <Sidebar rail><AppTree nav={nav} scope={scope} /></Sidebar>
+              <ProjectPanel nav={nav} cohortId={scope.cohortId} projectId={scope.projectId} budget={budget} note={note}>{panel}</ProjectPanel>
+            </>
+          ) : (
+            <Sidebar budget={budget}><AppTree nav={nav} scope={scope} />{note}</Sidebar>
+          )}
+        </div>
+        <main className={`min-w-0 flex-1 ${flush ? "canvas m-3 rounded-[10px] border border-glass-edge p-3 md:ml-0 md:p-5" : "p-4 md:p-8"}`}>{children}</main>
       </div>
     </div>
   );

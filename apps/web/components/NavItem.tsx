@@ -16,16 +16,16 @@ export function NavItem({ href, exact, mark, icon, depth = 0, children }: { href
   const active = exact ? path === href : path === href || path.startsWith(href + "/");
   const label = typeof children === "string" ? children : undefined;
   return (
-    <Link href={href} title={label} className={`flex items-center justify-between rounded-full py-1 pr-3 text-sm lg:pl-3 ${active ? "bg-field text-gold" : "hover:bg-field"}`}
+    <Link href={href} title={label} className={`flex items-center justify-between rounded-full py-1 pr-3 text-sm md:pl-0 lg:pl-3 ${active ? "bg-field text-gold" : "hover:bg-field"}`}
           style={{ paddingLeft: undefined }}>
       <span className="flex min-w-0 items-center gap-2 pl-3 lg:pl-0" style={{ marginLeft: depth * 14 }}>
         {Icon ? <Icon size={16} strokeWidth={1.75} className="shrink-0 opacity-80" aria-hidden /> : <span className="inline-block h-4 w-4 shrink-0 text-center text-xs opacity-50">·</span>}
-        <span className="nav-label hidden truncate lg:inline">{children}</span>
+        <span className="nav-label truncate md:hidden lg:inline">{children}</span>
       </span>
-      {mark && <span className={`nav-mark ml-2 hidden shrink-0 text-[10px] lg:inline ${active ? "text-gold/70" : "text-dim"}`}>{mark}</span>}
+      {mark && <span className={`nav-mark ml-2 shrink-0 text-[10px] md:hidden lg:inline ${active ? "text-gold/70" : "text-dim"}`}>{mark}</span>}
     </Link>
   );
 }
 export function NavGroup({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="mt-3"><div className="nav-title label mb-1 hidden px-3 lg:block">{title}</div><div className="nav-rule my-2 border-t border-glass-edge lg:hidden" />{children}</div>;
+  return <div className="mt-3"><div className="nav-title label mb-1 px-3 md:hidden lg:block">{title}</div><div className="nav-rule my-2 hidden border-t border-glass-edge md:block lg:hidden" />{children}</div>;
 }
