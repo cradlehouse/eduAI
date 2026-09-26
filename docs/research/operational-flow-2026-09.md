@@ -110,3 +110,29 @@ talk" + Script *or* Audio tab: a character speaking given lines), Extend Video, 
 Relevance: dialogue can stay inside the one LTX family (a character's still + their line → speaking
 clip), and Extend is available for continuity. fal also hosts LTX audio-to-video
 (https://fal.ai/models/fal-ai/ltx-2-19b/audio-to-video). Official API docs: https://docs.ltx.io/welcome
+
+## Addendum: LTX Studio itself (screens from Tim, 26 Sep)
+
+- **Home**: projects, plus a tool dock: Gen Space · Canvas · Storyboard · Video Editor · Flows | Dubbing ·
+  Caption. Sidebar: Home, Brand Kits, Assets, Custom Training, **Education (new)**.
+- **Storyboard Builder** (entry for a film): project settings first (aspect ratio, image model, **style**),
+  then one large box "Start with your story idea, scene, or full script", or drag/upload a script file.
+  "Blank Storyboard" or continue (AI storyboards are a paid tier).
+- **Gen Space**: a bottom prompt dock with Add image reference · Consistent element (@) · mode (Image /
+  Video) · model · resolution · aspect · count (3) · Generate · credits. Results stack in rows, each row
+  headed by its prompt, model, time, rerun, delete. Per image: favourite · **Edit image** · **Create
+  video** · download · menu: **Save as Element** · Upscale (~150 credits) · Send to · Set as cover · Delete.
+  Their onboarding tour teaches consistency as: "use your image as a reference for the next one" (drag the
+  still into the prompt box, write "the same wildflower field at night…").
+- **Video mode dock**: two frame slots, start ⇄ end, and **Camera motion as a picture grid** (None, Static,
+  Focus shift, Dolly in/out/left/right, Jib up/down — the same LTX enum our schema already carries), then
+  LTX-2.5 Fast · 6 s · 1080p · 16:9 · More.
+- **Video Editor**: assets panel (images, audio, elements) beside a timeline; Add clip; Export; Collaborate.
+- **Canvas**: node graph (Image upload + Prompt → model node) — their Flows surface.
+- **Pricing**: Free 800 credits once; Lite $12/mo 8k; Standard $28/mo 28k (AI storyboards, **Elements**,
+  Kling, Seedance, Nano Banana, commercial licence); Pro $100/mo 110k (Veo, 3 collaborators); Enterprise
+  (shared brand kits, unlimited collaborators). Consistency (Elements) sits behind the $28 tier.
+
+What maps onto Imaje: project settings (aspect, style/look, engine) asked with the script; still → "Create
+video" and still → "Save as Element" (set as a character reference or a place's master wide) as one-click
+actions on every take; start and end frame slots; camera motion as pictures; results grouped by prompt.
