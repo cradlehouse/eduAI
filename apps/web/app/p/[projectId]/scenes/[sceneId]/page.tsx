@@ -35,7 +35,7 @@ export default async function ScenePage({ params }: { params: Promise<{ projectI
           {next && <Link href={`/p/${projectId}/scenes/${next.id}`} className="hover:text-ink">Scene {next.position} →</Link>}
         </span>
       </div>
-      <SceneBoard projectId={projectId} scene={{ id: scene.id, position: scene.position, heading: parsed?.heading ?? scene.heading ?? scene.title, locationId: scene.location_entry_id, inScript: !!parsed }}
+      <SceneBoard projectId={projectId} scene={{ id: scene.id, position: scene.position, heading: parsed?.heading || scene.heading || scene.title || `Scene ${scene.position}`, locationId: scene.location_entry_id, inScript: !!parsed }}
                   assets={assets} blocks={blocks} shots={(shots ?? []).map((s) => ({ id: s.id, label: s.label, chosen: !!s.selected_take_id }))} />
     </div>
   );
