@@ -39,3 +39,15 @@ Stays one video model (LTX). Timing is untouched, so lips stay in sync.
   student's) needs a signed release, as the Voices page already says. Minors: no student voices without
   guardian consent.
 - Room sound after conversion held up in this test; check with louder backgrounds (rain, music).
+
+## Two people in one clip (spike 4, `two-voices.mjs`)
+
+LTX 2.5 two-shot, 8 s, both lines in the prompt. Demucs split voices from the rest; ElevenLabs
+speech-to-text with `diarize` found two speakers and each matched its script line; Chatterbox converted
+the voices twice (Angie's sample, Bert's sample); each copy was silenced outside that speaker's words;
+the picture, the Angie track, the Bert track and the room were recomposed (fal ffmpeg compose).
+Tim: both voices sound good and in their own voices, sync holds. ~$1.40.
+
+Room: LTX made almost no ambience (gaps between lines at -50 to -55 dB, near silent), so the room stem
+was empty. Room tone will be made once per location (sound-effects model) and laid under every shot
+there, as a real crew records room tone per location.
