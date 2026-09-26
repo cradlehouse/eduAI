@@ -2,13 +2,34 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { breakDownScript, type BreakdownT } from "@/lib/script/breakdown";
+import { removeSnippet } from "@/lib/script/screenplay";
+import { syncScenes } from "@/lib/script/sync";
 
 export async function saveScript(projectId: string, script: string): Promise<{ ok: true } | { error: string }> {
   const supabase = await createClient();
   const { data, error } = await supabase.from("projects").update({ script, script_updated_at: new Date().toISOString() }).eq("id", projectId).select("id");
   if (error) return { error: error.message };
   if (!data?.length) return { error: "You can't edit this project's script." };
-  revalidatePath(`/p/${projectId}`);
+  await syncScenes(projectId, script);
+  revalidatePath(`/p/${projectId}`, "layout");
+  return { ok: true };
+}
+
+// Undo a change the app wrote into the script: take its text back out. What was made alongside it
+// (a character, a location) stays where it is; the student deletes that on its own page if they want.
+export async function undoScriptChange(projectId: string, changeId: string): Promise<{ ok: true } | { error: string }> {
+  const supabase = await createClient();
+  const [{ data: ch }, { data: proj }] = await Promise.all([
+    supabase.from("script_changes").select("id, snippet, undone_at").eq("id", changeId).eq("project_id", projectId).maybeSingle(),
+    supabase.from("projects").select("script").eq("id", projectId).maybeSingle(),
+  ]);
+  if (!ch || ch.undone_at) return { error: "That change is already undone." };
+  const next = removeSnippet(proj?.script ?? "", ch.snippet);
+  if (next === null) return { error: "That text isn't in the script any more (it was edited by hand), so there is nothing to undo." };
+  const saved = await saveScript(projectId, next);
+  if ("error" in saved) return saved;
+  await supabase.from("script_changes").update({ undone_at: new Date().toISOString() }).eq("id", changeId);
+  revalidatePath(`/p/${projectId}`, "layout");
   return { ok: true };
 }
 
@@ -89,6 +110,8 @@ export async function applyBreakdown(projectId: string, b: BreakdownT): Promise<
     if (links.length) await supabase.from("scene_bible_entries").upsert(links.map((id) => ({ org_id: org, scene_id: sceneId, bible_entry_id: id })), { onConflict: "scene_id,bible_entry_id", ignoreDuplicates: true });
   }
 
+  const { data: after } = await supabase.from("projects").select("script").eq("id", projectId).maybeSingle();
+  if (after?.script) await syncScenes(projectId, after.script);
   revalidatePath(`/p/${projectId}`, "layout");
   return { ok: true, summary: `${created} added to the bible, ${updated} filled in, ${scenesCreated} scene${scenesCreated === 1 ? "" : "s"} created.` };
 }

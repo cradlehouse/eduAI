@@ -1,7 +1,6 @@
-import { BibleList } from "../bible/BibleList";
+import { ElementPage } from "../elements/ElementPage";
 
-export default async function Page({ params, searchParams }: { params: Promise<{ projectId: string }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
+export default async function Page({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
-  const { ok, error } = await searchParams;
-  return <BibleList projectId={projectId} kind="location" ok={ok} error={error} />;
+  return <ElementPage projectId={projectId} kind="location" />;
 }

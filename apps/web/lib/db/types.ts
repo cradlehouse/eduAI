@@ -237,8 +237,10 @@ export type Database = {
           project_id: string
           reference_asset_id: string | null
           requires_consent: boolean
+          room_tone_asset_id: string | null
           source: string
           updated_at: string
+          voice_asset_id: string | null
         }
         Insert: {
           appearance?: string
@@ -255,8 +257,10 @@ export type Database = {
           project_id: string
           reference_asset_id?: string | null
           requires_consent?: boolean
+          room_tone_asset_id?: string | null
           source?: string
           updated_at?: string
+          voice_asset_id?: string | null
         }
         Update: {
           appearance?: string
@@ -273,8 +277,10 @@ export type Database = {
           project_id?: string
           reference_asset_id?: string | null
           requires_consent?: boolean
+          room_tone_asset_id?: string | null
           source?: string
           updated_at?: string
+          voice_asset_id?: string | null
         }
         Relationships: [
           {
@@ -315,6 +321,20 @@ export type Database = {
           {
             foreignKeyName: "bible_entries_reference_asset_fk"
             columns: ["org_id", "reference_asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "bible_entries_room_fk"
+            columns: ["org_id", "room_tone_asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "bible_entries_voice_fk"
+            columns: ["org_id", "voice_asset_id"]
             isOneToOne: false
             referencedRelation: "assets"
             referencedColumns: ["org_id", "id"]
@@ -2001,6 +2021,7 @@ export type Database = {
           cohort_id: string
           created_at: string
           crew_cap: number | null
+          edit: Json
           id: string
           logline: string
           look: string | null
@@ -2018,6 +2039,7 @@ export type Database = {
           cohort_id: string
           created_at?: string
           crew_cap?: number | null
+          edit?: Json
           id?: string
           logline?: string
           look?: string | null
@@ -2035,6 +2057,7 @@ export type Database = {
           cohort_id?: string
           created_at?: string
           crew_cap?: number | null
+          edit?: Json
           id?: string
           logline?: string
           look?: string | null
@@ -2288,6 +2311,60 @@ export type Database = {
           },
           {
             foreignKeyName: "scenes_org_id_project_id_fkey"
+            columns: ["org_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
+      script_changes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          org_id: string
+          project_id: string
+          scene_position: number | null
+          snippet: string
+          source: string
+          undone_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          org_id: string
+          project_id: string
+          scene_position?: number | null
+          snippet?: string
+          source: string
+          undone_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          org_id?: string
+          project_id?: string
+          scene_position?: number | null
+          snippet?: string
+          source?: string
+          undone_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "script_changes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "script_changes_org_id_project_id_fkey"
             columns: ["org_id", "project_id"]
             isOneToOne: false
             referencedRelation: "projects"
@@ -2642,6 +2719,102 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      take_tracks: {
+        Row: {
+          asset_id: string
+          bible_entry_id: string | null
+          created_at: string
+          id: string
+          job_id: string | null
+          kind: string
+          org_id: string
+          project_id: string
+          spans: Json
+          take_id: string
+        }
+        Insert: {
+          asset_id: string
+          bible_entry_id?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          kind: string
+          org_id: string
+          project_id: string
+          spans?: Json
+          take_id: string
+        }
+        Update: {
+          asset_id?: string
+          bible_entry_id?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string | null
+          kind?: string
+          org_id?: string
+          project_id?: string
+          spans?: Json
+          take_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "take_tracks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_tokens"
+            referencedColumns: ["job_id"]
+          },
+          {
+            foreignKeyName: "take_tracks_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "take_tracks_org_id_asset_id_fkey"
+            columns: ["org_id", "asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "take_tracks_org_id_bible_entry_id_fkey"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entries"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "take_tracks_org_id_bible_entry_id_fkey"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entry_status"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "take_tracks_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "take_tracks_org_id_project_id_fkey"
+            columns: ["org_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "take_tracks_org_id_take_id_fkey"
+            columns: ["org_id", "take_id"]
+            isOneToOne: false
+            referencedRelation: "takes"
+            referencedColumns: ["org_id", "id"]
           },
         ]
       }
@@ -3320,6 +3493,10 @@ export type Database = {
       set_project_budget_tokens: {
         Args: { p_project: string; p_tokens: number }
         Returns: number
+      }
+      set_scene_order: {
+        Args: { p_ids: string[]; p_project: string }
+        Returns: undefined
       }
       shot_ready_for: {
         Args: { p_lane: Database["public"]["Enums"]["lane"]; p_shot: string }

@@ -49,12 +49,18 @@ def validate_inputs(schema: dict[str, Any], inputs: dict[str, Any]) -> list[str]
     return [f"{'/'.join(str(p) for p in e.path) or '(root)'}: {e.message}" for e in sorted(v.iter_errors(inputs), key=str)]
 
 
+# Our own bookkeeping on a job's inputs (what the result is called on the page); never sent to a vendor.
+OURS = {"label"}
+
+
 def map_inputs(adapter: dict[str, Any], inputs: dict[str, Any]) -> dict[str, Any]:
     """Our field names → the vendor's. string = rename; {to, prefix?, suffix?, list?} = rename + format
     (list wraps a single value in a one-element array, for vendors that take `image_urls`); null = drop."""
     imap: dict[str, Any] = adapter.get("input_map") or {}
     out: dict[str, Any] = {}
     for k, v in inputs.items():
+        if k in OURS:
+            continue
         if k not in imap:
             out[k] = v
             continue
