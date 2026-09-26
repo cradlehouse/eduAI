@@ -65,7 +65,9 @@ export async function updateEntry(formData: FormData) {
     const fixed = Object.fromEntries(FIXED.map((k) => [k, String(formData.get(`fixed_${k}`) ?? "").trim()]));
     const { data: cur } = await supabase.from("bible_entries").select("org_id, kind, fixed, reference_asset_id").eq("id", entryId).maybeSingle();
     const before = (cur?.fixed ?? {}) as Record<string, string>;
-    const changed = FIXED.some((k) => (before[k] ?? "") !== fixed[k]);
+    // Filling the conditions in for the first time is not a change of conditions.
+    const hadConditions = FIXED.some((k) => (before[k] ?? "").trim() !== "");
+    const changed = hadConditions && FIXED.some((k) => (before[k] ?? "") !== fixed[k]);
     if (changed) {
       const [{ count: angles }, { count: pins }] = await Promise.all([
         supabase.from("bible_entry_assets").select("id", { count: "exact", head: true }).eq("bible_entry_id", entryId),
