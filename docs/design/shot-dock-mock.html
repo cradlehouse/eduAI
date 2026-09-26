@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Imaje shot dock</title>
+<style>
+:root{
+  --bg:#0F1013;--deep:#08090B;--grid:rgba(255,255,255,.06);--glass:rgba(24,26,31,.78);
+  --edge:rgba(255,255,255,.10);--cedge:rgba(255,255,255,.14);--field:rgba(255,255,255,.04);
+  --ink:#F2F0EB;--dim:rgba(242,240,235,.55);--mute:rgba(242,240,235,.32);
+  --gold:#F2B441;--goldw:rgba(242,180,65,.08);--chosen:#69D2FF;--drift:#FF7A59;--ok:#7FD3A6;
+  --sodium:linear-gradient(135deg,#1a1f2e 0%,#2b2a2e 45%,#6b4a1e 78%,#c98a3a 100%);
+  --sodium2:linear-gradient(160deg,#141821 0%,#2e2a27 50%,#8a5c24 100%);
+  --sodium3:linear-gradient(120deg,#20242f 0%,#3b3530 55%,#b07a35 100%);
+  --face:radial-gradient(circle at 50% 42%,#c9a58a 0 26%,#4a3a30 27% 60%,#1f1a17 61% 100%);
+  --face2:radial-gradient(circle at 42% 45%,#b8937a 0 24%,#3c3029 25% 58%,#16130f 59% 100%);
+  --mono:"SF Mono",Menlo,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.35 "Helvetica Neue",Helvetica,Arial,sans-serif}
+.wrap{padding:16px;max-width:1400px;margin:0 auto}
+.cap{font-size:15px;color:var(--dim);margin:4px 0 12px}
+.cap b{color:var(--ink);font-weight:500}
+.scroll{overflow-x:auto;border-radius:12px;border:1px solid var(--edge)}
+.app{min-width:1240px;display:flex;flex-direction:column;background:var(--deep);padding-bottom:12px}
+.glass{background:var(--glass);border:1px solid var(--edge);border-radius:10px;backdrop-filter:blur(10px)}
+header{margin:12px 12px 0;display:flex;align-items:center;gap:14px;padding:8px 16px}
+header .logo{font-weight:500;font-size:15px}
+.crumb{display:flex;gap:8px;color:var(--dim);font-size:12px;align-items:center}
+.crumb b{color:var(--ink);font-weight:400}
+.avatar{margin-left:auto;width:32px;height:32px;border-radius:50%;background:var(--field);display:grid;place-items:center;font-size:12px}
+.body{display:flex;min-height:760px}
+/* left menu */
+.rail{margin:12px;width:68px;padding:12px 8px;display:flex;flex-direction:column;gap:6px;align-items:center}
+.ri{width:40px;height:36px;border-radius:8px;display:grid;place-items:center;color:var(--dim);position:relative}
+.ri svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6}
+.ri.on{background:var(--field);color:var(--gold)}
+.rsep{width:28px;border-top:1px solid var(--edge);margin:6px 0}
+.panel{margin:12px 12px 12px 0;width:236px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.budget{display:flex;gap:10px;align-items:center;background:var(--field);border-radius:8px;padding:10px;margin-bottom:8px}
+.ring{width:36px;height:36px;border-radius:50%;background:conic-gradient(var(--gold) 0 34%,rgba(255,255,255,.1) 34% 100%);display:grid;place-items:center}
+.ring i{width:26px;height:26px;border-radius:50%;background:#16181c;display:block}
+.bar{height:5px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;width:34%;background:var(--gold)}
+.gt{font-size:11px;color:var(--mute);padding:8px 10px 4px}
+.ni{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px;color:var(--dim);font-size:13px}
+.ni svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.6;flex:none}
+.ni.cur{color:var(--ink);font-weight:500}
+.ni.d1{padding-left:24px}
+.ni.on{background:var(--field);color:var(--gold)}
+.ni .m{margin-left:auto;font-size:11px;color:var(--mute);font-family:var(--mono)}
+.ni .m.need{color:var(--gold)}
+.ni .hint{display:block;font-size:10px;color:var(--gold);margin-top:1px}
+.note{font-size:11px;color:var(--mute);margin-top:auto;padding:10px;border-top:1px solid var(--edge)}
+/* main */
+main{flex:1;min-width:0;margin:12px 12px 12px 0;border:1px solid var(--edge);border-radius:10px;
+  background:var(--bg) radial-gradient(var(--grid) 1px,transparent 1px);background-size:22px 22px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;position:relative}
+.sh{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sh h1{font-size:20px;font-weight:400;margin:0;font-family:var(--mono);letter-spacing:.01em}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;border:1px solid var(--gold);background:var(--goldw);font-size:11px}
+.pill.q{border-color:var(--cedge);background:none;color:var(--dim)}
+.shots{display:flex;gap:8px;font-size:12px}
+.shots span{padding:5px 10px;border-radius:6px;border:1px solid var(--cedge);color:var(--dim)}
+.shots span.on{border-color:var(--gold);color:var(--ink)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;flex:1}
+.group{padding:10px 12px}
+.gh{display:flex;align-items:center;gap:10px;font-size:12px}
+.gh .p{flex:1;min-width:0;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gh .meta{color:var(--mute);font-size:11px;white-space:nowrap}
+.gh .ic{color:var(--dim);font-size:11px;border:1px solid var(--cedge);border-radius:6px;padding:2px 7px}
+.tag{color:var(--gold)}
+.takes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+.take{position:relative;aspect-ratio:16/9;border-radius:8px;border:1px solid var(--cedge);overflow:hidden;background:#1a1c21}
+.take .img{position:absolute;inset:0}
+.take .fig{position:absolute;left:38%;top:30%;width:18%;height:62%;border-radius:40% 40% 8% 8%;background:linear-gradient(#2a2420,#0d0b0a)}
+.take .n{position:absolute;left:8px;top:6px;font-size:11px;text-shadow:0 1px 2px #000}
+.take .play{position:absolute;right:8px;top:6px;font-size:10px;color:var(--dim);font-family:var(--mono)}
+.take.chosen{border-color:var(--chosen);box-shadow:0 0 0 1px var(--chosen)}
+.take.chosen .n{color:var(--chosen)}
+.take.gen{border-style:dashed;border-color:var(--gold);display:grid;place-items:center;color:var(--gold);font-size:11px;background:var(--goldw)}
+.acts{position:absolute;left:0;right:0;bottom:0;padding:24px 6px 6px;background:linear-gradient(transparent,rgba(0,0,0,.85));display:flex;gap:4px;flex-wrap:wrap}
+.acts span{font-size:10.5px;padding:3px 7px;border-radius:5px;background:rgba(24,26,31,.9);border:1px solid var(--cedge);white-space:nowrap}
+.acts span.pri{background:var(--gold);color:#1a1408;border-color:var(--gold);font-weight:500}
+.side{padding:12px;display:flex;flex-direction:column;gap:10px}
+.side h2{font-size:12px;font-weight:500;margin:0}
+.big{aspect-ratio:16/9;border-radius:8px;border:1px solid var(--chosen);position:relative;overflow:hidden}
+.kv{display:flex;justify-content:space-between;font-size:12px;color:var(--dim)}
+.kv b{color:var(--ink);font-weight:400}
+.label{font-size:11px;color:var(--mute)}
+/* dock */
+.dockwrap{position:relative}
+.dock{padding:10px 12px;display:flex;flex-direction:column;gap:9px;border-color:var(--cedge);box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.refs{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ref{display:inline-flex;align-items:center;gap:6px;padding:3px 8px 3px 3px;border-radius:999px;border:1px solid var(--gold);background:var(--goldw);font-size:11.5px}
+.ref i{width:20px;height:20px;border-radius:50%;display:block}
+.ref .x{color:var(--mute)}
+.add{padding:4px 10px;border-radius:999px;border:1px dashed var(--cedge);color:var(--dim);font-size:11.5px}
+.mid{display:flex;gap:12px;align-items:stretch}
+.frames{display:flex;align-items:center;gap:6px}
+.fr{width:92px;aspect-ratio:16/9;border-radius:6px;border:1px solid var(--cedge);position:relative;overflow:hidden;font-size:10px}
+.fr .t{position:absolute;left:5px;top:3px;text-shadow:0 1px 2px #000}
+.fr.empty{border-style:dashed;display:grid;place-items:center;color:var(--mute);background:var(--field)}
+.swap{color:var(--dim);font-size:14px}
+.prompt{flex:1;background:var(--field);border:1px solid var(--cedge);border-radius:6px;padding:9px 11px;font-size:13px;line-height:1.5;position:relative}
+.prompt .tag{background:var(--goldw);border-radius:4px;padding:0 3px}
+.caret{display:inline-block;width:1px;height:15px;background:var(--gold);vertical-align:-3px;margin-left:1px}
+.ctrl{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.c{padding:5px 10px;border-radius:6px;border:1px solid var(--cedge);font-size:12px;color:var(--dim);display:inline-flex;gap:6px;align-items:center}
+.c b{color:var(--ink);font-weight:400}
+.c.open{border-color:var(--gold);color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--cedge);border-radius:6px;overflow:hidden;font-size:12px}
+.seg span{padding:5px 10px;color:var(--dim)}
+.seg span.on{background:var(--field);color:var(--ink)}
+.gen{margin-left:auto;background:var(--gold);color:#1a1408;border-radius:6px;padding:7px 14px;font-size:12.5px;font-weight:500}
+.gen small{font-weight:400;opacity:.75;margin-left:6px;font-family:var(--mono)}
+.engine{font-size:11px;color:var(--mute)}
+.pop{position:absolute;z-index:3;padding:8px;box-shadow:0 18px 40px rgba(0,0,0,.6);border-color:var(--cedge)}
+.at{left:250px;bottom:112px;width:250px}
+.at .h{font-size:10px;color:var(--mute);padding:6px 8px 3px}
+.at .o{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;font-size:12px}
+.at .o i{width:22px;height:22px;border-radius:5px;display:block;flex:none}
+.at .o.sel{background:var(--field);outline:1px solid var(--gold)}
+.at .o .s{margin-left:auto;font-size:10px;color:var(--mute)}
+.cam{left:0;bottom:52px;width:372px}
+.cam .h{font-size:11px;color:var(--dim);padding:2px 4px 8px;display:flex;justify-content:space-between}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tile{border:1px solid var(--cedge);border-radius:6px;padding:4px;font-size:10px;color:var(--dim);text-align:center}
+.tile .v{aspect-ratio:4/3;border-radius:4px;background:#1f2127;margin-bottom:3px;position:relative;overflow:hidden;display:grid;place-items:center}
+.tile .v svg{width:30px;height:24px;stroke:var(--ink);fill:none;stroke-width:1.4;opacity:.7}
+.tile.on{border-color:var(--gold);color:var(--ink)}
+.tile.on .v svg{stroke:var(--gold);opacity:1}
+/* markers */
+.k{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#1a1408;font-size:10px;font-weight:600;flex:none;box-shadow:0 0 0 3px var(--deep)}
+.k.abs{position:absolute;z-index:4}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px 22px;margin-top:16px}
+.legend div{display:flex;gap:10px;font-size:12.5px;color:var(--dim);line-height:1.45}
+.legend b{color:var(--ink);font-weight:500}
+@media (max-width:700px){.wrap{padding:12px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<p class="cap"><b>Scene screen with the new shot dock</b> · left menu as it is now (icon rail + project panel). Mockup only; numbers are keyed to the notes below.</p>
+<div class="scroll"><div class="app">
+
+<header class="glass">
+  <span class="logo">Imaje</span>
+  <span class="crumb">Pegasus Media Project <span>/</span> Spring cohort <span>/</span> <b>Warehouse ▾</b> <span>/</span> <b>Scenes</b></span>
+  <span class="avatar">T</span>
+</header>
+
+<div class="body">
+  <!-- LEFT: icon rail (org + cohort tree collapsed to icons) -->
+  <aside class="glass rail" style="position:relative">
+    <span class="k abs" style="right:-8px;top:-6px">1</span>
+    <span class="ri" title="Overview"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg></span>
+    <span class="ri" title="Cohorts"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/></svg></span>
+    <span class="ri" title="People"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M16 5a3 3 0 010 6M18 14c2 .8 3 3 3 6"/></svg></span>
+    <span class="ri" title="Keys"><svg viewBox="0 0 24 24"><circle cx="8" cy="14" r="4"/><path d="M11 11l8-8M16 6l3 3"/></svg></span>
+    <span class="rsep"></span>
+    <span class="ri on" title="Spring cohort"><svg viewBox="0 0 24 24"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/></svg></span>
+    <span class="ri" title="Team"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/></svg></span>
+    <span class="ri" title="Projects"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="1.5"/><path d="M3 8l3-4h3l-3 4M9 8l3-4h3l-3 4M15 8l3-4h3"/></svg></span>
+    <span class="ri" title="Schedule"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+  </aside>
+
+  <!-- LEFT: project panel -->
+  <aside class="glass panel" style="position:relative">
+    <span class="k abs" style="right:-8px;top:-6px">2</span>
+    <div class="budget"><span class="ring"><i></i></span><div style="flex:1;min-width:0"><div style="font-size:11px;color:var(--dim)">Crew budget · <span style="color:var(--ink)">$68</span> of $200</div><div class="bar"><i></i></div></div></div>
+    <div class="gt">Spring cohort · projects</div>
+    <div class="ni cur">Warehouse</div>
+    <div class="ni d1"><svg viewBox="0 0 24 24"><path d="M4 4h7a3 3 0 013 3v13a2 2 0 00-2-2H4zM20 4h-5a3 3 0 00-3 3"/></svg>Script<span class="m" style="color:var(--ok)">✓</span></div>
+    <div class="ni d1"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg><span>Cast<span class="hint">1 needs a look</span></span><span class="m need">2</span></div>
+    <div class="ni d1"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M10 21v-4h4v4"/></svg><span>Places<span class="hint">no master wide yet</span></span><span class="m need">1</span></div>
+    <div class="ni d1"><svg viewBox="0 0 24 24"><circle cx="8" cy="14" r="4"/><path d="M11 11l8-8M16 6l3 3"/></svg>Props<span class="m">4</span></div>
+    <div class="ni d1 on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Scenes<span class="m">2</span></div>
+    <div class="ni d1"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.5 2.7-6 6-6s6 2.5 6 6"/><path d="M16 5a3 3 0 010 6M18 14c2 .8 3 3 3 6"/></svg>Crew</div>
+    <div class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="1.5"/><path d="M7 6v13M17 6v13M3 10h4M3 15h4M17 10h4M17 15h4"/></svg>Night Bus</div>
+    <div class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="1.5"/><path d="M7 6v13M17 6v13M3 10h4M3 15h4M17 10h4M17 15h4"/></svg>Kitchen Table</div>
+    <div class="ni"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="1.5"/><path d="M3 8l3-4h3l-3 4M9 8l3-4h3l-3 4M15 8l3-4h3"/></svg>All projects</div>
+    <div class="note">Engine for this film: <span style="color:var(--ink)">LTX 2.5</span> · 16:9 · Look: sodium night</div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="sh">
+      <h1>1. INT. WAREHOUSE – NIGHT</h1>
+      <span class="pill">▣ WAREHOUSE</span><span class="pill">MAYA</span><span class="pill">ROSA</span><span class="pill q">RED DUFFEL BAG</span>
+    </div>
+    <div class="shots"><span>Shot 1 · wide ✓</span><span class="on">Shot 2 · Maya enters</span><span>Shot 3 · close</span><span style="border-style:dashed">+ shot</span></div>
+
+    <div class="cols">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <!-- group 1 -->
+        <section class="glass group" style="position:relative">
+          <span class="k abs" style="left:-8px;top:-6px">3</span>
+          <div class="gh">
+            <span class="p"><span class="tag">@MAYA</span> steps through the loading door, rain behind her, into <span class="tag">@WAREHOUSE</span></span>
+            <span class="meta">LTX 2.5 Fast · 6 s · Dolly in · 4 min ago</span>
+            <span class="ic">↻ Again</span><span class="ic">✕</span>
+          </div>
+          <div class="takes">
+            <div class="take chosen"><div class="img" style="background:var(--sodium)"></div><div class="fig"></div><span class="n">Take 1 · chosen</span><span class="play">▶ 0:06</span></div>
+            <div class="take" style="position:relative"><div class="img" style="background:var(--sodium2)"></div><div class="fig" style="left:52%"></div><span class="n">Take 2</span><span class="play">▶ 0:06</span>
+              <div class="acts"><span class="pri">Choose</span><span>Make video</span><span>Use for… ▾</span><span>Set as master wide</span><span>Edit</span></div>
+              <span class="k abs" style="right:6px;top:22px">4</span>
+            </div>
+            <div class="take"><div class="img" style="background:var(--sodium3)"></div><div class="fig" style="left:28%;height:55%;top:36%"></div><span class="n">Take 3</span><span class="play">▶ 0:06</span></div>
+          </div>
+        </section>
+        <!-- group 2 -->
+        <section class="glass group">
+          <div class="gh">
+            <span class="p"><span class="tag">@MAYA</span> stops, torch beam catches her glasses, she listens</span>
+            <span class="meta">LTX 2.5 Fast · 4 s · Static · just now</span>
+            <span class="ic">↻ Again</span><span class="ic">✕</span>
+          </div>
+          <div class="takes">
+            <div class="take"><div class="img" style="background:var(--face)"></div><span class="n">Take 1</span><span class="play">▶ 0:04</span></div>
+            <div class="take gen">Take 2 · rendering · 40 s</div>
+            <div class="take gen" style="color:var(--dim);border-color:var(--cedge);background:none">Take 3 · queued · #3</div>
+          </div>
+        </section>
+      </div>
+
+      <!-- right: the shot -->
+      <aside class="glass side">
+        <h2>Shot 2 · Maya enters</h2>
+        <div class="big" style="background:var(--sodium)"><div class="fig" style="position:absolute;left:38%;top:30%;width:18%;height:62%;border-radius:40% 40% 8% 8%;background:linear-gradient(#2a2420,#0d0b0a)"></div></div>
+        <div class="kv"><span>Chosen</span><b style="color:var(--chosen)">Take 1</b></div>
+        <div class="kv"><span>Takes so far</span><b>6 · $2.70</b></div>
+        <div class="kv"><span>In this shot</span><b>MAYA · WAREHOUSE</b></div>
+        <div class="label" style="margin-top:4px">What the model is sent, besides your prompt</div>
+        <div style="font-size:11.5px;color:var(--dim);line-height:1.5;background:var(--field);border-radius:6px;padding:8px">MAYA: woman, 30s, long straight dark hair, round glasses, grey wool coat. WAREHOUSE: empty brick warehouse, one high window, concrete floor. Look: sodium night, 35mm grain.</div>
+        <div class="label">Instructor note</div>
+        <div style="font-size:11.5px;color:var(--dim)">“Try it with the end frame set to the torch close.”</div>
+      </aside>
+    </div>
+
+    <!-- DOCK -->
+    <div class="dockwrap">
+      <div class="glass pop at">
+        <span class="k abs" style="left:-8px;top:-6px">6</span>
+        <div class="h">CAST</div>
+        <div class="o sel"><i style="background:var(--face2)"></i>ROSA<span class="s">scenes 1, 2</span></div>
+        <div class="o"><i style="background:var(--face)"></i>MAYA<span class="s">in shot</span></div>
+        <div class="h">PLACES</div>
+        <div class="o"><i style="background:var(--sodium)"></i>WAREHOUSE<span class="s">in shot</span></div>
+        <div class="h">PROPS</div>
+        <div class="o"><i style="background:linear-gradient(135deg,#6e1e1a,#2a0d0b)"></i>RED DUFFEL BAG<span class="s">scene 1</span></div>
+      </div>
+
+      <div class="glass dock">
+        <div class="refs">
+          <span class="k">5</span>
+          <span class="ref"><i style="background:var(--face)"></i>@MAYA <span class="x">×</span></span>
+          <span class="ref"><i style="background:var(--sodium)"></i>@WAREHOUSE <span class="x">×</span></span>
+          <span class="add">+ reference image</span>
+          <span class="engine" style="margin-left:auto">Pinned from the scene. Type @ to add anyone else.</span>
+        </div>
+        <div class="mid">
+          <div class="frames"><span class="k">7</span>
+            <div class="fr" style="background:var(--sodium)"><span class="t">Start</span></div>
+            <span class="swap">⇄</span>
+            <div class="fr empty">+ End frame</div>
+          </div>
+          <div class="prompt"><span class="tag">@MAYA</span> stops at the edge of the light. <span class="tag">@RO</span><span class="caret"></span></div>
+        </div>
+        <div class="ctrl">
+          <span class="c open">Camera · <b>Dolly in</b> ▾</span>
+          <span class="c">Length · <b>6 s</b> ▾</span>
+          <span class="seg"><span class="on">Fast</span><span>Quality</span></span>
+          <span class="c">Takes · <b>3</b> ▾</span>
+          <span class="k" style="margin-left:6px">9</span>
+          <span class="engine">LTX 2.5 · 16:9 · set for the whole film</span>
+          <span class="gen">Generate 3 takes<small>$1.62</small></span>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</div></div>
+
+      <div class="glass cam" style="position:relative;padding:10px;margin-top:14px;max-width:420px">
+        <span class="k abs" style="left:-8px;top:-6px">8</span>
+        <div class="h"><span>Camera ▾ opens this</span><span style="color:var(--mute)">LTX camera presets</span></div>
+        <div class="tiles">
+          <div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="4" y="4" width="22" height="16" rx="2"/></svg></div>None</div>
+          <div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="4" y="4" width="22" height="16" rx="2"/><circle cx="15" cy="12" r="2"/></svg></div>Static</div>
+          <div class="tile on"><div class="v"><svg viewBox="0 0 30 24"><rect x="9" y="7" width="12" height="10" rx="1"/><path d="M2 2l6 4M28 2l-6 4M2 22l6-4M28 22l-6-4"/></svg></div>Dolly in</div>
+          <div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="9" y="7" width="12" height="10" rx="1"/><path d="M8 6L3 2M22 6l5-4M8 18l-5 4M22 18l5 4"/></svg></div>Dolly out</div>
+          <div class="tile"><div class="v"><svg viewBox="0 0 30 24"><circle cx="15" cy="12" r="7"/><circle cx="15" cy="12" r="3"/></svg></div>Focus shift</div>
+          <div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="8" y="6" width="14" height="12" rx="1"/><path d="M6 12H1M4 9l-3 3 3 3"/></svg></div>Dolly left</div>
+          <div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="8" y="6" width="14" height="12" rx="1"/><path d="M24 12h5M26 9l3 3-3 3"/></svg></div>Dolly right</div>
+          <div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="8" y="8" width="14" height="12" rx="1"/><path d="M15 6V1M12 3l3-3 3 3"/></svg></div>Jib up</div>
+          <div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="8" y="4" width="14" height="12" rx="1"/><path d="M15 18v5M12 21l3 3 3-3"/></svg></div>Jib down</div>
+          <div class="tile" style="border-style:dashed"><div class="v" style="color:var(--mute);font-size:10px">?</div>Which one?</div>
+        </div>
+      </div>
+
+<div class="legend">
+  <div><span class="k">1</span><span><b>Icon rail</b> (unchanged). The organisation and cohort menu shrinks to icons when a project is open, and each icon names itself on hover.</span></div>
+  <div><span class="k">2</span><span><b>Project panel</b> (as built today, plus one change). The film's steps sit under the open project: Script, Cast, Places, Props, Scenes, Crew. Each shows a count. <b>New:</b> a gold line saying what's still missing, and the film settings at the bottom.</span></div>
+  <div><span class="k">3</span><span><b>Takes grouped by prompt.</b> Each row shows the prompt that made it, the engine, length, camera, when it ran, Again and delete. Instructors can read how the prompts changed from try to try.</span></div>
+  <div><span class="k">4</span><span><b>Actions on every still</b> (shown on hover): Choose, Make video, Use for… (a character), Set as master wide (a place), Edit.</span></div>
+  <div><span class="k">5</span><span><b>Reference chips.</b> The scene's cast and place are pinned already. Each chip sends that entry's look to the model.</span></div>
+  <div><span class="k">6</span><span><b>Type @</b> to pull in anyone from Cast, Places or Props. Picking one adds a chip. This replaces the separate picker.</span></div>
+  <div><span class="k">7</span><span><b>Start and end frames.</b> The start frame defaults to the chosen still or the place's master wide. An end frame lets a shot land exactly on the next one.</span></div>
+  <div><span class="k">8</span><span><b>Camera motion as pictures</b>, using the LTX presets. The last tile explains the options in plain words.</span></div>
+  <div><span class="k">9</span><span><b>One bar, one button.</b> The engine is fixed for the film, so the only choice here is Fast or Quality. The button shows the price before you spend it (3 × 6 s at 9¢/s).</span></div>
+</div>
+</div>
+</body>
+</html>
