@@ -21,6 +21,7 @@ from .registry import Route, asset_kind_for, ext_for, extract_outputs, map_input
 from .settings import Settings
 from .settings import settings as default_settings
 from .storage import Storage, asset_key
+from .voices import ESTIMATE_CENTS, Fal, Track, extract_wav, split_voices
 
 log = logging.getLogger("orchestrator")
 
@@ -32,6 +33,7 @@ class Dispatcher:
         self.webhook_url = webhook_url
         self.gate = gate or PromptGate(cfg.anthropic_api_key, cfg.gate_model)
         self._provider_cache: dict[str, Provider] = {}
+        self._renders: set[asyncio.Task[None]] = set()
 
     def provider(self, name: str) -> Provider:
         if name not in self._provider_cache:
@@ -63,9 +65,15 @@ class Dispatcher:
         return n
 
     # ---- queued → submitted ---------------------------------------------
+    @property
+    def claim_kinds(self) -> list[str]:
+        # A generate worker also does the short post-processing renders (voice splits): they are a few
+        # fal calls, not a GPU job of our own.
+        return list(dict.fromkeys(self.cfg.kinds + (["render"] if "generate" in self.cfg.kinds else [])))
+
     async def submit_queued(self) -> int:
         count = 0
-        while job := await self.db.claim(self.cfg.kinds, self.cfg.worker_name):
+        while job := await self.db.claim(self.claim_kinds, self.cfg.worker_name):
             count += 1
             try:
                 await self.handle_claimed(job)
@@ -76,6 +84,13 @@ class Dispatcher:
 
     async def handle_claimed(self, job: dict[str, Any]) -> None:
         jid = str(job["id"])
+        op = (job.get("inputs") or {}).get("op")
+        if job.get("kind") == "render" and op in ("voices", "export"):
+            # Runs in the background; the job stays 'claimed' until it settles or is released.
+            t = asyncio.create_task(self.run_voices(job) if op == "voices" else self.run_export(job))
+            self._renders.add(t)
+            t.add_done_callback(self._renders.discard)
+            return
         if job.get("kind") != "generate":
             await self.db.release(jid, "failed", f"no handler for kind {job.get('kind')}")
             return
@@ -164,6 +179,102 @@ class Dispatcher:
                 urls.append(await self.storage.presigned_get(key, self.cfg.asset_url_ttl_s))
             out[f] = urls if isinstance(ref, list) else urls[0]
         return out
+
+    # ---- render: a chosen talking take → one track per character -------
+    async def run_voices(self, job: dict[str, Any]) -> None:
+        jid, org = str(job["id"]), str(job["org_id"])
+        inputs: dict[str, Any] = job.get("inputs") or {}
+        try:
+            if not await self.db.reserve(jid, ESTIMATE_CENTS):
+                await self.db.release(jid, "rejected", "not enough budget for the voice split")
+                return
+            key = self.platform_key("fal")
+            if not key:
+                await self.db.release(jid, "failed", "no fal key for the voice split")
+                return
+            fal = Fal(key)
+            vkey = await self.db.asset_key(org, str(inputs["video"]))
+            if not vkey:
+                raise ValueError("the take's video is missing")
+            video = await fal.get(await self.storage.presigned_get(vkey, self.cfg.asset_url_ttl_s))
+            original = extract_wav(video)
+            okey = asset_key(org, hashlib.sha256(original).hexdigest(), "wav")
+            await self.storage.put_if_absent(okey, original, "audio/wav")
+            voices: dict[str, str | None] = {}
+            for sp in inputs.get("speakers") or []:
+                aid = sp.get("voice_asset_id")
+                k = await self.db.asset_key(org, str(aid)) if aid else None
+                voices[str(sp["name"]).upper()] = await self.storage.presigned_get(k, self.cfg.asset_url_ttl_s) if k else None
+            await self.db.event(jid, "submitted", {"op": "voices", "speakers": sorted(voices)})
+            tracks, info = await split_voices(fal, await self.storage.presigned_get(okey, self.cfg.asset_url_ttl_s), inputs.get("lines") or [], voices)
+            tracks.insert(0, Track(kind="original", data=original, mime="audio/wav", name="LTX"))
+            ids = {str(sp["name"]).upper(): sp.get("entry_id") for sp in inputs.get("speakers") or []}
+            stored: list[tuple[StoredOutput, Track]] = []
+            for t in tracks:
+                t.entry_id = ids.get(t.name)
+                sha = hashlib.sha256(t.data).hexdigest()
+                r2 = asset_key(org, sha, "wav")
+                await self.storage.put_if_absent(r2, t.data, t.mime)
+                stored.append((StoredOutput(sha256=sha, r2_key=r2, mime=t.mime, bytes=len(t.data), kind="audio",
+                                            provenance={"source": "generated", "op": "voices", "job_id": jid, "track": t.kind, "character": t.name,
+                                                        "pipeline": ["demucs", "whisper", "chatterbox-s2s"]}), t))
+            receipt = {"actual_cents": None, "output_hashes": [s.sha256 for s, _ in stored],
+                       "policy_decisions": {"prompt_gate": "not_run", "reason": "post-processing of an approved take"},
+                       "provenance": {"op": "voices", "take_id": inputs.get("take_id"), **info}, "resource_estimate": {"basis": "undisclosed"}}
+            await self.db.settle_tracks(job, str(inputs["take_id"]), stored, receipt)
+            log.info("job %s: voices split into %d track(s)", jid, len(stored))
+        except Exception as e:  # noqa: BLE001 — a failed split must not take the loop down
+            log.exception("job %s: voice split failed", jid)
+            await self.db.release(jid, "failed", f"voice split: {type(e).__name__}: {e}")
+
+    async def run_export(self, job: dict[str, Any]) -> None:
+        """The edit → one file: picture, each clip's voice tracks and room tone, laid by timestamp (fal ffmpeg compose)."""
+        jid, org = str(job["id"]), str(job["org_id"])
+        clips: list[dict[str, Any]] = (job.get("inputs") or {}).get("clips") or []
+        try:
+            if not clips:
+                raise ValueError("nothing to export")
+            if not await self.db.reserve(jid, 1 + len(clips) // 10):
+                await self.db.release(jid, "rejected", "not enough budget to export")
+                return
+            key = self.platform_key("fal")
+            fal = Fal(key)
+
+            async def url(asset_id: str) -> str:
+                k = await self.db.asset_key(org, asset_id)
+                if not k:
+                    raise ValueError(f"asset {asset_id} missing")
+                return await self.storage.presigned_get(k, self.cfg.asset_url_ttl_s)
+
+            picture, voices, room, t = [], [], [], 0
+            for c in clips:
+                ms = int(float(c.get("seconds") or 6) * 1000)
+                picture.append({"timestamp": t, "duration": ms, "url": await url(c["video"])})
+                for v in c.get("voices") or []:
+                    voices.append({"timestamp": t, "duration": ms, "url": await url(v)})
+                if c.get("room"):
+                    room.append({"timestamp": t, "duration": ms, "url": await url(c["room"])})
+                t += ms
+            tracks = [{"id": "picture", "type": "video", "keyframes": picture}]
+            if voices:
+                tracks.append({"id": "voices", "type": "audio", "keyframes": voices})
+            if room:
+                tracks.append({"id": "room", "type": "audio", "keyframes": room})
+            await self.db.event(jid, "submitted", {"op": "export", "clips": len(clips), "tracks": [x["id"] for x in tracks]})
+            out = await fal.run("fal-ai/ffmpeg-api/compose", {"tracks": tracks}, timeout_s=900)
+            data = await fal.get(out["video_url"])
+            sha = hashlib.sha256(data).hexdigest()
+            r2 = asset_key(org, sha, "mp4")
+            await self.storage.put_if_absent(r2, data, "video/mp4")
+            stored = StoredOutput(sha256=sha, r2_key=r2, mime="video/mp4", bytes=len(data), kind="video",
+                                  provenance={"source": "rendered", "op": "export", "job_id": jid, "clips": len(clips)})
+            receipt = {"actual_cents": None, "output_hashes": [sha], "policy_decisions": {"prompt_gate": "not_run", "reason": "export of approved takes"},
+                       "provenance": {"op": "export", "tracks": [x["id"] for x in tracks]}, "resource_estimate": {"basis": "undisclosed"}}
+            await self.db.settle_tracks(job, None, [(stored, None)], receipt)
+            log.info("job %s: exported %d clip(s)", jid, len(clips))
+        except Exception as e:  # noqa: BLE001
+            log.exception("job %s: export failed", jid)
+            await self.db.release(jid, "failed", f"export: {type(e).__name__}: {e}")
 
     # ---- submitted / running → succeeded --------------------------------
     async def check_open(self) -> int:
@@ -280,6 +391,9 @@ class Dispatcher:
 
     async def expire(self) -> int:
         n = 0
+        for row in await self.db.stale_renders(20):
+            if await self.db.release(str(row["id"]), "timed_out", "render did not finish (worker restarted?)"):
+                n += 1
         cutoff = datetime.now(UTC) - timedelta(minutes=self.cfg.submit_timeout_min)
         for job in await self.db.open_jobs(self.cfg.kinds):
             sub_at = job.get("submitted_at")

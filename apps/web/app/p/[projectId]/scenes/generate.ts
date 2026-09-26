@@ -8,7 +8,8 @@ type Layer = Database["public"]["Enums"]["layer"];
 
 // Writes the jobs row as the signed-in user. RLS + the fill-defaults trigger derive org, cohort,
 // provider and model version; the orchestrator (P1-10) claims it. Nothing here talks to a vendor.
-export async function generate(input: { projectId: string; shotId: string; profileId: string; lane: Lane; layer: Layer; inputs: Record<string, Json> }) {
+// describe: false when the caller has already written the looks into the prompt (the Shot screen does).
+export async function generate(input: { projectId: string; shotId: string; profileId: string; lane: Lane; layer: Layer; inputs: Record<string, Json>; describe?: boolean }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Not signed in." };
@@ -37,7 +38,7 @@ export async function generate(input: { projectId: string; shotId: string; profi
   const look = looks.find((l) => l.key === project.look);
   // What the cut's place, cast and props look like, written once in the bible, leads every picture
   // prompt so the same people and the same place come back shot after shot.
-  if (["background", "character", "merged"].includes(input.layer) && typeof inputs.prompt === "string") {
+  if (input.describe !== false && ["background", "character", "merged"].includes(input.layer) && typeof inputs.prompt === "string") {
     const { data: pins } = await supabase.from("shot_bible_entries").select("bible_entries(kind, name, appearance)").eq("shot_id", input.shotId);
     const order = { location: 0, character: 1, prop: 2 } as Record<string, number>;
     const described = (pins ?? []).map((r) => r.bible_entries).filter((e) => !!e && !!e.appearance).map((e) => e!)
@@ -46,6 +47,8 @@ export async function generate(input: { projectId: string; shotId: string; profi
       .map((e) => `${e.name}: ${e.appearance}`);
     if (described.length) inputs.prompt = `${inputs.prompt}\n${described.join(". ")}.`;
     if (look) inputs.prompt = `${look.prompt}. ${inputs.prompt}`;
+  } else if (input.describe === false && look && typeof inputs.prompt === "string") {
+    inputs.prompt = `${look.prompt}. ${inputs.prompt}`;
   }
   const { data: job, error } = await supabase.from("jobs").insert({
     org_id: project.org_id, cohort_id: project.cohort_id, requested_by: user.id,
@@ -53,8 +56,7 @@ export async function generate(input: { projectId: string; shotId: string; profi
     lane: input.lane, layer: input.layer, inputs,
   }).select("id").single();
   if (error) return { error: error.message };
-  revalidatePath(`/p/${input.projectId}/scenes`);
-  revalidatePath(`/p/${input.projectId}`);
+  revalidatePath(`/p/${input.projectId}`, "layout");
   return { ok: true, jobId: job.id, tokens: est ?? null };
 }
 

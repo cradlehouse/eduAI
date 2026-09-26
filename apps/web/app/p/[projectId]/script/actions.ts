@@ -24,6 +24,7 @@ export async function undoScriptChange(projectId: string, changeId: string): Pro
     supabase.from("projects").select("script").eq("id", projectId).maybeSingle(),
   ]);
   if (!ch || ch.undone_at) return { error: "That change is already undone." };
+  if (!ch.snippet) return { error: "A cut line can't be put back from here. Add it again from the scene." };
   const next = removeSnippet(proj?.script ?? "", ch.snippet);
   if (next === null) return { error: "That text isn't in the script any more (it was edited by hand), so there is nothing to undo." };
   const saved = await saveScript(projectId, next);

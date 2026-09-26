@@ -91,6 +91,10 @@ class Db:
         return await self._all(
             "select * from public.jobs where kind::text = any(%s) and status in ('submitted','running') order by submitted_at", kinds)
 
+    async def stale_renders(self, minutes: int) -> list[dict[str, Any]]:
+        """Render jobs claimed but never settled (the worker restarted mid-run)."""
+        return await self._all("select id from public.jobs where kind = 'render' and status = 'claimed' and claimed_at < now() - make_interval(mins => %s)", minutes)
+
     async def job_by_request(self, provider: str, request_id: str) -> dict[str, Any] | None:
         return await self._one("select * from public.jobs where provider = %s and provider_request_id = %s", provider, request_id)
 
@@ -200,6 +204,37 @@ class Db:
                             "values (%s,%s,%s,%s,%s,%s,%s,%s::public.layer)",
                             (job["org_id"], job["project_id"], job["shot_id"], job["id"], aid, job["model_version_id"], job["deployment_profile_id"],
                              job.get("layer") or "merged"))
+                cur = await c.execute("select eduai.settle_job(%s, %s, %s) as ok", (job["id"], receipt.get("actual_cents"), Jsonb(receipt)))
+                ok = bool((await cur.fetchone())["ok"])
+                if not ok:
+                    raise RuntimeError("settle_job returned false (already settled?)")
+                return ok
+
+    async def settle_tracks(self, job: dict[str, Any], take_id: str | None, outputs: list[tuple[StoredOutput, Any]], receipt: dict[str, Any]) -> bool:
+        """A render (voice split, export): assets (+ take_tracks for a split) + settle_job in one transaction; no takes rows."""
+        async with self.pool.connection() as c:
+            async with c.transaction():
+                for o, t in outputs:
+                    cur = await c.execute("select id from public.assets where org_id = %s and sha256 = %s", (job["org_id"], o.sha256))
+                    row = await cur.fetchone()
+                    if row:
+                        aid = str(row["id"])
+                    else:
+                        cur = await c.execute("select chain_hash from public.assets where org_id = %s and chain_hash is not null "
+                                              "order by created_at desc, id desc limit 1", (job["org_id"],))
+                        prev = (await cur.fetchone() or {}).get("chain_hash")
+                        prov = o.provenance or {}
+                        cur = await c.execute(
+                            "insert into public.assets (org_id, project_id, kind, source, r2_key, sha256, mime, bytes, job_id, prev_hash, chain_hash, "
+                            "provenance, created_by) values (%s,%s,'audio','generated',%s,%s,%s,%s,%s,%s,%s,%s,%s) returning id",
+                            (job["org_id"], job["project_id"], o.kind, o.r2_key, o.sha256, o.mime, o.bytes, job["id"], prev,
+                             chain_hash(prev, o.sha256, prov), Jsonb(prov), job["requested_by"]))
+                        aid = str((await cur.fetchone())["id"])
+                    if take_id is None or t is None:
+                        continue
+                    await c.execute(
+                        "insert into public.take_tracks (org_id, project_id, take_id, bible_entry_id, kind, asset_id, spans, job_id) values (%s,%s,%s,%s,%s,%s,%s,%s)",
+                        (job["org_id"], job["project_id"], take_id, t.entry_id, t.kind, aid, Jsonb([list(s) for s in t.spans]), job["id"]))
                 cur = await c.execute("select eduai.settle_job(%s, %s, %s) as ok", (job["id"], receipt.get("actual_cents"), Jsonb(receipt)))
                 ok = bool((await cur.fetchone())["ok"])
                 if not ok:

@@ -5,7 +5,8 @@ import { BibleChip } from "@/components/BibleChip";
 import { addReference, addRelease, deleteEntry, revokeRelease, setEntryAssetLifecycle, setMaster, updateEntry } from "../actions";
 import { EntryStudio } from "./EntryStudio";
 import { JobWatcher } from "@/app/p/[projectId]/scenes/JobWatcher";
-import type { Option } from "@/app/p/[projectId]/scenes/CutWorkspace";
+import type { Database } from "@/lib/db/types";
+type Option = Database["public"]["Functions"]["model_options"]["Returns"][number];
 
 const input = "input";
 const btn = "btn";

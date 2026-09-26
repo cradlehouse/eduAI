@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 
-// The cut console lives on the storyboard now (filmstrip + dock + inspector). Old links still work.
+// Shots live under their scene now (Scene → Shot). Old links still land.
 export default async function ShotRedirect({ params }: { params: Promise<{ projectId: string; shotId: string }> }) {
   const { projectId, shotId } = await params;
-  redirect(`/p/${projectId}/scenes?cut=${shotId}`);
+  const supabase = await createClient();
+  const { data } = await supabase.from("shots").select("scene_id").eq("id", shotId).maybeSingle();
+  redirect(data ? `/p/${projectId}/scenes/${data.scene_id}/shots/${shotId}` : `/p/${projectId}/scenes`);
 }
