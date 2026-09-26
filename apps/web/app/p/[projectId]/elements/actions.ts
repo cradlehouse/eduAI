@@ -68,7 +68,7 @@ export async function makeElement(input: { projectId: string; entryId: string; w
     }
     case "voice": {
       const voice = String(input.params?.voice ?? "af_heart");
-      const text = input.extra?.trim() || `Hi, I'm ${e.name.split(" ")[0]}. This is how I sound.`;
+      const nm = e.name.split(" ")[0]; const text = input.extra?.trim() || `Hi, I'm ${nm.charAt(0).toUpperCase()}${nm.slice(1).toLowerCase()}. This is how I sound.`;
       return go("voice", "voice", { text, voice, label: voice }, "dialogue");
     }
     case "room": {

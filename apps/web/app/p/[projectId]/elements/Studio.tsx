@@ -43,7 +43,7 @@ export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, result
   const [count, setCount] = useState(3);
   const [voice, setVoice] = useState(VOICES[0].id);
   const file = useRef<HTMLInputElement>(null);
-  const first = entry.name.split(" ")[0];
+  const first = entry.name.split(" ")[0].replace(/^(.)(.*)$/, (_, a: string, b: string) => a.toUpperCase() + b.toLowerCase());
   const choose = kind === "character" ? `This is ${first}` : kind === "location" ? "Set as master wide" : "Use this look";
 
   const act = (fn: () => Promise<{ ok: true } | { error: string } | { ok: true; tokens?: number | null }>, ok?: string) =>

@@ -53,17 +53,43 @@ async function framePieces(shotId: string) {
   return { s, intent, loc, people, props };
 }
 
+// The readiness check (eduai.shot_ready) asks for an objective, continuity and camera language. The
+// shot already knows all three: what the camera sees, who and where, and the framing + move.
+async function ensureReady(shotId: string) {
+  const p = await framePieces(shotId);
+  if (!p) return;
+  const it = p.intent as Intent & { objective?: string; continuity?: string; camera_language?: string };
+  if (it.objective && it.continuity && it.camera_language) return;
+  const supabase = await createClient();
+  const intent = {
+    ...it,
+    objective: it.objective || p.s.description || p.s.label,
+    continuity: it.continuity || [p.loc?.name, ...p.people.map((e) => e.name)].filter(Boolean).join("; ") || "as the scene",
+    camera_language: it.camera_language || [it.framing ?? "medium", it.camera_motion ?? "static"].join(", ").replace(/_/g, " "),
+  };
+  await supabase.from("shots").update({ intent: intent as Json }).eq("id", shotId);
+}
+
 export async function makeFrames(projectId: string, shotId: string, input: { extra?: string; count?: number }): Promise<R & { tokens?: number | null }> {
+  await ensureReady(shotId);
   const p = await framePieces(shotId);
   if (!p) return { error: "Shot not found." };
   const bg = p.intent.angle_asset_id ?? p.loc?.reference_asset_id ?? null;
-  const refs = [bg, ...p.people.map((e) => e.reference_asset_id)].filter((x): x is string => !!x).slice(0, 4);
-  const lead = LEAD[p.intent.framing ?? "medium"] ?? LEAD.medium;
+  const framing = p.intent.framing ?? "medium";
+  // Singles lead with the person (the model copies the first reference's composition); wides lead with the room.
+  const single = ["close", "medium", "over_shoulder", "insert"].includes(framing);
+  const faces = p.people.map((e) => e.reference_asset_id).filter((x): x is string => !!x);
+  const refs = (single ? [...faces, bg] : [bg, ...faces]).filter((x): x is string => !!x).slice(0, 4);
+  const lead = LEAD[framing] ?? LEAD.medium;
   const cast = p.people.map((e) => `${e.name}: ${e.appearance || "as in the reference"}`).join(". ");
+  const names = p.people.map((e) => e.name).join(" and ");
   const prompt = [
     `${lead}. ${p.s.description}`,
     cast && `People: ${cast}.`,
-    p.loc && `Place: ${p.loc.name}${p.loc.appearance ? `, ${p.loc.appearance}` : ""}; keep the room exactly as in the first reference.`,
+    names && `Only ${names} ${p.people.length > 1 ? "are" : "is"} in frame, each appearing once; no other people.`,
+    p.loc && (single
+      ? `Background: ${p.loc.name}, the same room as the location reference, softly out of focus behind them.`
+      : `Place: ${p.loc.name}${p.loc.appearance ? `, ${p.loc.appearance}` : ""}; keep the room exactly as in the first reference.`),
     p.props.length ? `Objects: ${p.props.map((e) => `${e.name}${e.appearance ? ` (${e.appearance})` : ""}`).join(", ")}.` : "",
     input.extra?.trim(),
     "Mouths closed, a still moment just before the action.",
@@ -94,6 +120,7 @@ export async function setEndFrame(projectId: string, shotId: string, takeId: str
 // performed with sound. The voices get converted to each character's voice once a take is chosen.
 export async function makeClip(projectId: string, shotId: string, input: { seconds: number; quality: "fast" | "finish"; takes: number; extra?: string }): Promise<R> {
   const supabase = await createClient();
+  await ensureReady(shotId);
   const p = await framePieces(shotId);
   if (!p) return { error: "Shot not found." };
   if (!p.s.plate_take_id) return { error: "Choose a frame first." };

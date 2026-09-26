@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { BreakdownT } from "@/lib/script/breakdown";
 import { applyBreakdown, runBreakdown, saveScript } from "./script/actions";
@@ -13,6 +13,9 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
   const router = useRouter();
   const [script, setScript] = useState(initial);
   const [dirty, setDirty] = useState(false);
+  // Other pages write into the script (and undo takes text out): follow the saved copy unless the
+  // student has unsaved typing here.
+  useEffect(() => { if (!dirty) setScript(initial); }, [initial, dirty]);
   const [b, setB] = useState<BreakdownT | null>(null);
   const [keep, setKeep] = useState<Record<string, boolean>>({});
   const [msg, setMsg] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
