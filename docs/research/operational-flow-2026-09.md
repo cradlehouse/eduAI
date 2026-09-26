@@ -98,3 +98,15 @@ name as the #1 cause of failure.
 + lighting/weather) → 4 Scenes & Shots (scene = location + lighting + cast; shot = description, camera,
 `@cast`, dialogue, still → takes; chosen take stored explicitly) → 5 Cut & Share. Gated but revisitable;
 changes to Cast/World propagate. No shipping tool enforces stages 2–3 before 4.
+
+## Addendum: LTX's own console (screens from Tim, 26 Sep)
+
+Tim signed up at LTX; the screens are the **developer playground / API console**, not LTX Studio. It is
+a tool-per-mode form layout (left: tools; middle: inputs; right: example; Generate button carries the
+price): Image to Video (start + end frame, prompt, model LTX-2.5 Pro, resolution, duration, fps; $1.00
+for 6 s 1080p ≈ 17¢/s, same as fal), Text to Video (+ aspect 16:9 / 9:16), **Audio to Video** (start
+image + prompt + audio file; ~$0.85), **Long Form Avatar** (start frame + "describe how they look and
+talk" + Script *or* Audio tab: a character speaking given lines), Extend Video, Video to HDR.
+Relevance: dialogue can stay inside the one LTX family (a character's still + their line → speaking
+clip), and Extend is available for continuity. fal also hosts LTX audio-to-video
+(https://fal.ai/models/fal-ai/ltx-2-19b/audio-to-video). Official API docs: https://docs.ltx.io/welcome
