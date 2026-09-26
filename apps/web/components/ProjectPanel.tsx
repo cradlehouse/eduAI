@@ -3,8 +3,9 @@ import { NavGroup, NavItem } from "./NavItem";
 import { TokenBar, TokenRing, type Budget } from "./TokenMeter";
 
 // The slide-out for a project: the cohort's projects (current one open) with the project's pages
-// underneath, the project's token meter, and below it whatever the layout adds (the bible rail).
-export function ProjectPanel({ nav, cohortId, projectId, budget, note, inline, children }: { nav: Nav; cohortId: string; projectId: string; budget?: Budget | null; note?: React.ReactNode; inline?: boolean; children?: React.ReactNode }) {
+// underneath as production stages (Script → Cast / Places / Props → Scenes), and the token meter.
+export type StageCounts = { script?: string; cast?: string; places?: string; props?: string; scenes?: string };
+export function ProjectPanel({ nav, cohortId, projectId, budget, note, inline, counts, children }: { nav: Nav; cohortId: string; projectId: string; budget?: Budget | null; note?: React.ReactNode; inline?: boolean; counts?: StageCounts; children?: React.ReactNode }) {
   const projects = nav.projectsByCohort[cohortId] ?? [];
   const cohort = nav.cohorts.find((c) => c.id === cohortId);
   return (
@@ -15,12 +16,15 @@ export function ProjectPanel({ nav, cohortId, projectId, budget, note, inline, c
           const cur = p.id === projectId;
           return (
             <div key={p.id}>
-              <NavItem href={`/p/${p.id}`} exact={cur} icon="Film">{p.title}</NavItem>
+              {cur ? <div className="flex items-center gap-2 px-3 py-1 text-sm text-ink"><span className="nav-label truncate font-medium">{p.title}</span></div> : <NavItem href={`/p/${p.id}`} icon="Film">{p.title}</NavItem>}
               {cur && (
                 <div>
-                  <NavItem href={`/p/${p.id}/scenes`} depth={1} icon="LayoutGrid">Scenes</NavItem>
-                  <NavItem href={`/p/${p.id}/bible`} depth={1} icon="BookOpen">Bible</NavItem>
-                  <NavItem href={`/p/${p.id}/members`} depth={1} icon="Users">Members</NavItem>
+                  <NavItem href={`/p/${p.id}`} exact depth={1} icon="BookOpen" mark={counts?.script}>Script</NavItem>
+                  <NavItem href={`/p/${p.id}/cast`} depth={1} icon="UserRound" mark={counts?.cast}>Cast</NavItem>
+                  <NavItem href={`/p/${p.id}/places`} depth={1} icon="Building2" mark={counts?.places}>Places</NavItem>
+                  <NavItem href={`/p/${p.id}/props`} depth={1} icon="KeyRound" mark={counts?.props}>Props</NavItem>
+                  <NavItem href={`/p/${p.id}/scenes`} depth={1} icon="LayoutGrid" mark={counts?.scenes}>Scenes</NavItem>
+                  <NavItem href={`/p/${p.id}/members`} depth={1} icon="Users">Crew</NavItem>
                 </div>
               )}
             </div>

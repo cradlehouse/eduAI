@@ -35,8 +35,17 @@ export async function generate(input: { projectId: string; shotId: string; profi
   const inputs = { ...input.inputs };
   const looks = (project.orgs?.looks ?? []) as { key: string; label: string; prompt: string }[];
   const look = looks.find((l) => l.key === project.look);
-  if (look && ["background", "character", "merged"].includes(input.layer) && typeof inputs.prompt === "string") {
-    inputs.prompt = `${look.prompt}. ${inputs.prompt}`;
+  // What the cut's place, cast and props look like, written once in the bible, leads every picture
+  // prompt so the same people and the same place come back shot after shot.
+  if (["background", "character", "merged"].includes(input.layer) && typeof inputs.prompt === "string") {
+    const { data: pins } = await supabase.from("shot_bible_entries").select("bible_entries(kind, name, appearance)").eq("shot_id", input.shotId);
+    const order = { location: 0, character: 1, prop: 2 } as Record<string, number>;
+    const described = (pins ?? []).map((r) => r.bible_entries).filter((e) => !!e && !!e.appearance).map((e) => e!)
+      .filter((e) => input.layer !== "background" || e.kind === "location")
+      .sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9))
+      .map((e) => `${e.name}: ${e.appearance}`);
+    if (described.length) inputs.prompt = `${inputs.prompt}\n${described.join(". ")}.`;
+    if (look) inputs.prompt = `${look.prompt}. ${inputs.prompt}`;
   }
   const { data: job, error } = await supabase.from("jobs").insert({
     org_id: project.org_id, cohort_id: project.cohort_id, requested_by: user.id,

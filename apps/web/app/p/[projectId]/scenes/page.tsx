@@ -23,7 +23,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
   const supabase = await createClient();
   const [{ data: project }, { data: scenes }, { data: shots }, { data: takeRows }, { data: jobs }, { data: entries }, { data: imageAssets }, nav, pdata] = await Promise.all([
     supabase.from("projects").select("look, cohort_id, orgs(looks)").eq("id", projectId).maybeSingle(),
-    supabase.from("scenes").select("id, position, title, synopsis").eq("project_id", projectId).order("position"),
+    supabase.from("scenes").select("id, position, title, synopsis, heading, time_of_day, location_entry_id").eq("project_id", projectId).order("position"),
     supabase.from("shots").select("id, scene_id, position, label, description, duration_target_s, intent, selected_take_id, plate_take_id").eq("project_id", projectId).order("position"),
     supabase.from("takes").select("id, shot_id, layer, asset_id, created_at, lifecycle, assets(mime, kind, duration_s)").eq("project_id", projectId).in("lifecycle", ["live", "killed"]).order("created_at"),
     supabase.from("job_tokens").select("job_id, shot_id, lane, layer, status, estimated_tokens, actual_tokens, created_at, error").eq("project_id", projectId).order("created_at", { ascending: false }).limit(200),
@@ -49,6 +49,9 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
   const manage = !!nav && (nav.isAdmin || (nav.cohorts.find((c) => c.id === project?.cohort_id)?.manage ?? false));
   const budget = pdata?.budget ? { spent: pdata.budget.spent_tokens ?? 0, total: pdata.budget.total_tokens ?? 0 } : { spent: 0, total: 0 };
 
+  const { data: sceneCast } = scene ? await supabase.from("scene_bible_entries").select("bible_entry_id").eq("scene_id", scene.id) : { data: [] as { bible_entry_id: string }[] };
+  const sceneLocation = (entries ?? []).find((e) => e.id === scene?.location_entry_id) ?? null;
+  const sceneMembers = (entries ?? []).filter((e) => (sceneCast ?? []).some((c) => c.bible_entry_id === e.id));
   const shotIds = allShots.map((s) => s.id);
   const { data: linkRows } = shotIds.length
     ? await supabase.from("shot_bible_entries").select("shot_id, bible_entry_id, bible_entries(name, kind, requires_consent)").in("shot_id", shotIds)
@@ -86,7 +89,17 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
       <JobWatcher active={busy} />
       {/* header: scene title, scene switch, budget, look, view */}
       <div className="flex flex-wrap items-center gap-4">
-        <h1 className="text-[22px]">{scene ? <>Scene {scene.position} <span className="ml-2 text-[13px] text-dim">{scene.title}</span></> : "Scenes"}</h1>
+        <div>
+          <h1 className="text-[22px]">{scene ? <>Scene {scene.position} <span className="ml-2 text-[13px] text-dim">{scene.heading || scene.title}</span></> : "Scenes"}</h1>
+          {scene && (
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
+              {sceneLocation ? <Link href={`/p/${projectId}/bible/${sceneLocation.id}`} className="pill pinned">{sceneLocation.name}</Link>
+                : <Link href={`/p/${projectId}/places`} className="pill border-dashed text-gold">set a place for this scene</Link>}
+              {scene.time_of_day && <span className="pill text-dim">{scene.time_of_day}</span>}
+              {sceneMembers.map((m) => <Link key={m.id} href={`/p/${projectId}/bible/${m.id}`} className="pill text-dim">{m.name}</Link>)}
+            </div>
+          )}
+        </div>
         {sceneList.length > 1 && (
           <div className="flex flex-wrap gap-1">
             {sceneList.map((sc) => { const first = allShots.find((s) => s.scene_id === sc.id); const href = view === "list" ? `/p/${projectId}/scenes?view=list&scene=${sc.id}` : first ? cutHref(first.id) : `/p/${projectId}/scenes?scene=${sc.id}`;

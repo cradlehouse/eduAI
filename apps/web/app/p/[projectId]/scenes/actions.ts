@@ -74,8 +74,15 @@ export async function createShot(formData: FormData) {
     duration_target_s: dur ? Number(dur) : null,
   }).select("id").single();
   if (error) go(projectId, "scenes", { error: error.message });
+  // A cut starts with its scene's place, cast and props; the student can pin more per cut.
+  const [{ data: sc }, { data: links }] = await Promise.all([
+    supabase.from("scenes").select("location_entry_id").eq("id", sceneId).maybeSingle(),
+    supabase.from("scene_bible_entries").select("bible_entry_id").eq("scene_id", sceneId),
+  ]);
+  const inherit = [sc?.location_entry_id, ...(links ?? []).map((l) => l.bible_entry_id)].filter((x): x is string => !!x);
+  if (inherit.length) await supabase.from("shot_bible_entries").insert(inherit.map((id) => ({ org_id: orgId!, shot_id: row!.id, bible_entry_id: id })));
   revalidatePath(`/p/${projectId}/scenes`);
-  go(projectId, `shots/${row!.id}`);
+  goCut(projectId, row!.id);
 }
 
 export async function updateShot(formData: FormData) {

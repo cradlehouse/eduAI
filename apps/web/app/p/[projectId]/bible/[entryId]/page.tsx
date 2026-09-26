@@ -26,7 +26,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
   const supabase = await createClient();
   const [{ data: e }, { data: row }, { data: rows }, { data: releases }, { data: manage }, { data: jobs }, { data: pins }, ...opts] = await Promise.all([
     supabase.from("bible_entry_status").select("*").eq("id", entryId).maybeSingle(),
-    supabase.from("bible_entries").select("fixed, forked_from, description").eq("id", entryId).maybeSingle(),
+    supabase.from("bible_entries").select("fixed, forked_from, description, appearance").eq("id", entryId).maybeSingle(),
     supabase.from("bible_entry_assets").select("id, asset_id, role, label, params, position, lifecycle, job_id, created_at, assets(width, height)").eq("bible_entry_id", entryId).order("position"),
     supabase.from("consent_releases").select("*").eq("bible_entry_id", entryId).order("created_at", { ascending: false }),
     supabase.rpc("my_landing"),
@@ -74,7 +74,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
         <h1 className="text-[22px]">{e.name} <span className="ml-2 text-[13px] text-dim">{e.kind === "location" ? "environment" : e.kind}</span></h1>
         {e.requires_consent && <BibleChip state={e.consent_state} />}
         {row?.forked_from && <Link href={`/p/${projectId}/bible/${row.forked_from}`} className="text-[11px] text-mute underline">forked from an earlier version</Link>}
-        <Link href={`/p/${projectId}/bible`} className="ml-auto text-[11px] text-mute hover:text-dim">← Bible</Link>
+        <Link href={`/p/${projectId}/${e.kind === "location" ? "places" : e.kind === "prop" ? "props" : "cast"}`} className="ml-auto text-[11px] text-mute hover:text-dim">← {e.kind === "location" ? "Places" : e.kind === "prop" ? "Props" : "Cast"}</Link>
       </div>
       {ok && <p className="rounded-[6px] bg-ok/10 px-3 py-2 text-[12px] text-ok">{ok}</p>}
       {error && <p className="rounded-[6px] bg-drift/10 px-3 py-2 text-[12px] text-drift">{error}</p>}
@@ -149,6 +149,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
               </>
             )}
             <label className="label">Name<input name="name" defaultValue={e.name ?? ""} required className={`${input} mt-0.5 w-full`} /></label>
+            <label className="label">What {e.kind === "character" ? "they look" : "it looks"} like <span className="text-mute">(used in every shot)</span><textarea name="appearance" rows={2} defaultValue={row?.appearance ?? ""} className={`${input} mt-0.5 w-full ${row?.appearance ? "" : "border-gold"}`} placeholder={e.kind === "character" ? "woman, 30s, long straight dark hair, round glasses, grey wool coat" : "empty brick warehouse, one high window, concrete floor, dusk light"} /></label>
             <label className="label">{e.kind === "location" ? "What it is" : e.kind === "character" ? "Who they are" : "Description"}<textarea name="description" rows={3} defaultValue={e.description ?? ""} className={`${input} mt-0.5 w-full`} placeholder={e.kind === "location" ? "Regional bus depot after last departure. Wet concrete, one working vending machine, bays 1–6 empty." : e.kind === "character" ? "19, tired, moves fast. Grey hoodie, red duffel bag, scar on left eyebrow." : ""} /></label>
             {e.kind !== "location" && <label className="label">Likeness or voice of (real person)<input name="likeness_of" defaultValue={e.likeness_of ?? ""} className={`${input} mt-0.5 w-full`} /></label>}
             <label className="flex items-center gap-2 text-[11px] text-dim"><input type="checkbox" name="requires_consent" defaultChecked={!!e.requires_consent} /> Requires consent</label>
@@ -158,7 +159,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
           </form>
           <form action={deleteEntry} className="-mt-2 self-end"><input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="entry_id" value={entryId} /><button className={`${btn} text-drift`}>Delete entry</button></form>
 
-          <EntryStudio projectId={projectId} entryId={entryId} kind={e.kind ?? ""} masterAssetId={e.reference_asset_id ?? null} refAssetIds={refIds} options={options} entryName={e.name ?? ""} fixed={fixed} />
+          <EntryStudio projectId={projectId} entryId={entryId} kind={e.kind ?? ""} masterAssetId={e.reference_asset_id ?? null} refAssetIds={refIds} options={options} entryName={e.name ?? ""} fixed={fixed} appearance={row?.appearance ?? ""} />
 
           {tests.length > 0 && (
             <div className="glass rounded-[10px] p-3">

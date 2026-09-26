@@ -11,9 +11,9 @@ type Option = Database["public"]["Functions"]["model_options"]["Returns"][number
 // The "+ angle" / "test it" / "+ reference" generator on a bible entry (docs/DESIGN.md §4.1–4.2).
 // Environments: an angle is made FROM the master with the angles route (turn / height / distance).
 // Any entry: a test still from a prompt + the entry's own references with the edit route.
-export function EntryStudio({ projectId, entryId, kind, masterAssetId, refAssetIds, options, entryName, fixed }: {
+export function EntryStudio({ projectId, entryId, kind, masterAssetId, refAssetIds, options, entryName, fixed, appearance = "" }: {
   projectId: string; entryId: string; kind: string; masterAssetId: string | null; refAssetIds: string[];
-  options: Record<Lane, Option[]>; entryName: string; fixed: Record<string, string>;
+  options: Record<Lane, Option[]>; entryName: string; fixed: Record<string, string>; appearance?: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -44,7 +44,7 @@ export function EntryStudio({ projectId, entryId, kind, masterAssetId, refAssetI
   const angleInputs = useMemo(() => ({ image: masterAssetId, horizontal_angle: turn, vertical_angle: height, zoom, additional_prompt: note || undefined, image_size: "landscape_16_9", num_images: 1 }), [masterAssetId, turn, height, zoom, note]);
   const refs = useMemo(() => [masterAssetId, ...refAssetIds].filter((x): x is string => !!x).slice(0, 9), [masterAssetId, refAssetIds]);
   const fixedLine = ["time", "light", "weather", "occupancy"].map((k) => fixed[k]).filter(Boolean).join(", ");
-  const testInputs = useMemo(() => ({ prompt: [entryName, fixedLine, testPrompt].filter(Boolean).join(". "), references: refs, image_size: "landscape_16_9" }), [entryName, fixedLine, testPrompt, refs]);
+  const testInputs = useMemo(() => ({ prompt: [appearance || entryName, fixedLine, testPrompt].filter(Boolean).join(". "), references: refs, image_size: "landscape_16_9" }), [appearance, entryName, fixedLine, testPrompt, refs]);
 
   useEffect(() => {
     const supabase = createClient();

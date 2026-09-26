@@ -223,6 +223,7 @@ export type Database = {
       }
       bible_entries: {
         Row: {
+          appearance: string
           created_at: string
           created_by: string | null
           description: string
@@ -236,9 +237,11 @@ export type Database = {
           project_id: string
           reference_asset_id: string | null
           requires_consent: boolean
+          source: string
           updated_at: string
         }
         Insert: {
+          appearance?: string
           created_at?: string
           created_by?: string | null
           description?: string
@@ -252,9 +255,11 @@ export type Database = {
           project_id: string
           reference_asset_id?: string | null
           requires_consent?: boolean
+          source?: string
           updated_at?: string
         }
         Update: {
+          appearance?: string
           created_at?: string
           created_by?: string | null
           description?: string
@@ -268,6 +273,7 @@ export type Database = {
           project_id?: string
           reference_asset_id?: string | null
           requires_consent?: boolean
+          source?: string
           updated_at?: string
         }
         Relationships: [
@@ -2001,6 +2007,8 @@ export type Database = {
           org_id: string
           requires_approval: boolean
           roles_needed: string[]
+          script: string
+          script_updated_at: string | null
           slug: string
           status: Database["public"]["Enums"]["project_status"]
           title: string
@@ -2016,6 +2024,8 @@ export type Database = {
           org_id: string
           requires_approval?: boolean
           roles_needed?: string[]
+          script?: string
+          script_updated_at?: string | null
           slug: string
           status?: Database["public"]["Enums"]["project_status"]
           title: string
@@ -2031,6 +2041,8 @@ export type Database = {
           org_id?: string
           requires_approval?: boolean
           roles_needed?: string[]
+          script?: string
+          script_updated_at?: string | null
           slug?: string
           status?: Database["public"]["Enums"]["project_status"]
           title?: string
@@ -2166,38 +2178,107 @@ export type Database = {
           },
         ]
       }
+      scene_bible_entries: {
+        Row: {
+          bible_entry_id: string
+          created_at: string
+          org_id: string
+          scene_id: string
+        }
+        Insert: {
+          bible_entry_id: string
+          created_at?: string
+          org_id: string
+          scene_id: string
+        }
+        Update: {
+          bible_entry_id?: string
+          created_at?: string
+          org_id?: string
+          scene_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scene_bible_entries_org_id_bible_entry_id_fkey"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entries"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "scene_bible_entries_org_id_bible_entry_id_fkey"
+            columns: ["org_id", "bible_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entry_status"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "scene_bible_entries_org_id_scene_id_fkey"
+            columns: ["org_id", "scene_id"]
+            isOneToOne: false
+            referencedRelation: "scenes"
+            referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
       scenes: {
         Row: {
           created_at: string
+          heading: string
           id: string
+          location_entry_id: string | null
           org_id: string
           position: number
           project_id: string
+          script_excerpt: string
           synopsis: string
+          time_of_day: string
           title: string
           updated_at: string
         }
         Insert: {
           created_at?: string
+          heading?: string
           id?: string
+          location_entry_id?: string | null
           org_id: string
           position: number
           project_id: string
+          script_excerpt?: string
           synopsis?: string
+          time_of_day?: string
           title: string
           updated_at?: string
         }
         Update: {
           created_at?: string
+          heading?: string
           id?: string
+          location_entry_id?: string | null
           org_id?: string
           position?: number
           project_id?: string
+          script_excerpt?: string
           synopsis?: string
+          time_of_day?: string
           title?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "scenes_location_fk"
+            columns: ["org_id", "location_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entries"
+            referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "scenes_location_fk"
+            columns: ["org_id", "location_entry_id"]
+            isOneToOne: false
+            referencedRelation: "bible_entry_status"
+            referencedColumns: ["org_id", "id"]
+          },
           {
             foreignKeyName: "scenes_org_id_fkey"
             columns: ["org_id"]

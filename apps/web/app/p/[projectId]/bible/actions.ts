@@ -14,7 +14,7 @@ const KINDS: BibleKind[] = ["character", "location", "prop", "style", "voice"];
 const LANES: Lane[] = ["explore", "control", "finish", "voice_likeness"];
 const back = (projectId: string, entryId?: string, msg?: { ok?: string; error?: string }) => {
   const q = msg?.ok ? `?ok=${encodeURIComponent(msg.ok)}` : msg?.error ? `?error=${encodeURIComponent(msg.error)}` : "";
-  redirect(`/p/${projectId}/bible${entryId ? `/${entryId}` : ""}${q}`);
+  redirect(`/p/${projectId}/${entryId ? `bible/${entryId}` : "cast"}${q}`);
 };
 
 export async function createEntry(formData: FormData) {
@@ -33,6 +33,7 @@ export async function createEntry(formData: FormData) {
   const { data: row, error } = await supabase.from("bible_entries").insert({
     org_id: project!.org_id, project_id: projectId, kind, name,
     description: String(formData.get("description") ?? "").trim(),
+    appearance: String(formData.get("appearance") ?? "").trim(),
     likeness_of: likeness, requires_consent: !!likeness || formData.get("requires_consent") === "on",
     created_by: user!.id,
   }).select("id").single();
@@ -52,6 +53,7 @@ export async function updateEntry(formData: FormData) {
     likeness_of: likeness,
     requires_consent: !!likeness || formData.get("requires_consent") === "on",
   };
+  if (formData.has("appearance")) patch.appearance = String(formData.get("appearance") ?? "").trim();
   const file = formData.get("reference") as File | null;
   if (file && file.size > 0) {
     const r = await storeUpload(file, projectId, "image");
