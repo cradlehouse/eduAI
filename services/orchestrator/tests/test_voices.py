@@ -64,3 +64,15 @@ def test_settle_tracks_placeholders_match_values():
         if depth == 0:
             break
     assert sql.count("%s") == args
+
+
+def test_mix_places_loops_and_clips():
+    from orchestrator.voices import mix
+    rate = 100
+    voice = array("h", [20000] * 50)
+    room = array("h", [20000] * 30)
+    out = _samples(mix(2.0, [(voice, 0.5, 1.0, 1.0, False), (room, 0.0, 2.0, 0.5, True)], rate=rate))
+    assert len(out) == 200
+    assert out[10] == 10000            # room only
+    assert out[60] == 30000            # voice + room
+    assert out[120] == 10000           # voice ended after its 50 samples; room loops on

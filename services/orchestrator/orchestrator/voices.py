@@ -65,6 +65,61 @@ def extract_wav(video: bytes) -> bytes:
     return buf.getvalue()
 
 
+MIX_RATE = 48000
+
+
+def decode_pcm(data: bytes, rate: int = MIX_RATE) -> array:
+    """Any audio or video file's sound as mono 16-bit samples at `rate` (PyAV)."""
+    import av
+
+    out = array("h")
+    with av.open(io.BytesIO(data)) as c:
+        stream = next((s for s in c.streams if s.type == "audio"), None)
+        if stream is None:
+            return out
+        res = av.AudioResampler(format="s16", layout="mono", rate=rate)
+        for frame in c.decode(stream):
+            for f in res.resample(frame):
+                out.frombytes(bytes(f.planes[0])[: f.samples * 2])
+        for f in res.resample(None):
+            out.frombytes(bytes(f.planes[0])[: f.samples * 2])
+    return out
+
+
+def media_seconds(data: bytes) -> float:
+    import av
+
+    with av.open(io.BytesIO(data)) as c:
+        if c.duration:
+            return c.duration / 1_000_000
+        v = next((s for s in c.streams if s.type == "video"), None)
+        return float(v.duration * v.time_base) if v and v.duration else 0.0
+
+
+def mix(total_s: float, layers: list[tuple[array, float, float, float, bool]], rate: int = MIX_RATE) -> bytes:
+    """layers: (samples, start_s, length_s, gain, loop). Each is laid at start for length (looped if asked,
+    else cut), scaled by gain, summed and clipped. Returns a 16-bit mono WAV."""
+    n = int(total_s * rate)
+    acc = [0] * n
+    for samples, start, length, gain, loop in layers:
+        if not samples or gain <= 0:
+            continue
+        a, m = int(start * rate), int(length * rate)
+        for i in range(min(m, n - a)):
+            j = i % len(samples) if loop else i
+            if j >= len(samples):
+                break
+            acc[a + i] += int(samples[j] * gain)
+    out = array("h", (max(-32768, min(32767, x)) for x in acc))
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(out.tobytes())
+    return buf.getvalue()
+
+
 def keep_only(wav_bytes: bytes, spans: list[tuple[float, float]], pad: float = PAD_S) -> bytes:
     """Silence everything outside the spans (seconds). Works on 16-bit PCM of any channel count."""
     with wave.open(io.BytesIO(wav_bytes)) as r:

@@ -21,7 +21,7 @@ from .registry import Route, asset_kind_for, ext_for, extract_outputs, map_input
 from .settings import Settings
 from .settings import settings as default_settings
 from .storage import Storage, asset_key
-from .voices import ESTIMATE_CENTS, Fal, Track, extract_wav, split_voices
+from .voices import ESTIMATE_CENTS, Fal, Track, decode_pcm, extract_wav, media_seconds, mix, split_voices
 
 log = logging.getLogger("orchestrator")
 
@@ -228,50 +228,61 @@ class Dispatcher:
             await self.db.release(jid, "failed", f"voice split: {type(e).__name__}: {e}")
 
     async def run_export(self, job: dict[str, Any]) -> None:
-        """The edit → one file: picture, each clip's voice tracks and room tone, laid by timestamp (fal ffmpeg compose)."""
+        """The edit → one file. Picture: the chosen takes end to end (fal ffmpeg compose, video only).
+        Sound: mixed here, sample-accurate: each character's voice track at its shot, the picture's own
+        sound where a take wasn't split, the location's room tone under each shot, at the Edit levels."""
         jid, org = str(job["id"]), str(job["org_id"])
-        clips: list[dict[str, Any]] = (job.get("inputs") or {}).get("clips") or []
+        inputs: dict[str, Any] = job.get("inputs") or {}
+        clips: list[dict[str, Any]] = inputs.get("clips") or []
+        levels: dict[str, float] = {k: float(v) for k, v in (inputs.get("levels") or {}).items()}
         try:
             if not clips:
                 raise ValueError("nothing to export")
             if not await self.db.reserve(jid, 1 + len(clips) // 10):
                 await self.db.release(jid, "rejected", "not enough budget to export")
                 return
-            key = self.platform_key("fal")
-            fal = Fal(key)
+            fal = Fal(self.platform_key("fal"))
 
-            async def url(asset_id: str) -> str:
+            async def fetch(asset_id: str) -> tuple[str, bytes]:
                 k = await self.db.asset_key(org, asset_id)
                 if not k:
                     raise ValueError(f"asset {asset_id} missing")
-                return await self.storage.presigned_get(k, self.cfg.asset_url_ttl_s)
+                url = await self.storage.presigned_get(k, self.cfg.asset_url_ttl_s)
+                return url, await fal.get(url)
 
-            picture, voices, room, t = [], [], [], 0
+            picture, layers, t = [], [], 0.0
+            room_cache: dict[str, Any] = {}
             for c in clips:
-                ms = int(float(c.get("seconds") or 6) * 1000)
-                picture.append({"timestamp": t, "duration": ms, "url": await url(c["video"])})
-                for v in c.get("voices") or []:
-                    voices.append({"timestamp": t, "duration": ms, "url": await url(v)})
+                vurl, vdata = await fetch(c["video"])
+                secs = media_seconds(vdata) or float(c.get("seconds") or 6)
+                picture.append({"timestamp": int(t * 1000), "duration": int(secs * 1000), "url": vurl})
+                if c.get("voices"):
+                    for v in c["voices"]:
+                        layers.append((decode_pcm((await fetch(v))[1]), t, secs, levels.get("voice", 1.0), False))
+                else:
+                    layers.append((decode_pcm(vdata), t, secs, levels.get("picture", 1.0), False))
                 if c.get("room"):
-                    room.append({"timestamp": t, "duration": ms, "url": await url(c["room"])})
-                t += ms
-            tracks = [{"id": "picture", "type": "video", "keyframes": picture}]
-            if voices:
-                tracks.append({"id": "voices", "type": "audio", "keyframes": voices})
-            if room:
-                tracks.append({"id": "room", "type": "audio", "keyframes": room})
-            await self.db.event(jid, "submitted", {"op": "export", "clips": len(clips), "tracks": [x["id"] for x in tracks]})
-            out = await fal.run("fal-ai/ffmpeg-api/compose", {"tracks": tracks}, timeout_s=900)
-            data = await fal.get(out["video_url"])
+                    if c["room"] not in room_cache:
+                        room_cache[c["room"]] = decode_pcm((await fetch(c["room"]))[1])
+                    layers.append((room_cache[c["room"]], t, secs, levels.get("room", 0.5), True))
+                t += secs
+            await self.db.event(jid, "submitted", {"op": "export", "clips": len(clips), "seconds": round(t, 2)})
+            comp = await fal.run("fal-ai/ffmpeg-api/compose", {"tracks": [{"id": "picture", "type": "video", "keyframes": picture}]}, timeout_s=900)
+            sound = mix(t, layers)
+            skey = asset_key(org, hashlib.sha256(sound).hexdigest(), "wav")
+            await self.storage.put_if_absent(skey, sound, "audio/wav")
+            sound_url = await self.storage.presigned_get(skey, self.cfg.asset_url_ttl_s)
+            merged = await fal.run("fal-ai/ffmpeg-api/merge-audio-video", {"video_url": comp["video_url"], "audio_url": sound_url}, timeout_s=900)
+            data = await fal.get(merged["video"]["url"])
             sha = hashlib.sha256(data).hexdigest()
             r2 = asset_key(org, sha, "mp4")
             await self.storage.put_if_absent(r2, data, "video/mp4")
             stored = StoredOutput(sha256=sha, r2_key=r2, mime="video/mp4", bytes=len(data), kind="video",
-                                  provenance={"source": "rendered", "op": "export", "job_id": jid, "clips": len(clips)})
+                                  provenance={"source": "rendered", "op": "export", "job_id": jid, "clips": len(clips), "seconds": round(t, 2)})
             receipt = {"actual_cents": None, "output_hashes": [sha], "policy_decisions": {"prompt_gate": "not_run", "reason": "export of approved takes"},
-                       "provenance": {"op": "export", "tracks": [x["id"] for x in tracks]}, "resource_estimate": {"basis": "undisclosed"}}
+                       "provenance": {"op": "export", "seconds": round(t, 2), "levels": levels}, "resource_estimate": {"basis": "undisclosed"}}
             await self.db.settle_tracks(job, None, [(stored, None)], receipt)
-            log.info("job %s: exported %d clip(s)", jid, len(clips))
+            log.info("job %s: exported %d clip(s), %.1fs", jid, len(clips), t)
         except Exception as e:  # noqa: BLE001
             log.exception("job %s: export failed", jid)
             await self.db.release(jid, "failed", f"export: {type(e).__name__}: {e}")
