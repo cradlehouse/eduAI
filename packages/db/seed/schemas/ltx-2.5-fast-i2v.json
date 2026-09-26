@@ -1,0 +1,15 @@
+{
+  "input_schema": {
+    "type": "object",
+    "required": ["prompt", "image"],
+    "properties": {
+      "prompt": { "type": "string", "maxLength": 2000, "x-ui": { "widget": "textarea" } },
+      "image": { "type": "string", "format": "asset-ref", "title": "start frame", "x-ui": { "widget": "asset", "accept": "image" } },
+      "end_image": { "type": "string", "format": "asset-ref", "title": "end frame", "x-ui": { "widget": "asset", "accept": "image" } },
+      "duration_s": { "type": "integer", "enum": [6, 8, 10, 12, 14, 16, 18, 20], "default": 6 },
+      "camera_motion": { "type": "string", "enum": ["static", "dolly_in", "dolly_out", "dolly_left", "dolly_right", "jib_up", "jib_down", "focus_shift"], "x-ui": { "widget": "camera-motion" } },
+      "generate_audio": { "type": "boolean", "default": true }
+    }
+  },
+  "safety": { "output_moderation": false, "prompt_gate": "required" }
+}

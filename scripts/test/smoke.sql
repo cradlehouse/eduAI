@@ -57,7 +57,7 @@ declare r record; demo uuid := '00000000-0000-4000-8000-000000000001'; stu uuid 
   veo uuid := (select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2');
   flux uuid := (select id from public.deployment_profiles where slug = 'flux-2-dev@fal');
 begin
-  assert (select count(*) from public.deployment_profiles where approval_status = 'approved') = 6, 'six approved profiles: four Phase 1 routes + two still routes';
+  assert (select count(*) from public.deployment_profiles where approval_status = 'approved') = 12, 'twelve approved profiles: four Phase 1 routes, two still routes, six open-model routes';
   assert (select count(*) from public.deployment_profiles where kind = 'self_hosted' and compute_provider = 'crusoe' and approval_status = 'draft') = 1, 'crusoe draft profile';
   assert (select resource_disclosure from public.model_versions where slug = 'kling-3') = 'C', 'closed vendor = C';
   assert (select count(*) from public.model_versions where resource_disclosure = 'A') = 0, 'nobody is tier A yet';
@@ -268,7 +268,7 @@ begin
   assert (select count(*) from public.job_receipts) = 0, 'outsider sees no demo receipts';
   assert (select count(*) from public.job_events where org_id = '00000000-0000-4000-8000-000000000001') = 0, 'outsider sees no demo events';
   assert (select count(*) from public.ledger) = 0, 'outsider sees no demo ledger';
-  assert (select count(*) from public.deployment_profiles) = 13, 'registry readable';
+  assert (select count(*) from public.deployment_profiles) = 19, 'registry readable';
   assert (select count(*) from public.org_model_profiles) = 1, 'sees own org allowlist only';
   assert (select count(*) from public.consent_releases) = 0, 'sees no demo releases';
   begin
@@ -312,8 +312,8 @@ begin
   assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'ltx-2.5-fast@fal'), '{"duration_s":5}') = 450, 'ltx estimate';
   assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'veo-3.1-lite@fal-r2'), '{"duration_s":8}') = 400, 'veo estimate';
   assert public.estimate_tokens((select id from public.deployment_profiles where slug = 'stable-audio-2.5@fal'), '{}') = 200, 'sfx estimate';
-  assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore')) = 10, 'model_options lists every profile';
-  assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where allowed) = 4, 'explore: ltx + sfx + two still routes allowed';
+  assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore')) = 16, 'model_options lists every profile';
+  assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where allowed) = 9, 'explore: ltx + sfx + two still routes + five open-model explore routes allowed';
   assert (select reason from public.model_options('00000000-0000-4000-8000-000000000030', 'explore') where profile_slug = 'veo-3.1-lite@fal-r2') = 'lane_not_supported', 'veo not an explore route';
   assert (select count(*) from public.model_options('00000000-0000-4000-8000-000000000031', 'explore')) = 0, 'no options for a project I cannot access';
   assert (select missing from public.shot_ready_for('40000000-0000-4000-8000-000000000001', 'finish')) = '{consent}', 'shot_ready_for finish blocked by consent';

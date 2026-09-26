@@ -7,3 +7,8 @@ chatterbox,Chatterbox,text_to_speech,Scratch dialogue and permitted voice work. 
 stable-audio,Stable Audio,sound_effects,Foley, ambience and sound-design iterations. Licensed training data.
 flux-edit,FLUX edit,image_edit,Keyframes from references: the character sheet and the set angle go in, the still for a cut comes out. The in-class loop.
 qwen-angles,Qwen angles,image_edit,New camera angles of an existing still. Trained on 3D renders; turns a master wide into a set board. Reverse angles still invent the unseen wall.
+qwen-image,Qwen-Image,text_to_image,Open-weight stills: cast portraits and location wides from a description. Apache 2.0; can run on our own GPUs.
+qwen-edit,Qwen-Image edit,image_edit,Open-weight keyframes from references: the cast look and the location angle go in, the frame for a shot comes out.
+ltx-i2v,LTX from a frame,image_to_video,A shot's clip from its chosen frame: camera move, optional end frame, sound made with the picture. Open weights.
+kokoro,Kokoro,text_to_speech,Stock voices for the Cast voice tab. No real person's voice. Apache 2.0.
+stable-audio-open,Stable Audio Open,sound_effects,Room tone and effects from open weights. One bed per location, laid under every shot there.

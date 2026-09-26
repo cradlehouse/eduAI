@@ -1,0 +1,11 @@
+{
+  "input_schema": {
+    "type": "object",
+    "required": ["prompt"],
+    "properties": {
+      "prompt": { "type": "string", "maxLength": 1000, "x-ui": { "widget": "textarea" } },
+      "duration_s": { "type": "integer", "minimum": 5, "maximum": 47, "default": 30 }
+    }
+  },
+  "safety": { "output_moderation": false, "prompt_gate": "required" }
+}

@@ -1,0 +1,13 @@
+{
+  "input_schema": {
+    "type": "object",
+    "required": ["prompt"],
+    "properties": {
+      "prompt": { "type": "string", "maxLength": 2000, "x-ui": { "widget": "textarea" } },
+      "image_size": { "type": "string", "enum": ["landscape_16_9", "portrait_4_3", "square_hd", "landscape_4_3"], "default": "landscape_16_9", "title": "frame" },
+      "num_images": { "type": "integer", "minimum": 1, "maximum": 4, "default": 1 },
+      "seed": { "type": "integer", "minimum": 0, "maximum": 2147483647 }
+    }
+  },
+  "safety": { "output_moderation": false, "prompt_gate": "required" }
+}

@@ -1,0 +1,7 @@
+{
+  "cost_model": { "kind": "per_1k_chars", "cents": 2, "text_field": "text", "verified": true, "verified_on": "2026-09-26", "basis": "$0.02 per 1000 characters", "source": "https://fal.ai/models/fal-ai/kokoro/american-english" },
+  "retention": { "vendor_retains_inputs": false, "vendor_retention_days": 0, "platform_input_days": 90, "platform_output_days": 365 },
+  "energy_profile": { "grid": "unknown", "region": "us", "claim": "fal.ai does not publish data-centre energy sourcing.", "verifiable": false, "source": "" },
+  "resource_model": { "basis": "undisclosed" },
+  "adapter": { "input_map": { "text": "prompt" }, "outputs": ["audio"], "verified": true }
+}

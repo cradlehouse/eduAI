@@ -1,0 +1,12 @@
+{
+  "input_schema": {
+    "type": "object",
+    "required": ["text", "voice"],
+    "properties": {
+      "text": { "type": "string", "maxLength": 1000, "x-ui": { "widget": "textarea" } },
+      "voice": { "type": "string", "enum": ["af_heart", "af_alloy", "af_aoede", "af_bella", "af_jessica", "af_kore", "af_nicole", "af_nova", "af_river", "af_sarah", "af_sky", "am_adam", "am_echo", "am_eric", "am_fenrir", "am_liam", "am_michael", "am_onyx", "am_puck"] },
+      "speed": { "type": "number", "minimum": 0.5, "maximum": 1.5, "default": 1 }
+    }
+  },
+  "safety": { "output_moderation": false, "prompt_gate": "required" }
+}
