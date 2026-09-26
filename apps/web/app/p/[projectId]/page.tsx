@@ -19,9 +19,9 @@ export default async function ProjectHome({ params }: { params: Promise<{ projec
   const chosen = (shots ?? []).filter((s) => s.selected_take_id).length;
   const hasScript = !!project?.script?.trim();
   const next = !hasScript ? "Write or paste the script, then break it down."
-    : count("character") + count("location") === 0 ? "Break the script down to find the cast and the places."
-    : unlooked > 0 ? `${unlooked} character${unlooked === 1 ? "" : "s"} or place${unlooked === 1 ? "" : "s"} still need a description of how they look.`
-    : unbuilt > 0 ? `${unbuilt} place${unbuilt === 1 ? "" : "s"} still need a master wide.`
+    : count("character") + count("location") === 0 ? "Break the script down to find the cast and the locations."
+    : unlooked > 0 ? `${unlooked} character${unlooked === 1 ? "" : "s"} or location${unlooked === 1 ? "" : "s"} still need a description of how they look.`
+    : unbuilt > 0 ? `${unbuilt} location${unbuilt === 1 ? "" : "s"} still need a master wide.`
     : "Shoot scene by scene.";
   const stage = (href: string, label: string, detail: string) => (
     <Link href={href} className="glass flex min-w-[130px] flex-1 flex-col rounded-[10px] px-3 py-2 hover:border-card-edge">
@@ -38,7 +38,7 @@ export default async function ProjectHome({ params }: { params: Promise<{ projec
       <div className="flex flex-wrap gap-2">
         {stage(`/p/${projectId}`, "1 · Script", hasScript ? "written" : "not started")}
         {stage(`/p/${projectId}/cast`, "2 · Cast", `${count("character")} characters`)}
-        {stage(`/p/${projectId}/places`, "3 · Places", `${count("location")} places`)}
+        {stage(`/p/${projectId}/locations`, "3 · Locations", `${count("location")} locations`)}
         {stage(`/p/${projectId}/props`, "Props", `${count("prop")} props`)}
         {stage(`/p/${projectId}/scenes`, "4 · Scenes", `${(scenes ?? []).length} scenes · ${chosen}/${(shots ?? []).length} cuts chosen`)}
       </div>

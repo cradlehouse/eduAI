@@ -7,7 +7,7 @@ import { applyBreakdown, runBreakdown, saveScript } from "./script/actions";
 type Existing = { kind: string; name: string };
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
-// The script, and its breakdown. Paste or write the script; "Break it down" asks for the cast, places,
+// The script, and its breakdown. Paste or write the script; "Break it down" asks for the cast, locations,
 // props and scenes; the student edits what came back (especially how each character looks) and keeps it.
 export function ScriptStudio({ projectId, initial, existing, canEdit }: { projectId: string; initial: string; existing: Existing[]; canEdit: boolean }) {
   const router = useRouter();
@@ -48,7 +48,7 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
       const r = await applyBreakdown(projectId, kept);
       setPhase("idle");
       if ("error" in r) { setMsg({ kind: "error", text: r.error }); return; }
-      setMsg({ kind: "ok", text: `${r.summary} Next: give every character a look and every place a master wide.` });
+      setMsg({ kind: "ok", text: `${r.summary} Next: give every character a look and every location a master wide.` });
       setB(null); router.refresh();
     });
   }
@@ -79,7 +79,7 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
             <button type="button" onClick={breakdown} disabled={pending || script.trim().length < 40} className="btn-primary disabled:opacity-40">
               {phase === "reading" ? "Reading the script…" : "Break it down"}
             </button>
-            <span className="text-[11px] text-mute">Finds the characters, places, props and scenes. You check it before anything is kept.</span>
+            <span className="text-[11px] text-mute">Finds the characters, locations, props and scenes. You check it before anything is kept.</span>
           </div>
         )}
         {msg && <p className={`mt-2 text-[12px] ${msg.kind === "ok" ? "text-ok" : "text-drift"}`}>{msg.text}</p>}
@@ -91,9 +91,9 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
             <div className="text-[12px] font-medium text-ink">How this works</div>
             <ol className="mt-2 list-decimal space-y-1 pl-4">
               <li>Write or paste the script on the left.</li>
-              <li><b className="text-ink">Break it down.</b> You get the cast, the places, the props and the scenes it found.</li>
-              <li>Describe how each character looks and what each place looks like. That description is used in every shot they appear in.</li>
-              <li>Keep it. Then build each character and place once (Cast, Places), and shoot scene by scene.</li>
+              <li><b className="text-ink">Break it down.</b> You get the cast, the locations, the props and the scenes it found.</li>
+              <li>Describe how each character looks and what each location looks like. That description is used in every shot they appear in.</li>
+              <li>Keep it. Then build each character and location once (Cast, Locations), and shoot scene by scene.</li>
             </ol>
           </div>
         )}
@@ -120,7 +120,7 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
               </div>
             </section>
             <section className="glass rounded-[10px] p-3">
-              <div className="text-[12px] font-medium">Places <span className="font-normal text-mute">· {b.locations.length}</span></div>
+              <div className="text-[12px] font-medium">Locations <span className="font-normal text-mute">· {b.locations.length}</span></div>
               <div className="mt-2 flex flex-col gap-3">
                 {b.locations.map((l, i) => (
                   <div key={i} className="rounded-[8px] border border-glass-edge p-2">

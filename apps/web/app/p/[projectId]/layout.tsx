@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
 import { SidebarNote } from "@/components/Sidebar";
 
-const SECTIONS = { "": "Script", cast: "Cast", places: "Places", props: "Props", bible: "Bible", scenes: "Scenes", shoot: "Scenes", shots: "Scenes", members: "Crew" };
+const SECTIONS = { "": "Script", cast: "Cast", locations: "Locations", places: "Locations", props: "Props", bible: "Bible", scenes: "Scenes", shoot: "Scenes", shots: "Scenes", members: "Crew" };
 
 export default async function ProjectLayout({ children, params }: { children: React.ReactNode; params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
@@ -25,7 +25,7 @@ export default async function ProjectLayout({ children, params }: { children: Re
     supabase.from("projects").select("script").eq("id", projectId).maybeSingle(),
   ]);
   const n = (k: string) => String((entries ?? []).filter((e) => e.kind === k).length);
-  const counts = { script: proj?.script?.trim() ? "✓" : "", cast: n("character"), places: n("location"), props: n("prop"), scenes: String((scenes ?? []).length) };
+  const counts = { script: proj?.script?.trim() ? "✓" : "", cast: n("character"), locations: n("location"), props: n("prop"), scenes: String((scenes ?? []).length) };
   const base = `/p/${projectId}`;
   const cohortName = project.cohorts?.name ?? "Cohort";
 

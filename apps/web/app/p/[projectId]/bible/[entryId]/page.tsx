@@ -74,7 +74,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
         <h1 className="text-[22px]">{e.name} <span className="ml-2 text-[13px] text-dim">{e.kind === "location" ? "environment" : e.kind}</span></h1>
         {e.requires_consent && <BibleChip state={e.consent_state} />}
         {row?.forked_from && <Link href={`/p/${projectId}/bible/${row.forked_from}`} className="text-[11px] text-mute underline">forked from an earlier version</Link>}
-        <Link href={`/p/${projectId}/${e.kind === "location" ? "places" : e.kind === "prop" ? "props" : "cast"}`} className="ml-auto text-[11px] text-mute hover:text-dim">← {e.kind === "location" ? "Places" : e.kind === "prop" ? "Props" : "Cast"}</Link>
+        <Link href={`/p/${projectId}/${e.kind === "location" ? "locations" : e.kind === "prop" ? "props" : "cast"}`} className="ml-auto text-[11px] text-mute hover:text-dim">← {e.kind === "location" ? "Locations" : e.kind === "prop" ? "Props" : "Cast"}</Link>
       </div>
       {ok && <p className="rounded-[6px] bg-ok/10 px-3 py-2 text-[12px] text-ok">{ok}</p>}
       {error && <p className="rounded-[6px] bg-drift/10 px-3 py-2 text-[12px] text-drift">{error}</p>}

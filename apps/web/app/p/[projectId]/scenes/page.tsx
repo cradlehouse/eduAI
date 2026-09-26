@@ -94,7 +94,7 @@ export default async function ScenesPage({ params, searchParams }: { params: Pro
           {scene && (
             <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px]">
               {sceneLocation ? <Link href={`/p/${projectId}/bible/${sceneLocation.id}`} className="pill pinned">{sceneLocation.name}</Link>
-                : <Link href={`/p/${projectId}/places`} className="pill border-dashed text-gold">set a place for this scene</Link>}
+                : <Link href={`/p/${projectId}/locations`} className="pill border-dashed text-gold">set a location for this scene</Link>}
               {scene.time_of_day && <span className="pill text-dim">{scene.time_of_day}</span>}
               {sceneMembers.map((m) => <Link key={m.id} href={`/p/${projectId}/bible/${m.id}`} className="pill text-dim">{m.name}</Link>)}
             </div>

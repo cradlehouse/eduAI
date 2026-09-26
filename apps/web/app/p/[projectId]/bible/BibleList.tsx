@@ -7,7 +7,7 @@ type Kind = "character" | "location" | "prop" | "style" | "voice";
 const COPY: Record<Kind, { title: string; blurb: string; name: string; who: string; look: string; lookPh: string }> = {
   character: { title: "Cast", blurb: "Everyone in the film. Build each one once: who they are and exactly how they look. That look goes into every shot they're in.",
                name: "MAYA", who: "Who they are", look: "What they look like", lookPh: "woman, 30s, long straight dark hair, round glasses, grey wool coat" },
-  location: { title: "Places", blurb: "Every set. Describe it, then make a master wide: every angle of the place is made from that wide so it stays the same place.",
+  location: { title: "Locations", blurb: "Every location, inside or out. Describe it, then make a master wide: every angle is made from that wide so it stays the same location.",
               name: "WAREHOUSE", who: "What it is", look: "What it looks like", lookPh: "empty brick warehouse, one high window, concrete floor, dusk light" },
   prop: { title: "Props", blurb: "Objects the story depends on. Describe them once so they look the same in every shot.",
           name: "RED DUFFEL BAG", who: "What it's for", look: "What it looks like", lookPh: "faded red canvas duffel, black straps, scuffed corners" },
@@ -66,7 +66,7 @@ export async function BibleList({ projectId, kind, ok, error }: { projectId: str
       </ul>
 
       <details className="glass rounded-[10px] p-3">
-        <summary className="cursor-pointer select-none text-[12px] font-medium">Add {kind === "character" ? "a character" : kind === "location" ? "a place" : `a ${kind}`}</summary>
+        <summary className="cursor-pointer select-none text-[12px] font-medium">Add {kind === "character" ? "a character" : kind === "location" ? "a location" : `a ${kind}`}</summary>
         <form action={createEntry} className="mt-3 grid gap-2 sm:grid-cols-2">
           <input type="hidden" name="project_id" value={projectId} /><input type="hidden" name="kind" value={kind} />
           <label className="label">Name<input name="name" required placeholder={c.name} className="input mt-0.5 w-full" /></label>

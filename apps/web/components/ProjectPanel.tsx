@@ -3,8 +3,8 @@ import { NavGroup, NavItem } from "./NavItem";
 import { TokenBar, TokenRing, type Budget } from "./TokenMeter";
 
 // The slide-out for a project: the cohort's projects (current one open) with the project's pages
-// underneath as production stages (Script → Cast / Places / Props → Scenes), and the token meter.
-export type StageCounts = { script?: string; cast?: string; places?: string; props?: string; scenes?: string };
+// underneath as production stages (Script → Cast / Locations / Props → Scenes), and the token meter.
+export type StageCounts = { script?: string; cast?: string; locations?: string; props?: string; scenes?: string };
 export function ProjectPanel({ nav, cohortId, projectId, budget, note, inline, counts, children }: { nav: Nav; cohortId: string; projectId: string; budget?: Budget | null; note?: React.ReactNode; inline?: boolean; counts?: StageCounts; children?: React.ReactNode }) {
   const projects = nav.projectsByCohort[cohortId] ?? [];
   const cohort = nav.cohorts.find((c) => c.id === cohortId);
@@ -21,7 +21,7 @@ export function ProjectPanel({ nav, cohortId, projectId, budget, note, inline, c
                 <div>
                   <NavItem href={`/p/${p.id}`} exact depth={1} icon="BookOpen" mark={counts?.script}>Script</NavItem>
                   <NavItem href={`/p/${p.id}/cast`} depth={1} icon="UserRound" mark={counts?.cast}>Cast</NavItem>
-                  <NavItem href={`/p/${p.id}/places`} depth={1} icon="Building2" mark={counts?.places}>Places</NavItem>
+                  <NavItem href={`/p/${p.id}/locations`} depth={1} icon="Building2" mark={counts?.locations}>Locations</NavItem>
                   <NavItem href={`/p/${p.id}/props`} depth={1} icon="KeyRound" mark={counts?.props}>Props</NavItem>
                   <NavItem href={`/p/${p.id}/scenes`} depth={1} icon="LayoutGrid" mark={counts?.scenes}>Scenes</NavItem>
                   <NavItem href={`/p/${p.id}/members`} depth={1} icon="Users">Crew</NavItem>

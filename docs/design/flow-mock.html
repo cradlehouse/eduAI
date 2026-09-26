@@ -137,10 +137,10 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
 <div class="wrap">
 <div class="intro">
   <h1>One step at a time</h1>
-  <p>Each screen has <b>one job</b>. The icons on the left are the film's steps in order, and a gold dot means that step still has something waiting. You build the pieces first (cast, sets, props). Then you pull those pieces into a scene, shoot it one shot at a time, and cut it. The <b>asset drawer</b> only opens where you're putting pieces together. The <b>prompt bar</b> only appears where you're making an image or a clip.</p>
+  <p>Each screen has <b>one job</b>. The icons on the left are the film's steps in order, and a gold dot means that step still has something waiting. You build the pieces first (cast, locations, props). Then you pull those pieces into a scene, shoot it one shot at a time, and cut it. The <b>asset drawer</b> only opens where you're putting pieces together. The <b>prompt bar</b> only appears where you're making an image or a clip.</p>
   <p>The example film is a diner at night. <b>Angie</b> tells <b>Bert</b> she's leaving town.</p>
 </div>
-<div class="path"><span>1 · Script</span><i>→</i><span>2 · Cast</span><i>→</i><span>3 · Sets</span><i>→</i><span>4 · Props</span><i>→</i><span>5 · Scene</span><i>→</i><span>6 · Shot</span><i>→</i><span>7 · Edit</span></div>
+<div class="path"><span>1 · Script</span><i>→</i><span>2 · Cast</span><i>→</i><span>3 · Locations</span><i>→</i><span>4 · Props</span><i>→</i><span>5 · Scene</span><i>→</i><span>6 · Shot</span><i>→</i><span>7 · Edit</span></div>
 
 <!-- ============ reusable rail markup is repeated per screen ============ -->
 
@@ -151,7 +151,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <div class="logo">Imaje</div>
     <span class="ri on"><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>Script</span>
     <span class="ri"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Cast</span>
-    <span class="ri"><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Sets</span>
+    <span class="ri"><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Locations</span>
     <span class="ri"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V5h6v3"/></svg>Props</span>
     <span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5l-2 4M14 5l-2 4M20 5l-2 4"/></svg>Scenes</span>
     <span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="1"/><path d="M7 7v10M11 7v10M15 7v10"/></svg>Edit</span>
@@ -171,7 +171,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
       <div style="display:flex;flex-direction:column;gap:10px">
         <div class="glass" style="padding:12px">
           <div style="font-size:12px;font-weight:500">Found in the script</div>
-          <div style="font-size:12.5px;color:var(--dim);margin-top:8px;line-height:1.8">2 cast · Angie, Bert<br>2 sets · Diner inside, Diner outside<br>1 prop · the pie<br>2 scenes</div>
+          <div style="font-size:12.5px;color:var(--dim);margin-top:8px;line-height:1.8">2 cast · Angie, Bert<br>2 locations · Diner inside, Diner outside<br>1 prop · the pie<br>2 scenes</div>
           <div style="font-size:12px;color:var(--gold);margin-top:8px">2 questions: what does Angie wear? What colour is the diner?</div>
         </div>
         <span class="btn" style="text-align:center">Next: make the cast →</span>
@@ -188,7 +188,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <li><b>Break it down.</b> The AI lists who's in it, where it happens, what objects matter, and the scenes.</li>
     <li><b>Check the list</b> (remove anything wrong), then one button: <b>Next: make the cast</b>.</li>
   </ol>
-  <div class="out">Makes: <b>empty Cast, Sets and Props pages</b>, each with its description from the script.</div>
+  <div class="out">Makes: <b>empty Cast, Locations and Props pages</b>, each with its description from the script.</div>
   <div class="not">Not here: any image making. Questions the script can't answer ("what does Angie wear?") move to Angie's page, where they're answered.</div>
 </div>
 </div>
@@ -200,7 +200,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <div class="logo">Imaje</div>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>Script</span>
     <span class="ri on"><span class="d"></span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Cast</span>
-    <span class="ri"><span class="d"></span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Sets</span>
+    <span class="ri"><span class="d"></span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Locations</span>
     <span class="ri"><span class="d"></span><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V5h6v3"/></svg>Props</span>
     <span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5l-2 4M14 5l-2 4M20 5l-2 4"/></svg>Scenes</span>
     <span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="1"/><path d="M7 7v10M11 7v10M15 7v10"/></svg>Edit</span>
@@ -240,7 +240,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <li>Tab 2, <b>Turnaround</b>: front, side, back from the chosen look. Tab 3, <b>Voice</b>. Each is its own small step.</li>
   </ol>
   <div class="out">Makes: <b>Angie</b>, an element that can be dragged into any scene.</div>
-  <div class="not">Not here: sets, cameras, dialogue, video. The prompt bar only makes portraits of this person.</div>
+  <div class="not">Not here: locations, cameras, dialogue, video. The prompt bar only makes portraits of this person.</div>
 </div>
 </div>
 
@@ -251,14 +251,14 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <div class="logo">Imaje</div>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>Script</span>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Cast</span>
-    <span class="ri on"><span class="d"></span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Sets</span>
+    <span class="ri on"><span class="d"></span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Locations</span>
     <span class="ri"><span class="d"></span><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V5h6v3"/></svg>Props</span>
     <span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5l-2 4M14 5l-2 4M20 5l-2 4"/></svg>Scenes</span>
     <span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="1"/><path d="M7 7v10M11 7v10M15 7v10"/></svg>Edit</span>
     <span class="sp"></span><span class="ring"><i></i></span><small>$70/200</small>
   </nav>
   <div class="glass list">
-    <div class="h">Sets · 2</div>
+    <div class="h">Locations · 2</div>
     <div class="li on"><i style="border:none;background:var(--diner)"></i>Diner inside<span class="st todo">angles</span></div>
     <div class="li"><i></i>Diner outside<span class="st todo">no wide yet</span></div>
   </div>
@@ -285,15 +285,15 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
   </div>
 </div></div>
 <div class="notes">
-  <h2>3 · Sets</h2>
+  <h2>3 · Locations</h2>
   <div class="job">Job: build each place once, so it's the same place in every cut.</div>
   <ol>
-    <li><b>Pick a set.</b> Tab 1, <b>Master wide</b>: same as a character. Describe it, generate three, choose one. That wide is the set.</li>
+    <li><b>Pick a location.</b> Tab 1, <b>Master wide</b>: same as a character. Describe it, generate three, choose one. That wide is the location.</li>
     <li>Tab 2, <b>Angles</b>: the page suggests the angles scene 1 needs (counter, hatch, booth). Each one is made <i>from the master wide</i>, so it's the same room.</li>
     <li>Tab 3, <b>Times of day</b> if the script comes back here in daylight.</li>
   </ol>
   <div class="out">Makes: <b>Diner inside</b>: one wide plus its angles, draggable into scenes.</div>
-  <div class="not">Not here: people. Sets are built empty, and the cast get put in them at the Shot step.</div>
+  <div class="not">Not here: people. Locations are built empty, and the cast get put in them at the Shot step.</div>
 </div>
 </div>
 
@@ -312,7 +312,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <div class="logo">Imaje</div>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>Script</span>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Cast</span>
-    <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Sets</span>
+    <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Locations</span>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V5h6v3"/></svg>Props</span>
     <span class="ri on"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5l-2 4M14 5l-2 4M20 5l-2 4"/></svg>Scenes</span>
     <span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="1"/><path d="M7 7v10M11 7v10M15 7v10"/></svg>Edit</span>
@@ -323,7 +323,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <div class="h">Cast</div>
     <div class="as used"><i style="background:var(--angie2)"></i>Angie<span class="u">in scene</span></div>
     <div class="as used"><i style="background:var(--bert)"></i>Bert<span class="u">in scene</span></div>
-    <div class="h">Sets</div>
+    <div class="h">Locations</div>
     <div class="as used"><i style="background:var(--diner)"></i>Diner inside<span class="u">in scene</span></div>
     <div class="as"><i style="background:linear-gradient(135deg,#0d1220,#1d2a45,#4d6c9c)"></i>Diner outside</div>
     <div class="h">Props</div>
@@ -351,7 +351,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
   <h2>5 · Scene</h2>
   <div class="job">Job: say where it is, who's in it, and what happens.</div>
   <ol>
-    <li>The <b>asset drawer</b> opens on the left with everything you built. <b>Drag</b> the set into Where, and the people into Who. From the script they're usually there already.</li>
+    <li>The <b>asset drawer</b> opens on the left with everything you built. <b>Drag</b> the location into Where, and the people into Who. From the script they're usually there already.</li>
     <li><b>What happens</b> is the scene from the script as action lines and dialogue. Change it here if the scene has changed.</li>
     <li><b>Plan the shots.</b> The AI suggests a shot list (wide, over Angie's shoulder, close on Bert…), which you edit on the next screen.</li>
   </ol>
@@ -367,7 +367,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <div class="logo">Imaje</div>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>Script</span>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Cast</span>
-    <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Sets</span>
+    <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Locations</span>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V5h6v3"/></svg>Props</span>
     <span class="ri on"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5l-2 4M14 5l-2 4M20 5l-2 4"/></svg>Scenes</span>
     <span class="ri"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="1"/><path d="M7 7v10M11 7v10M15 7v10"/></svg>Edit</span>
@@ -387,7 +387,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div><div class="lbl">Camera (chosen in step 1)</div>
         <div class="tiles"><div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="3" y="3" width="24" height="18" rx="2"/></svg></div>Wide</div><div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="3" y="3" width="24" height="18" rx="2"/><circle cx="15" cy="12" r="4"/></svg></div>Medium</div><div class="tile on"><div class="v"><svg viewBox="0 0 30 24"><rect x="3" y="3" width="24" height="18" rx="2"/><circle cx="15" cy="13" r="7"/></svg></div>Close-up</div><div class="tile"><div class="v"><svg viewBox="0 0 30 24"><rect x="3" y="3" width="24" height="18" rx="2"/><circle cx="21" cy="13" r="5"/><path d="M3 21c2-6 6-8 8-8"/></svg></div>Over shoulder</div></div>
-        <div class="lbl" style="margin-top:10px">Background angle from the set</div>
+        <div class="lbl" style="margin-top:10px">Background angle from the location</div>
         <div class="im" style="background:var(--diner2);width:60%"><span class="n">Counter, reverse</span></div>
       </div>
       <div><div class="lbl">Frames: choose one, it becomes the clip's first frame</div>
@@ -412,7 +412,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
   <h2>6 · Shot</h2>
   <div class="job">Job: get one shot right, then move to the next.</div>
   <ol>
-    <li><b>Camera</b>: pick the framing from pictures (wide, medium, close, over the shoulder) and the camera move. The page picks the set angle to match.</li>
+    <li><b>Camera</b>: pick the framing from pictures (wide, medium, close, over the shoulder) and the camera move. The page picks the location angle to match.</li>
     <li><b>Frame</b>: the prompt bar already has Angie and the diner angle in it, and the description comes from the scene. <b>Make frames</b> (cheap stills), then <b>Use this frame</b>.</li>
     <li><b>Clip</b>: the chosen frame plus her line becomes a video. Make 2–3 takes and choose one. Then the next shot in the list on the left.</li>
   </ol>
@@ -428,7 +428,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <div class="logo">Imaje</div>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 12h7M9 16h7"/></svg>Script</span>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>Cast</span>
-    <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Sets</span>
+    <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><path d="M3 20V9l9-5 9 5v11"/><path d="M9 20v-6h6v6"/></svg>Locations</span>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="2"/><path d="M9 8V5h6v3"/></svg>Props</span>
     <span class="ri done"><span class="ck">✓</span><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9h18M8 5l-2 4M14 5l-2 4M20 5l-2 4"/></svg>Scenes</span>
     <span class="ri on"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="1"/><path d="M7 7v10M11 7v10M15 7v10"/></svg>Edit</span>
