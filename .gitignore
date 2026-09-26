@@ -13,3 +13,4 @@ __pycache__/
 .venv/
 supabase/.temp/
 supabase/.branches/
+docs/research/spike-a2v/
