@@ -226,7 +226,7 @@ class Db:
                         prov = o.provenance or {}
                         cur = await c.execute(
                             "insert into public.assets (org_id, project_id, kind, source, r2_key, sha256, mime, bytes, job_id, prev_hash, chain_hash, "
-                            "provenance, created_by) values (%s,%s,'audio','generated',%s,%s,%s,%s,%s,%s,%s,%s,%s) returning id",
+                            "provenance, created_by) values (%s,%s,%s::public.asset_kind,'generated',%s,%s,%s,%s,%s,%s,%s,%s,%s) returning id",
                             (job["org_id"], job["project_id"], o.kind, o.r2_key, o.sha256, o.mime, o.bytes, job["id"], prev,
                              chain_hash(prev, o.sha256, prov), Jsonb(prov), job["requested_by"]))
                         aid = str((await cur.fetchone())["id"])

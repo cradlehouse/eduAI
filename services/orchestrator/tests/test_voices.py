@@ -46,3 +46,21 @@ def test_one_detected_speaker_follows_the_script():
     chunks = [{"speaker": "S0", "text": w, "timestamp": [i, i + 0.4]} for i, w in enumerate("I got the job in Tulsa then go before I talk you out of it".split())]
     out = assign_speakers(chunks, LINES)
     assert len(out["ANGIE"]) == 6 and out["BERT"][0] == (6, 6.4)
+
+
+def test_settle_tracks_placeholders_match_values():
+    # Regression: the render settle once had one more value than placeholders.
+    import inspect
+
+    from orchestrator.db import Db
+    src = inspect.getsource(Db.settle_tracks)
+    sql = src[src.index("insert into public.assets"):src.index("returning id")]
+    start = src.index('(job["org_id"], job["project_id"], o.kind')
+    depth, args = 0, 1
+    for ch in src[start:]:
+        depth += ch == "("
+        depth -= ch == ")"
+        args += ch == "," and depth == 1
+        if depth == 0:
+            break
+    assert sql.count("%s") == args
