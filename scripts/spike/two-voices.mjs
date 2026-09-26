@@ -78,29 +78,41 @@ function keepOnly(wav, spans) {
 const words = (s) => s.toLowerCase().replace(/[^a-z' ]/g, " ").split(/\s+/).filter(Boolean);
 const overlap = (a, b) => { const B = new Set(words(b)); return words(a).filter((w) => B.has(w)).length; };
 
-// 1. Still and voice samples
-const [still, angieVoice, bertVoice] = await Promise.all([
-  run("fal-ai/flux-2-pro", { image_size: "landscape_16_9", output_format: "png",
-    prompt: "Cinematic 35mm film still, night, inside a small American diner. Medium two-shot: on the left a waitress in her late twenties, curly auburn hair tied back, freckles, mint-green diner uniform, behind the counter; on the right a cook in his sixties, grey stubble, white apron and paper hat, leaning through the kitchen hatch. They look at each other. Rain on the window, warm sodium light, mouths closed." }),
+// 1-2. Still, voice samples and the clip. A rerun reuses the clip already saved (the costly part).
+import { existsSync } from "node:fs";
+const [angieVoice, bertVoice] = await Promise.all([
   run("fal-ai/kokoro/american-english", { prompt: "Hi, I'm Angie. I've worked the night shift at Rosie's for four years now.", voice: "af_bella" }),
   run("fal-ai/kokoro/american-english", { prompt: "Name's Bert. I've been cooking in this diner longer than you've been alive, kid.", voice: "am_onyx", speed: 0.9 }),
 ]);
-await save(still.images[0].url, "G-still.png");
-
-// 2. The clip with LTX's own sound
-const clip = await run("lightricks/ltx-2.5/image-to-video/fast", {
-  image_url: still.images[0].url, duration: 8, resolution: "1080p", aspect_ratio: "16:9", generate_audio: true, camera_motion: "static",
-  prompt: `The waitress on the left says quietly to the cook: "${ANGIE}" The cook on the right pauses, then answers: "${BERT}" They take turns, no talking over each other. Rain on the window, quiet diner room tone, no music.`,
-});
-await save(clip.video.url, "G-1-original.mp4");
+let clipUrl;
+if (existsSync(`${dir}/G-1-original.mp4`)) {
+  console.log("reusing G-1-original.mp4");
+  clipUrl = await upload(await readFile(`${dir}/G-1-original.mp4`), "G-1-original.mp4", "video/mp4");
+} else {
+  const still = await run("fal-ai/flux-2-pro", { image_size: "landscape_16_9", output_format: "png",
+    prompt: "Cinematic 35mm film still, night, inside a small American diner. Medium two-shot: on the left a waitress in her late twenties, curly auburn hair tied back, freckles, mint-green diner uniform, behind the counter; on the right a cook in his sixties, grey stubble, white apron and paper hat, leaning through the kitchen hatch. They look at each other. Rain on the window, warm sodium light, mouths closed." });
+  await save(still.images[0].url, "G-still.png");
+  const clip = await run("lightricks/ltx-2.5/image-to-video/fast", {
+    image_url: still.images[0].url, duration: 8, resolution: "1080p", aspect_ratio: "16:9", generate_audio: true, camera_motion: "static",
+    prompt: `The waitress on the left says quietly to the cook: "${ANGIE}" The cook on the right pauses, then answers: "${BERT}" They take turns, no talking over each other. Rain on the window, quiet diner room tone, no music.`,
+  });
+  await save(clip.video.url, "G-1-original.mp4");
+  clipUrl = clip.video.url;
+}
 
 // 3. Split the sound
-execFileSync("swift", ["scripts/spike/extract-audio.swift", `${dir}/G-1-original.mp4`, `${dir}/G-original.m4a`], { stdio: "inherit" });
-const clipAudio = await upload(await readFile(`${dir}/G-original.m4a`), "G-original.m4a", "audio/mp4");
-const stems = await run("fal-ai/demucs", { audio_url: clipAudio, model: "htdemucs", output_format: "wav" });
+execFileSync("swift", ["scripts/spike/extract-audio.swift", `${dir}/G-1-original.mp4`, `${dir}/G-original.m4a`], { stdio: "ignore" });
+execFileSync("afconvert", ["-f", "WAVE", "-d", "LEI16", `${dir}/G-original.m4a`, `${dir}/G-original.wav`]);
+const clipAudio = await upload(await readFile(`${dir}/G-original.wav`), "G-original.wav", "audio/wav");
+const stems = await run("fal-ai/demucs", { audio_url: clipAudio, model: "htdemucs", stems: ["vocals", "drums", "bass", "other"], output_format: "wav" });
+if (!stems.vocals?.url) {
+  console.log("demucs returned:", JSON.stringify(stems).slice(0, 400));
+  const iso = await run("fal-ai/elevenlabs/audio-isolation", { audio_url: clipAudio });
+  stems.vocals = iso.audio;
+}
 await save(stems.vocals.url, "G-voices-before.wav");
 const room = ["other", "drums", "bass"].filter((k) => stems[k]?.url).map((k) => stems[k].url);
-await save(stems.other.url, "G-room.wav");
+if (stems.other?.url) await save(stems.other.url, "G-room.wav");
 const stt = await run("fal-ai/elevenlabs/speech-to-text", { audio_url: stems.vocals.url, diarize: true });
 await writeFile(`${dir}/G-transcript.json`, JSON.stringify(stt, null, 2));
 
@@ -141,11 +153,11 @@ const ms = 8000;
 const [ua, ub] = await Promise.all([upload(angieTrack, "angie.wav", "audio/wav"), upload(bertTrack, "bert.wav", "audio/wav")]);
 const kf = (url) => [{ timestamp: 0, duration: ms, url }];
 const mix = await run("fal-ai/ffmpeg-api/compose", { tracks: [
-  { id: "picture", type: "video", keyframes: kf(clip.video.url) },
+  { id: "picture", type: "video", keyframes: kf(clipUrl) },
   { id: "angie", type: "audio", keyframes: kf(ua) },
   { id: "bert", type: "audio", keyframes: kf(ub) },
   ...room.map((u, i) => ({ id: `room${i}`, type: "audio", keyframes: kf(u) })),
 ] });
 await save(mix.video_url, "G-2-two-voices.mp4");
-await writeFile(`${dir}/two-voices.json`, JSON.stringify({ still, angieVoice, bertVoice, clip, stems, stt, spans, va, vb, mix }, null, 2));
+await writeFile(`${dir}/two-voices.json`, JSON.stringify({ angieVoice, bertVoice, clipUrl, stems, stt, spans, va, vb, mix }, null, 2));
 console.log("\nDone. Compare G-1-original.mp4 with G-2-two-voices.mp4; tracks are G-track-angie.wav, G-track-bert.wav, G-room.wav");
