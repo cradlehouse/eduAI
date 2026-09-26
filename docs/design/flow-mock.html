@@ -328,6 +328,7 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
     <div class="as"><i style="background:linear-gradient(135deg,#0d1220,#1d2a45,#4d6c9c)"></i>Diner outside</div>
     <div class="h">Props</div>
     <div class="as"><i style="background:linear-gradient(135deg,#6b3b1a,#d9a55b)"></i>Pie</div>
+    <div class="as" style="color:var(--gold);border:1px dashed var(--cedge)">+ new character</div>
   </div>
   <div class="cv">
     <div class="top"><h3 class="mono" style="font-size:15px">1 · INT. ROSIE'S DINER – NIGHT</h3><span class="r btn">Plan the shots →</span></div>
@@ -336,6 +337,16 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
       <div class="slot full"><i style="background:var(--angie2);width:40px"></i><span><span class="k">Who</span>Angie</span></div>
       <div class="slot full"><i style="background:var(--bert);width:40px"></i><span><span class="k">Who</span>Bert</span></div>
       <div class="slot" style="color:var(--mute);justify-content:center">+ drop a prop</div>
+    </div>
+    <div class="glass" style="position:absolute;right:18px;top:118px;width:330px;padding:12px;z-index:5;border-color:var(--gold);box-shadow:0 18px 40px rgba(0,0,0,.6)">
+      <div style="font-size:12px;font-weight:500">New in this scene: <span class="tag">BARTENDER</span></div>
+      <div class="lbl" style="margin-top:8px">What they look like (quick; finish on their Cast page)</div>
+      <div class="field" style="font-size:12px">man, 50s, apron, rolled sleeves, grey stubble</div>
+      <div class="lbl" style="margin-top:8px">Their lines in this scene</div>
+      <div class="field" style="font-size:12px">What'll it be?</div>
+      <div style="font-size:11.5px;color:var(--mute);margin:4px 0 8px">+ another line · goes after: <span style="color:var(--dim)">Angie wipes the counter</span></div>
+      <div style="font-size:11.5px;color:var(--gold);margin-bottom:10px">Adds BARTENDER to Cast and writes the line into the script, scene 1.</div>
+      <div style="display:flex;gap:6px"><span class="btn">Add to scene</span><span class="btn g">Cancel</span></div>
     </div>
     <div class="glass" style="padding:10px 12px;flex:1">
       <div class="lbl">What happens (from the script, edit freely)</div>
@@ -352,7 +363,9 @@ html,body{margin:0;background:var(--deep);color:var(--ink);font:13px/1.4 "Helvet
   <div class="job">Job: say where it is, who's in it, and what happens.</div>
   <ol>
     <li>The <b>asset drawer</b> opens on the left with everything you built. <b>Drag</b> the location into Where, and the people into Who. From the script they're usually there already.</li>
-    <li><b>What happens</b> is the scene from the script as action lines and dialogue. Change it here if the scene has changed.</li>
+    <li><b>Drop a person in</b> and a pop-up shows their lines in this scene from the script: keep them, change them, or add one.</li>
+    <li><b>Add someone new</b> (a bartender): give them a quick look and a line ("What'll it be?"). They're added to Cast, and the line is <b>written into the script</b> in the right place. The script stays the master copy.</li>
+    <li><b>What happens</b> is the scene as action and dialogue lines. Edits here update the script too.</li>
     <li><b>Plan the shots.</b> The AI suggests a shot list (wide, over Angie's shoulder, close on Bert…), which you edit on the next screen.</li>
   </ol>
   <div class="out">Makes: <b>the scene setup</b>, which every shot in it inherits.</div>
