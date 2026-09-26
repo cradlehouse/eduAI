@@ -7,8 +7,22 @@
 // Run: FAL_KEY=... node scripts/spike/lipsync-compare.mjs docs/research/spike-a2v
 import { readFile, writeFile } from "node:fs/promises";
 
-const KEY = process.env.FAL_KEY;
-if (!KEY) { console.error("Set FAL_KEY"); process.exit(1); }
+// Asks for the key (hidden) when FAL_KEY isn't set, so it never lands in shell history.
+async function askHidden(q) {
+  process.stdout.write(q);
+  process.stdin.setRawMode(true); process.stdin.resume();
+  let s = "";
+  for await (const chunk of process.stdin) {
+    for (const ch of chunk.toString()) {
+      if (ch === "\r" || ch === "\n") { process.stdin.setRawMode(false); process.stdin.pause(); process.stdout.write("\n"); return s.trim(); }
+      if (ch === "\u0003") process.exit(1);
+      if (ch === "\u007f") s = s.slice(0, -1); else s += ch;
+    }
+  }
+  return s.trim();
+}
+const KEY = process.env.FAL_KEY || await askHidden("fal key (hidden): ");
+if (!KEY) { console.error("No key"); process.exit(1); }
 const dir = process.argv[2] ?? "docs/research/spike-a2v";
 const prev = JSON.parse(await readFile(`${dir}/result.json`, "utf8"));
 const stillUrl = prev.still.images[0].url, lineUrl = prev.line.audio.url;
