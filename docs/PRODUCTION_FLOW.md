@@ -21,6 +21,22 @@ Evidence for the sound pipeline: `docs/research/dialogue-spike-2026-09.md`.
 7. **Edit.** Drawer holds the chosen takes and sound. Timeline tracks: picture, one voice track per
    character, room, effects, music. Share with the instructor or export (mixed down on export).
 
+## The script stays in sync, both ways
+
+The script is the one master copy, but you don't have to start there. Anything added anywhere is written
+into the script, and the page asks where it goes:
+
+| Added on | Asks | Written into the script as |
+|---|---|---|
+| Locations | Which scene is here? (an existing scene, or a new scene after scene N) | the scene's slugline (INT. BAR – NIGHT), or a new scene with its slugline |
+| Cast | Which scenes are they in? Any lines? (both optional) | their first appearance (NAME in caps with a short intro) and their dialogue |
+| Props | Which scene, and when? | an action line where it first appears |
+| Scene (a line, a new character) | Where in the scene? (after which line) | a dialogue block or action line at that point |
+
+Each change is marked on the Script page: "added in Scene 2 · who · when · undo". Undo removes it from the
+script and from wherever it was added. Editing it in the script changes it everywhere. Removing something
+asks first whether to take it out of the script too.
+
 ## How a talking shot is made
 
 1. LTX 2.5 image-to-video from the chosen frame, sound on, the scene's lines in the prompt
