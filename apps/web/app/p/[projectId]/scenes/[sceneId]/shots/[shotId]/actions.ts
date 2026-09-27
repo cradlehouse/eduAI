@@ -18,6 +18,14 @@ const LEAD: Record<string, string> = {
   insert: "Cinematic insert shot of a detail",
 };
 
+// Indoors, weather words make the models rain inside the room (they animate whatever "rain" they're
+// given). So an INT. shot's prompt drops sentences about weather; a visible window is "wet glass".
+const WEATHER = /\b(rain\w*|drizzl\w*|storm\w*|snow\w*|downpour\w*|thunder\w*|drops?|droplets?)\b/i;
+function dryIndoors(text: string, interior: boolean) {
+  if (!interior || !text) return text;
+  return text.split(/(?<=[.!?])\s+/).filter((s) => !WEATHER.test(s)).join(" ").trim();
+}
+
 async function shotOf(shotId: string) {
   const supabase = await createClient();
   const { data } = await supabase.from("shots").select("id, project_id, scene_id, label, description, duration_target_s, intent, plate_take_id, selected_take_id").eq("id", shotId).maybeSingle();
@@ -91,15 +99,15 @@ export async function makeFrames(projectId: string, shotId: string, input: { ext
   const cast = p.people.map((e) => `${e.name}: ${e.appearance || "as in the reference"}`).join(". ");
   const names = p.people.map((e) => e.name).join(" and ");
   const prompt = [
-    `${lead}. ${p.s.description}`,
+    `${lead}. ${dryIndoors(p.s.description, p.interior)}`,
     cast && `People: ${cast}.`,
     names && `Only ${names} ${p.people.length > 1 ? "are" : "is"} in frame, each appearing once; no other people.`,
     p.loc && (single
       ? `Background: ${p.loc.name}, the same room as the location reference, softly out of focus behind them.`
-      : `Place: ${p.loc.name}${p.loc.appearance ? `, ${p.loc.appearance}` : ""}; keep the room exactly as in the first reference.`),
+      : `Place: ${p.loc.name}${p.loc.appearance ? `, ${dryIndoors(p.loc.appearance, p.interior)}` : ""}; keep the room exactly as in the first reference.`),
     p.props.length ? `Objects: ${p.props.map((e) => `${e.name}${e.appearance ? ` (${e.appearance})` : ""}`).join(", ")}.` : "",
-    p.interior && "Indoors and dry: any rain is outside, seen only through the window glass.",
-    input.extra?.trim(),
+    p.interior && "Indoors; the window glass is wet and dark outside.",
+    dryIndoors(input.extra?.trim() ?? "", p.interior),
     "Mouths closed, a still moment just before the action.",
   ].filter(Boolean).join(" ");
   const r = await pickRoute(projectId, refs.length ? "edit" : "image");
@@ -139,8 +147,8 @@ export async function makeClip(projectId: string, shotId: string, input: { secon
   if (!start) return { error: "The chosen frame is missing." };
   const lines = (p.intent.lines ?? []).map((l) => `${l.who} says: "${l.text}"`).join(" Then ");
   const prompt = [
-    p.s.description, lines, input.extra?.trim(),
-    p.interior && "The room is dry: rain falls only outside the window.",
+    dryIndoors(p.s.description, p.interior), lines, dryIndoors(input.extra?.trim() ?? "", p.interior),
+    p.interior && "Indoors, a still room: nothing falls from above.",
     "Only the people already in the frame; nobody new appears.",
     lines ? "Clear natural speech, lips in sync. No music." : "No speech, no music.",
   ].filter(Boolean).join(" ");
