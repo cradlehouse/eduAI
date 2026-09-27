@@ -48,9 +48,16 @@ async function framePieces(shotId: string) {
   const entries = (pins ?? []).map((p) => p.bible_entries).filter((e): e is NonNullable<typeof e> => !!e);
   const loc = entries.find((e) => e.kind === "location");
   const on = new Set((intent.on ?? []).map((n) => n.toUpperCase()));
-  const people = entries.filter((e) => e.kind === "character" && (on.size === 0 || on.has(e.name.toUpperCase())));
+  // Anyone the description names is in the frame too, or the model invents a stranger for them.
+  const { data: sc } = await supabase.from("scenes").select("heading").eq("id", s.scene_id).maybeSingle();
+  const { data: sceneCast } = await supabase.from("scene_bible_entries").select("bible_entries(id, kind, name, appearance, reference_asset_id)").eq("scene_id", s.scene_id);
+  const desc = ` ${s.description.toUpperCase()} `;
+  const named = (sceneCast ?? []).map((r) => r.bible_entries).filter((e): e is NonNullable<typeof e> => !!e && e.kind === "character" && new RegExp(`\\b${e.name.toUpperCase().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(desc));
+  for (const e of named) if (!entries.some((x) => x.id === e.id)) entries.push(e);
+  const people = entries.filter((e) => e.kind === "character" && (on.size === 0 || on.has(e.name.toUpperCase()) || named.some((n) => n.id === e.id)));
+  const interior = /^\s*(INT|I\/E|INT\.?\/EXT)/i.test(sc?.heading ?? "");
   const props = entries.filter((e) => e.kind === "prop");
-  return { s, intent, loc, people, props };
+  return { s, intent, loc, people, props, interior };
 }
 
 // The readiness check (eduai.shot_ready) asks for an objective, continuity and camera language. The
@@ -91,6 +98,7 @@ export async function makeFrames(projectId: string, shotId: string, input: { ext
       ? `Background: ${p.loc.name}, the same room as the location reference, softly out of focus behind them.`
       : `Place: ${p.loc.name}${p.loc.appearance ? `, ${p.loc.appearance}` : ""}; keep the room exactly as in the first reference.`),
     p.props.length ? `Objects: ${p.props.map((e) => `${e.name}${e.appearance ? ` (${e.appearance})` : ""}`).join(", ")}.` : "",
+    p.interior && "Indoors and dry: any rain is outside, seen only through the window glass.",
     input.extra?.trim(),
     "Mouths closed, a still moment just before the action.",
   ].filter(Boolean).join(" ");
@@ -130,7 +138,12 @@ export async function makeClip(projectId: string, shotId: string, input: { secon
   const end = p.intent.end_take_id ? frames?.find((f) => f.id === p.intent.end_take_id)?.asset_id : undefined;
   if (!start) return { error: "The chosen frame is missing." };
   const lines = (p.intent.lines ?? []).map((l) => `${l.who} says: "${l.text}"`).join(" Then ");
-  const prompt = [p.s.description, lines, input.extra?.trim(), lines ? "Clear natural speech, lips in sync. No music." : "No speech, no music."].filter(Boolean).join(" ");
+  const prompt = [
+    p.s.description, lines, input.extra?.trim(),
+    p.interior && "The room is dry: rain falls only outside the window.",
+    "Only the people already in the frame; nobody new appears.",
+    lines ? "Clear natural speech, lips in sync. No music." : "No speech, no music.",
+  ].filter(Boolean).join(" ");
   const r = await pickRoute(projectId, input.quality === "finish" ? "clipFinish" : "clip");
   if (!r) return { error: "Your school hasn't enabled the video route. Ask your instructor." };
   const durations = input.quality === "finish" ? [6, 8, 10] : [6, 8, 10, 12, 14, 16, 18, 20];

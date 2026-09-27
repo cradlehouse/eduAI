@@ -31,6 +31,8 @@ Rules:
 - Keep it small: 3 to 7 shots for a normal scene. Students pay for every shot.
 - Motion: mostly static; a slow dolly in for an emotional line; don't move the camera on every shot.
 - Descriptions are prompts for an image model: concrete, visual, present tense. Use the character names in capitals.
+- "on" lists EVERY character visible in the frame, even partly: an over-the-shoulder includes the near person's shoulder, a reaction includes whoever is being looked at if they are in frame. A description never refers to anyone (not even "her" or "him") who isn't in "on"; if someone is out of frame, say they are off-screen.
+- Weather belongs outside. In an INT. scene, rain, snow or wind are only seen through windows or doors; the room itself is dry. Never put rain on a face or inside a room.
 - Seconds: roughly the time to say the lines plus a beat (4-12).`;
 
 export async function planShots(scene: { heading: string; blocks: { i: number; kind: string; who?: string; text: string }[]; cast: string[]; location: string }) {
