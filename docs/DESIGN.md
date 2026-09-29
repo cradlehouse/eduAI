@@ -72,25 +72,30 @@ Rules:
 
 ## 2. Layout
 
-Desktop-first; the workspace is a desktop tool. Minimum 1200 wide. Below 1024, the bible rail and inspector collapse to icon rails; the canvas and timeline stay.
+Rewritten 28 Sep 2026 for the one-job-per-screen flow (PRODUCTION_FLOW.md; mockups in
+`docs/design/flow-mock.html` and `scene-lines-mock.html`). The earlier single-workspace layout (bible rail +
+canvas + inspector + timeline on one screen) was dropped: students were shown everything at once.
 
 ```
-┌──────────┬─────────────────────────────────────┬──────────┐
-│ Bible    │  Title ····························· avatars    │
-│ rail     │  Pinned chips                       │ Inspector│
-│ 230px    │  Canvas (dot grid)                  │ 206–302px│
-│          │  cards, cuts, takes                 │          │
-│          │                                     │          │
-├──────────┴─────────────────────────────────────┴──────────┤
-│ Timeline drawer (collapsible, 180–280px)                   │
-└────────────────────────────────────────────────────────────┘
+┌──────┬──────────────┬──────────────────────────────────────────────┐
+│ Step │ List of this │  Title · tabs for this element or shot        │
+│ rail │ step's items │  One job's content (results, slots, lines)    │
+│ 68px │ 210–220px    │                                               │
+│      │ (or asset    │                                               │
+│      │  drawer)     │  Prompt bar (only where something is made)    │
+└──────┴──────────────┴──────────────────────────────────────────────┘
 ```
 
-- Bible rail: fixed left, 230px, glass, full height. Sections: Characters, Environments, Props, Style. Style is a single fixed item per project (no list).
-- Canvas: fills the middle. Dot grid at 22px. Pannable. Cards are absolutely positioned within a scene; positions persist per scene.
-- Inspector: fixed right, glass. Contents depend on what's selected (nothing → Routes; a cut → Cut inspector; a take → Take inspector with receipt).
-- Timeline: bottom drawer. Collapsed by default on Character and Environment screens; open by default on Scene.
-- Collaborator avatars top-right of every screen (team members currently in the project). Presence only; no cursors in v1.
+- **Step rail** (left, every project page): Script, Cast, Locations, Props, Scenes, Edit in order; a gold dot
+  means something is waiting, a tick means done. Crew, Cohort and the budget ring sit at the bottom. On
+  phones it becomes a scrolling row under the header. The org/cohort tree only appears outside a project.
+- **Second column**: the list for this step (Cast, Locations, Props: one row per element with its status),
+  the shot list (Shot screen), or the **asset drawer** (Scene and Edit only: drag in, or +).
+- **Main**: one job. Tabs split an element or a shot into its steps (Look / Turnaround / Voice;
+  Master wide / Angles / Times of day / Room tone; Camera / Frame / Clip).
+- **Prompt bar** (bottom, sticky): only on screens that make something (Look, Frame, Clip). Shows what goes
+  in automatically (chips for the cast look and the location view), the count, and the price on the button.
+- Header: the breadcrumb doubles as the project switcher; avatar menu top right.
 
 ## 3. Components
 
@@ -123,96 +128,37 @@ Desktop-first; the workspace is a desktop tool. Minimum 1200 wide. Below 1024, t
 ### Prompt field
 - Field background, dim placeholder "Write the shot…". Screening happens on submit; a refusal replaces the take card with the refusal card and a one-line reason.
 
-## 4. Screens
+## 4. Screens (as built, 28 Sep 2026)
 
-### 4.1 Character
+| Step | Route | What's on it |
+|---|---|---|
+| Script | `/p/:id` | Settings bar (shape, look, engine); script editor; Break it down → review; "Added to the script from other pages" list with undo |
+| Cast | `/p/:id/cast/:entry?tab=` | Look (description, 3 portraits, "This is Angie", "Start from this", upload a start image) · Turnaround (front/side/back) · Voice (stock voice picker, sample, "Use this voice") |
+| Locations | `/p/:id/locations/:entry?tab=` | Master wide · Angles (made from the wide; preset buttons) · Times of day · Room tone (30 s bed, "Use this") |
+| Props | `/p/:id/props/:entry` | Look only |
+| Scenes | `/p/:id/scenes` | Cards in script order: location thumb, who's in it, shots chosen |
+| Scene | `/p/:id/scenes/:scene` | Asset drawer; Where / Who / Props slots (drop or +); lines pop-up on drop; "+ new character" with a line; What happens (the script's own blocks, editable, + line); Plan the shots → suggested list → Keep |
+| Shot | `/p/:id/scenes/:scene/shots/:shot?tab=` | Camera (framing and move as picture tiles, location view) · Frame (stills; Use this frame / Use as end frame) · Clip (start ⇄ end, Fast/Quality, takes, choose; sound tracks once split) |
+| Edit | `/p/:id/edit` | Player; tracks: Picture, one per character, Room, Music (placeholder); level sliders; Export → download |
 
-Purpose: build a person once so every shot she's in matches.
+Rules the screens follow:
+- Adding anything anywhere writes it into the script and asks where it goes.
+- Choosing is a toggle and nothing is deleted (takes are hidden, not removed); every generation is priced
+  before and receipted after.
+- A step's tab shows ✓ when it's done; the next step is where a student lands.
 
-Canvas:
-- Three reference cards in a row, 220×220: Face (close-up, neutral), Body (full length), Wardrobe (what she wears). Two dashed slots to the right: + profile, + expression. Up to 9 references.
-- Thin gold lines run from the three cards down into the Identity panel — the visual statement that identity is compiled from references.
+## 5. Data (as built)
 
-Panels:
-- Identity (below the cards): continuity score and bar; "Who she is" free-text; "Wardrobe by scene" chips — a Default plus optional per-scene overrides. A wardrobe override is the only per-scene variation a character has; everything else is locked.
-- Test her (bottom): prompt + Generate + price. Results appear as three 120×70 thumbs with scores. Tests never enter the film and are billed as images (Explore $0.02 / Control $0.05 / Finish $0.08 — placeholder numbers; pull from the registry).
-- Inspector (right): Routes for images; Screening note (minors tier on/off is set by the cohort, shown read-only); Lock note.
+`bible_entries` (+ appearance, voice_asset_id, room_tone_asset_id), `bible_entry_assets` (roles: look,
+turnaround, angle, time, voice, room, upload…), `scenes` (heading, location, excerpt, follows the script via
+`set_scene_order`), `shots.intent` (framing, camera_motion, lines, on, angle_asset_id, end_take_id),
+`shots.plate_take_id` = chosen frame, `shots.selected_take_id` = chosen clip, `take_tracks` (voice per
+character, original), `script_changes` (undo), `projects.edit` (levels).
 
-Behaviour:
-- Save is disabled until Face + one other reference exist.
-- The character's key image (used as her swatch everywhere) is the Face reference.
-- Changing a reference re-compiles identity and re-scores; existing takes keep their old scores and get a "re-check" affordance, they are not re-scored silently.
-
-### 4.2 Environment
-
-Purpose: build a place once so every shot in it lines up.
-
-Canvas:
-- One large master card, Wide, 460×260, chosen-cyan border and foot text "geometry source". Two 216×124 cards stacked right: Reverse, Detail. Dashed slot: + angle, with the hint "made from the wide, so it lines up".
-- The Wide must exist before any other angle can be generated; other angles are generated image-to-image from it.
-
-Panels:
-- Fixed for this space: a 2×2 grid — time, light, weather, occupancy. Editing any of these after save prompts "This makes a new environment" and forks; it never mutates the one existing shots used.
-- What it is: free text.
-- Props that live here: chips. A prop pinned here is auto-pinned to any scene set in this environment.
-- Test it: prompt + Generate + price.
-- Inspector: Camera (lens, height, move — the environment's default framing, inherited by cuts and overridable); Continuity note.
-
-### 4.3 Scene
-
-Purpose: the working screen. Lay out cuts, generate takes, choose one per cut.
-
-Header: "Scene 3 — The handoff", budget bar with `$spent / $cap`, avatars.
-
-Pinned chips under the header: everything pinned at scene level.
-
-Canvas:
-- Cuts are cards in a row, 290×164 (the chosen take, or the latest take if none chosen, is the media). Label "Cut 1 · Maya, close". Foot: take number left, continuity right.
-- Under each cut: its take thumbnails in a row + a dashed "+" slot. Under those, a mute line with the camera: "close · eye level · static · 50mm".
-- A cut can hold a subset of scene pins ("In this cut: Maya · depot"). Dropping a bible item on a cut adds it to that cut only.
-- Dashed "+ cut" slot at the end of the row. Cuts are camera setups: close on A, close on B, both wide, insert on the bag.
-
-Panels:
-- Cut inspector (selected cut): camera 2×2 (framing/lens, height, move, light-from-environment); Shot prompt + "Another take"; Continuity on the current take, one row per pinned character and the environment. This is where a wide can pass on Maya and fail on the courier.
-- Route (right): Explore / Control / Finish with video prices; "This take" price; screening note.
-- Instructor strip (bottom, shown to instructor/admin roles only, collapsed for students): screened prompt count, refusals (no charge), team on this scene. Every take, prompt, cost, score and choice is here; nothing is deleted.
-
-Behaviour:
-- Choosing a take is a toggle. Choosing a different one un-chooses the previous. Kill hides a take (dims to 30%, still in history); Restore brings it back.
-- Generate is blocked, with a reason, if the cut has no pinned environment.
-- The timeline drawer is open on this screen and reflects chosen takes live.
-
-### 4.4 Timeline
-
-Purpose: assemble chosen takes in story order. This is not an editor; there are no trims or transitions in v1.
-
-- Ruler: scene names across the top.
-- Lanes: Picture (52px clips, media thumbs, cyan border = chosen, dashed gap = "C3 wide — no take chosen"); Ambience (one bed per environment, auto-placed, cyan-wash); Effects (spot sounds, cyan-wash); Voice (dashed, "voice route · phase 2").
-- A cut with no chosen take renders as a gap the width of its cut, never as a stand-in take.
-- Drag clips to reorder within a scene; scenes reorder in the project view, not here.
-- Footer panel: takes in the cut ($), spent this project vs cap, bar.
-- Export rough cut: ghost button, produces a stitched MP4 in v1; XML for Premiere/Resolve later.
-
-Audio is a placeholder in this spec: Stable Audio is live for effects, so the Effects lane is real; Ambience should be generated once per environment at environment-save time; Voice waits for Chatterbox.
-
-## 5. Data this implies
-
-Add where missing:
-- `characters.references[]` with a `slot` enum (face, body, wardrobe, profile, expression, other) and `wardrobe_overrides[{scene_id, description}]`.
-- `environments.fixed { time, light, weather, occupancy }` — immutable after first take; edits fork a new environment row with `forked_from`.
-- `environments.angles[]` with `is_master` and `derived_from`.
-- `pins` table: `{ target_type: scene|cut, target_id, asset_type, asset_id }`.
-- `takes.continuity[]`: `{ subject_type: character|environment, subject_id, score, reason, at_seconds }` — per subject, not one number per take.
-- `takes.state`: live | killed. `cuts.chosen_take_id`.
-- `cuts.camera { framing, lens, height, move }`, defaulting from the environment.
-
-## 6. Migration from the current scheme
-
-1. Add the tokens above to the global stylesheet and Tailwind config. Delete the existing palette; do not alias old names to new ones, or the old colours will leak back in.
-2. Grep for hex literals and `bg-`/`text-`/`border-` utilities using the old palette; replace with semantic names (`bg-glass`, `border-card-edge`, `text-dim`, `text-gold`).
-3. Convert every panel to the glass recipe. Convert every list to Bible rows. Convert every generation output to an Image card.
-4. Reserve gold, cyan, coral for the meanings in §1 only. Anything currently coloured for decoration goes to ink/dim/mute.
-5. Then rebuild screens in this order: Scene (most used), Character, Environment, Timeline.
+## 6. Superseded
+The §2 workspace layout and §4 screens of the 23 Sep spec (one canvas with bible rail, inspector and
+timeline) and its §5 data sketch (characters/environments/pins tables) were replaced by the above.
+Tokens (§1), components (§3) and the accessibility floor (§7) still apply.
 
 ## 7. Accessibility floor
 

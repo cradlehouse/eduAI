@@ -1,5 +1,7 @@
 # eduai — stack and standing preferences
 
+Last reviewed 28 Sep 2026. Business side: BUSINESS.md. What's open: STATUS.md.
+
 What we run, why, and the decisions already made. Update this when a decision changes;
 the handoff and build spec are history, this file is current.
 
@@ -22,19 +24,19 @@ cameras/lighting/audio/laptops/software, and has apprentices make both individua
 |---|---|---|---|
 | Database, auth, realtime, secrets | **Supabase** (Postgres 17, Auth magic-link, Realtime, Vault), **pinned to AWS us-west-2 (Oregon)** | One contract between web and orchestrator; RLS does the tenancy; Vault holds org-supplied keys. Oregon is a carbon-neutral AWS region, a verifiable claim (see RESOURCE_NEUTRALITY.md) | Live: project `eduAI`, ref `zhltmlguysknjeueabyy`, us-west-2 |
 | Sign-in | **Password** first (`/login`), **Google** once configured (`NEXT_PUBLIC_AUTH_GOOGLE=1` + `[auth.external.google]` in config.toml), emailed **link** kept for invites and password-less accounts; reset via recovery email → `/account`. `/account` = display name + set/change password. `SessionGuard` reloads any page whose rendered user no longer matches the cookie session (Next's router cache reuses the last tree on Back). | Magic links every time got old fast; minors and instructors need a normal sign-in | Live 2026-09-12 |
-| Migrations | **Supabase CLI**, native layout `supabase/migrations`, numbered `0001…`, applied with `supabase db push` | Same convention as ercotcron; CI replays them on plain Postgres | Live, 16 applied |
-| Web app | **Next.js 15.5** App Router, TypeScript, Tailwind 4, pnpm 11; design per docs/DESIGN.md (Darkroom layout, Playbook colour) | Thin UI: CRUD + Realtime, no vendor calls. Holds **no secrets**: invite acceptance and landing are user-scoped RPCs (migration 0103) | P1-03 done |
+| Migrations | **Supabase CLI**, native layout `supabase/migrations`, numbered `0001…`, applied with `supabase db push --linked` (`packages/db/migrations` is a symlink: `git add supabase/migrations/…`) | Same convention as ercotcron; CI replays them on plain Postgres | Live, through 0128 (28 Sep) |
+| Web app | **Next.js 15.5** App Router, TypeScript, Tailwind 4, pnpm 11; dark design per docs/DESIGN.md; the one-job-per-screen flow in PRODUCTION_FLOW.md | Thin UI: no vendor calls except Claude for script breakdown and shot planning (`ANTHROPIC_API_KEY` Worker secret, model `claude-opus-5`). Invite acceptance and landing are user-scoped RPCs (0103) | Live; production flow shipped 26–28 Sep |
 | Web hosting | **Cloudflare Workers** (static assets binding) via **OpenNext** (`@opennextjs/cloudflare`) | Cloudflare is already required (R2, Worker); no per-push deploy cost; **not Vercel**. Not Pages: Cloudflare has moved Next.js to Workers. Not vinext yet: Cloudflare's own README calls it not battle-tested and Next-16-only; revisit in Phase 4, the swap is build-tool only | **Live**: https://eduai-web.long-night-f7d0.workers.dev (Worker `eduai-web`) |
-| Orchestrator | **Python 3.12, FastAPI, uv**; one web service + `generate` and `render` workers | Talks to vendors, R2 and Postgres; never renders HTML | **Live 2026-09-13** at https://eduai-orchestrator.onrender.com (`/health`). Created by hand from the public repo URL (blueprint + env-group link failed); env vars live on the service; Manual Deploy after each push unless the GitHub app is granted the repo |
+| Orchestrator | **Python 3.12, FastAPI, uv**; one service runs the `generate` worker, which also claims `render` jobs (voice splits, exports) in the background | Talks to vendors, R2 and Postgres; never renders HTML | **Live** at https://eduai-orchestrator.onrender.com (`/health`); auto-deploys on push to main (~4 min) |
 | Orchestrator hosting | **Render**, workspace `waterfallai` (really Cradle House), project `eduai`, region **Oregon**; env group `eduai` holds every orchestrator secret; workers on paid instances | Same AWS region as the database; free tier sleeps and generation must not | Project + env group created 2026-09-12; services at P1-16 |
 | Object storage | **Cloudflare R2**, bucket `eduai-assets`, content-addressed keys `<org>/<sha2>/<sha256>.<ext>`. Web uploads/serves via the Worker's R2 **binding** (no keys); the orchestrator uses S3 keys on Render | Cheap egress; immutable assets | P1-10. Cloudflare account `300ea11f0166485a4c182f50ad32b524` (admin@cradle.house). **Bucket created 2026-09-12**, location wnam, lifecycle in infra/r2-lifecycle.json |
 | Webhook inbox | **Cloudflare Worker** → verify signature → insert `webhook_inbox` → 200 | Vendors never point at Render; replay-safe by `(provider, dedupe_key)`; no secrets in the Worker (anon RPC; the orchestrator re-polls, never trusts the body) | Live 2026-09-12: https://eduai-webhook-inbox.long-night-f7d0.workers.dev |
-| Media processing | **ffmpeg** in the render worker; **OTIO** for timelines; FCP7 XML / FCPXML / EDL writers | Export formats editors actually open | Phase 3 |
-| Model vendors | **fal.ai** (Veo 3.1 Lite, LTX 2.5, Stable Audio 3); Replicate (Chatterbox, Phase 2) | Registry-driven; a vendor is a row, never code | fal at P1-10 |
+| Media processing | **PyAV** in the orchestrator (decode, extract sound, mix at 48 kHz: no ffmpeg binary); **fal ffmpeg-api** for picture concat and audio/video merge. Later: OTIO timelines, FCP7 XML / FCPXML / EDL | Our own mix is sample-accurate and honours the Edit levels; fal compose laid audio end to end | Export live 28 Sep; editor formats later |
+| Model vendors | **fal.ai** for everything, open-weight first: LTX 2.5 image-to-video (clips, with sound), Qwen-Image / Qwen edit / Qwen angles (stills), Kokoro (stock voices), Stable Audio Open (room tone), and in the voice split Demucs + Whisper + Chatterbox speech-to-speech. Closed fallbacks still registered: FLUX 2 pro edit, Veo 3.1 Lite, Stable Audio 2.5 | Registry-driven; a vendor is a row, never code. Every film-pipeline model is open-weight so it can move to our own GPUs | Live; costs in BUSINESS.md |
 | Self-hosted compute | **Crusoe Cloud** (stranded-energy + renewable GPUs) for the Phase 4 open-weight profiles | The only tier where energy is measurable; the sustainability differentiator vs CoreWeave/Lambda/RunPod | Phase 4, draft profile `ltx-2.5@crusoe` |
 | Prompt gate + assistants | **Anthropic Claude** (`claude-haiku-4-5-20251001` via forced tool use) | Content-tier prompt gate: every prompt is classified against the effective tier (M forced for minors) before a vendor sees it; refusals release the tokens and carry a one-sentence reason a teacher can show; a route with `prompt_gate: required` fails closed when the classifier is unavailable. Assistants later | Live in the orchestrator 2026-09-13 |
 | Publishing | **Ayrshare** | One API for YouTube/TikTok/Instagram; org and personal profiles | Phase 3 |
-| Errors | **Sentry**, org `cradlehouse`, projects `eduai-orchestrator` (FastAPI; errors + logs) and `eduai-web` (Next.js). `send_default_pii=False` everywhere: users are mostly minors | | Orchestrator wired 2026-09-13 (on when `SENTRY_DSN` is set); web SDK still to do (Workers runtime) |
+| Errors | **Sentry**, org `cradlehouse`, projects `eduai-orchestrator` (FastAPI; errors + logs) and `eduai-web` (Next.js). `send_default_pii=False` everywhere: users are mostly minors | | Both wired; web reports only when `NODE_ENV === "production"` (local dev noise stopped 24 Sep) |
 | CI | **GitHub Actions**: generated-file sync · migrations + RLS check + smoke on `postgres:17` · web lint/typecheck · orchestrator ruff/pytest | The db job is the one that matters; the last two skip until code exists | Live, green |
 | Repo | **GitHub `cradlehouse/eduAI`**, pnpm-workspace monorepo | | Live |
 
@@ -67,13 +69,13 @@ GPU platform before the Phase 4 self-hosted LTX profile.
 - Lanes are the product vocabulary: `explore`, `control`, `finish`, `voice_likeness`. Never "open vs commercial".
 - A model is selectable only through an approved profile an org has allowlisted for that lane. A registry row alone is nothing.
 - Versions and profiles used by any job are immutable except for approval/health/notes; changes are new slugs.
-- Phase 1 routes: one managed visual model (Veo), one open-weight experimentation route (LTX), one SFX route (Stable Audio). Kling, FLUX.2 dev and Chatterbox stay draft.
+- Routes (28 Sep): open-weight first for every film job (see Model vendors); one video engine per film (LTX 2.5); Kling, FLUX.2 dev and the Replicate Chatterbox stay draft.
 - Every cost and endpoint in the seed is flagged `verified: false` / UNVERIFIED until checked against vendor docs.
 - Resource neutrality is the fifth integrity axis: disclosure tier A/B/C per version, energy profile + resource model per deployment profile, estimate frozen into every receipt. Never a fabricated kWh for a closed model. Details in RESOURCE_NEUTRALITY.md.
 - Pricing unit is generated minutes, not seats; cohort film vs individual films are both supported by project vs personal budgets. Details in PRICING.md.
 
 **People and safety**
-- Auth is magic-link only. No passwords. Invites carry role, cohort, project and project role; acceptance is one transaction.
+- Sign-in is password first, emailed link for invites and password-less accounts (see the Sign-in row). Invites carry role, cohort, project and project role; acceptance is one transaction.
 - Four org roles (student, instructor, admin, owner). Project roles are credit labels, not permissions. No permission matrix in v1.
 - Minors: content tier forced to `M`, never the voice/likeness lane, no personal social accounts, guardian signer on releases.
 - Consent is specific: subject, rights holder, source asset, permitted lanes, distribution scope, expiry. Revocation blocks new generation immediately; existing receipts keep the basis that applied at the time.

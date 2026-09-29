@@ -9,6 +9,7 @@ are often minors: never upload real student faces or voices without a signed gua
 - `supabase/migrations` — Postgres schema (Supabase project `zhltmlguysknjeueabyy`). `packages/db/migrations` is a symlink to it: always `git add supabase/migrations/<file>`.
 - `packages/db/seed` — model registry: models.csv, model_versions.csv, deployment_profiles.csv, schemas/*.json, profiles/*.json.
 - `docs/PRODUCTION_FLOW.md` — how the product works (read this first). `docs/STATUS.md` — what's done, what's open.
+- `docs/BUSINESS.md` — customers, pricing, unit costs, hosting economics, licences, risks. `docs/STACK.md` — every layer and the standing rules. `docs/DESIGN.md` — tokens, layout, screens as built.
 - `docs/research/` — model, continuity, dialogue and self-hosting research. `docs/design/` — mockups.
 - `scripts/spike/` — paid model tests; they ask for a fal key (hidden). Keys pasted into chat can't be used.
 
