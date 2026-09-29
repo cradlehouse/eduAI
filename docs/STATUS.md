@@ -9,9 +9,10 @@ voice split per character → Edit timeline → Export (our own audio mix, 12–
 - **Rain indoors**: fix deployed (INT. prompts drop weather words), not yet re-tested. ~$1.40 to re-run
   the two test shots; the test project has ~$1.90 left.
 - **Built 28 Sep, not yet deployed or tried live** (needs migration 0129, a web deploy, a push for Render):
-  - Frame check: Claude (Opus 5.5, low effort) looks at each new frame beside the Cast looks and flags
-    someone not in Cast, the wrong face, a missing person, or weather indoors. Flags only; the student still
-    chooses. Stored per frame in `shots.intent.checks`.
+  - Frame check: when a student clicks "Use this frame", Claude (Opus 5.5, low effort) checks that one
+    frame beside the Cast looks for someone not in Cast, the wrong face, a missing person, or weather
+    indoors. Flagged ⇒ "Use it anyway" / "Make more frames". Only chosen frames are checked (~1 per shot,
+    guarding the clip). Stored per frame in `shots.intent.checks`. Open-weight replacement is undecided.
   - Cast tick: done when everyone has a look and everyone with a line has a voice.
   - Music: made on the Edit page (Stable Audio, a hidden "Music" style entry), plays under the whole film,
     loops if shorter, own level. Per-character voice levels now reach the export mix.

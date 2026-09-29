@@ -120,25 +120,29 @@ export async function makeFrames(projectId: string, shotId: string, input: { ext
   return { ok: true, tokens: "tokens" in res ? res.tokens : null };
 }
 
-// The frame check: Claude compares the frame with the Cast looks and the scene (see lib/script/framecheck).
-// Stored per frame on the shot, so it runs once per frame; `again` re-runs it.
-export async function checkFrame(projectId: string, shotId: string, takeId: string, again = false): Promise<R> {
+// The frame check: Claude compares the chosen frame with the Cast looks and the scene (see
+// lib/script/framecheck). It runs when a student picks a frame, not on every frame made: it guards the
+// clip, which is where the money goes. Stored per frame on the shot, so a frame is checked once; `again`
+// re-runs it. A check that couldn't run comes back as { error } inside `check`, and never blocks.
+type Stored = CheckResult | { error: string; at: string };
+export async function checkFrame(projectId: string, shotId: string, takeId: string, again = false): Promise<{ check: Stored } | { error: string }> {
   const p = await framePieces(shotId);
   if (!p) return { error: "Shot not found." };
-  if (!again && p.intent.checks?.[takeId]) return { ok: true };
+  const had = p.intent.checks?.[takeId];
+  if (!again && had) return { check: had };
   const supabase = await createClient();
   const { data: take } = await supabase.from("takes").select("asset_id, shot_id").eq("id", takeId).maybeSingle();
   if (!take || take.shot_id !== shotId) return { error: "Frame not found." };
   const { data: sc } = await supabase.from("scenes").select("heading").eq("id", p.s.scene_id).maybeSingle();
   const r = await runCheck({ frameAssetId: take.asset_id, heading: sc?.heading ?? "", description: p.s.description, people: p.people.map((e) => ({ name: e.name, reference: e.reference_asset_id })) });
-  // Re-read the intent: another frame's check may have landed while this one ran.
+  const check: Stored = "error" in r ? { error: r.error, at: new Date().toISOString() } : r.result;
+  // Re-read the intent: something else may have changed the shot while the check ran.
   const fresh = await shotOf(shotId);
   const it = (fresh?.intent ?? {}) as Intent;
-  const checks = { ...(it.checks ?? {}), [takeId]: "error" in r ? { error: r.error, at: new Date().toISOString() } : r.result };
-  const { error } = await supabase.from("shots").update({ intent: { ...it, checks } as unknown as Json }).eq("id", shotId);
+  const { error } = await supabase.from("shots").update({ intent: { ...it, checks: { ...(it.checks ?? {}), [takeId]: check } } as unknown as Json }).eq("id", shotId);
   if (error) return { error: error.message };
   done(projectId, p.s.scene_id, shotId);
-  return "error" in r ? { error: r.error } : { ok: true };
+  return { check };
 }
 
 export async function chooseFrame(projectId: string, shotId: string, takeId: string | null) { return setChosenTake(projectId, shotId, "background", takeId); }
