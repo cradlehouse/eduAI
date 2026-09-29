@@ -21,7 +21,7 @@ from .registry import Route, asset_kind_for, ext_for, extract_outputs, map_input
 from .settings import Settings
 from .settings import settings as default_settings
 from .storage import Storage, asset_key
-from .voices import ESTIMATE_CENTS, Fal, Track, decode_pcm, extract_wav, media_seconds, mix, split_voices
+from .voices import ESTIMATE_CENTS, Fal, Track, decode_pcm, extract_wav, media_seconds, mix, split_voices, voice_allowed
 
 log = logging.getLogger("orchestrator")
 
@@ -200,11 +200,20 @@ class Dispatcher:
             original = extract_wav(video)
             okey = asset_key(org, hashlib.sha256(original).hexdigest(), "wav")
             await self.storage.put_if_absent(okey, original, "audio/wav")
+            # Voices come from the Cast entries as they are now, not from the job's inputs, and a real
+            # person's voice only with a signed release (voices.voice_allowed).
+            speakers = inputs.get("speakers") or []
+            rows = {r["entry_id"]: r for r in await self.db.speaker_voices(org, [str(sp["entry_id"]) for sp in speakers if sp.get("entry_id")], job.get("requested_by"))}
             voices: dict[str, str | None] = {}
-            for sp in inputs.get("speakers") or []:
-                aid = sp.get("voice_asset_id")
-                k = await self.db.asset_key(org, str(aid)) if aid else None
-                voices[str(sp["name"]).upper()] = await self.storage.presigned_get(k, self.cfg.asset_url_ttl_s) if k else None
+            kept: dict[str, str] = {}
+            for sp in speakers:
+                name = str(sp["name"]).upper()
+                row = rows.get(str(sp.get("entry_id")))
+                ok, why = voice_allowed(row) if row else (False, "not in the Cast")
+                k = await self.db.asset_key(org, str(row["voice_asset_id"])) if ok and row else None
+                voices[name] = await self.storage.presigned_get(k, self.cfg.asset_url_ttl_s) if k else None
+                if not voices[name]:
+                    kept[name] = why
             await self.db.event(jid, "submitted", {"op": "voices", "speakers": sorted(voices)})
             tracks, info = await split_voices(fal, await self.storage.presigned_get(okey, self.cfg.asset_url_ttl_s), inputs.get("lines") or [], voices)
             tracks.insert(0, Track(kind="original", data=original, mime="audio/wav", name="LTX"))
@@ -220,7 +229,7 @@ class Dispatcher:
                                                         "pipeline": ["demucs", "whisper", "chatterbox-s2s"]}), t))
             receipt = {"actual_cents": None, "output_hashes": [s.sha256 for s, _ in stored],
                        "policy_decisions": {"prompt_gate": "not_run", "reason": "post-processing of an approved take"},
-                       "provenance": {"op": "voices", "take_id": inputs.get("take_id"), **info}, "resource_estimate": {"basis": "undisclosed"}}
+                       "provenance": {"op": "voices", "take_id": inputs.get("take_id"), "kept_ltx_voice": kept, **info}, "resource_estimate": {"basis": "undisclosed"}}
             await self.db.settle_tracks(job, str(inputs["take_id"]), stored, receipt)
             log.info("job %s: voices split into %d track(s)", jid, len(stored))
         except Exception as e:  # noqa: BLE001 — a failed split must not take the loop down
@@ -229,8 +238,9 @@ class Dispatcher:
 
     async def run_export(self, job: dict[str, Any]) -> None:
         """The edit → one file. Picture: the chosen takes end to end (fal ffmpeg compose, video only).
-        Sound: mixed here, sample-accurate: each character's voice track at its shot, the picture's own
-        sound where a take wasn't split, the location's room tone under each shot, at the Edit levels."""
+        Sound: mixed here, sample-accurate: each character's voice track at its shot (at that character's
+        level), the picture's own sound where a take wasn't split, the location's room tone under each
+        shot, the music under the whole film, all at the Edit levels."""
         jid, org = str(job["id"]), str(job["org_id"])
         inputs: dict[str, Any] = job.get("inputs") or {}
         clips: list[dict[str, Any]] = inputs.get("clips") or []
@@ -258,7 +268,11 @@ class Dispatcher:
                 picture.append({"timestamp": int(t * 1000), "duration": int(secs * 1000), "url": vurl})
                 if c.get("voices"):
                     for v in c["voices"]:
-                        layers.append((decode_pcm((await fetch(v))[1]), t, secs, levels.get("voice", 1.0), False))
+                        # {asset, name} carries the character's own level (Edit's per-character slider);
+                        # a bare asset id (older exports) plays at the voice level alone.
+                        aid, name = (v.get("asset"), v.get("name")) if isinstance(v, dict) else (v, None)
+                        gain = levels.get("voice", 1.0) * (levels.get(f"voice:{name}", 1.0) if name else 1.0)
+                        layers.append((decode_pcm((await fetch(str(aid)))[1]), t, secs, gain, False))
                 else:
                     layers.append((decode_pcm(vdata), t, secs, levels.get("picture", 1.0), False))
                 if c.get("room"):
@@ -266,6 +280,9 @@ class Dispatcher:
                         room_cache[c["room"]] = decode_pcm((await fetch(c["room"]))[1])
                     layers.append((room_cache[c["room"]], t, secs, levels.get("room", 0.5), True))
                 t += secs
+            if inputs.get("music"):
+                # Under the whole film from the top, looped if the piece is shorter than the film.
+                layers.append((decode_pcm((await fetch(str(inputs["music"])))[1]), 0.0, t, levels.get("music", 0.3), True))
             await self.db.event(jid, "submitted", {"op": "export", "clips": len(clips), "seconds": round(t, 2)})
             comp = await fal.run("fal-ai/ffmpeg-api/compose", {"tracks": [{"id": "picture", "type": "video", "keyframes": picture}]}, timeout_s=900)
             sound = mix(t, layers)

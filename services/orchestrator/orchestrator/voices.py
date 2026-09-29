@@ -146,6 +146,23 @@ def keep_only(wav_bytes: bytes, spans: list[tuple[float, float]], pad: float = P
     return out.getvalue()
 
 
+def voice_allowed(row: dict[str, Any]) -> tuple[bool, str]:
+    """May this Cast voice be used to convert the lines? A stock voice (generated) always may. A real
+    person's voice (an uploaded recording, or an entry marked as depicting someone) needs a signed release
+    that permits the voice_likeness lane, and the person asking must not be a minor (the same rule the
+    model gate applies to that lane). Otherwise LTX's own voice stays for that character."""
+    if not row.get("voice_asset_id"):
+        return False, "no Cast voice"
+    real = bool(row.get("requires_consent")) or row.get("source") == "uploaded"
+    if not real:
+        return True, "stock voice"
+    if row.get("consent") != "signed":
+        return False, f"real voice without a signed release ({row.get('consent') or 'missing'})"
+    if row.get("minor"):
+        return False, "real voice: a student under 18 can't use the voice-likeness lane"
+    return True, "real voice, release signed"
+
+
 def _words(s: str) -> list[str]:
     return [w for w in re.sub(r"[^a-z' ]", " ", s.lower()).split() if w]
 

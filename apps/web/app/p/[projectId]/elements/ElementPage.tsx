@@ -3,6 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { priceOf } from "@/lib/elements/routes";
 import { JobWatcher } from "@/app/p/[projectId]/scenes/JobWatcher";
+import { normName, speakersIn } from "@/lib/script/screenplay";
+import { getNav } from "@/lib/auth/nav";
+import { voiceState } from "@/lib/sound/consent";
 import { AddElement } from "./AddElement";
 import { Studio, type Result } from "./Studio";
 
@@ -19,18 +22,20 @@ export const TABS: Record<Kind, { key: string; label: string }[]> = {
 // steps as tabs, and a prompt bar that only makes pictures (or sounds) of this one element.
 export async function ElementPage({ projectId, kind, entryId, tab }: { projectId: string; kind: Kind; entryId?: string; tab?: string }) {
   const supabase = await createClient();
-  const [{ data: list }, { data: scenes }, { data: links }] = await Promise.all([
+  const [{ data: list }, { data: scenes }, { data: links }, { data: proj }] = await Promise.all([
     supabase.from("bible_entries").select("id, name, appearance, reference_asset_id, voice_asset_id, room_tone_asset_id").eq("project_id", projectId).eq("kind", kind).order("created_at"),
     supabase.from("scenes").select("id, position, heading, location_entry_id").eq("project_id", projectId).order("position"),
     supabase.from("scene_bible_entries").select("scene_id, bible_entry_id"),
+    supabase.from("projects").select("script").eq("id", projectId).maybeSingle(),
   ]);
+  const speaking = speakersIn(proj?.script ?? "");
   const entries = list ?? [];
   const base = `/p/${projectId}/${PATH[kind]}`;
   const sceneList = (scenes ?? []).map((s) => ({ position: s.position, heading: s.heading || `Scene ${s.position}` }));
   const scenesOf = (id: string) => (scenes ?? []).filter((s) => s.location_entry_id === id || (links ?? []).some((l) => l.scene_id === s.id && l.bible_entry_id === id)).map((s) => s.position);
   const status = (e: (typeof entries)[number]) =>
     !e.reference_asset_id ? (kind === "location" ? "no wide yet" : "no look yet")
-    : kind === "character" && !e.voice_asset_id ? "no voice yet"
+    : kind === "character" && !e.voice_asset_id && speaking.has(normName(e.name)) ? "no voice yet"
     : kind === "location" && !e.room_tone_asset_id ? "no room tone" : "";
 
   // Straight to the next one that needs work (or the first): one element at a time.
@@ -75,11 +80,23 @@ export async function ElementPage({ projectId, kind, entryId, tab }: { projectId
     );
   }
 
-  const [{ data: rows }, { data: jobs }, { data: detail }] = await Promise.all([
+  const [{ data: rows }, { data: jobs }, { data: detail }, { data: releases }, nav] = await Promise.all([
     supabase.from("bible_entry_assets").select("id, asset_id, role, label, params, created_at, job_id, assets(mime, kind)").eq("bible_entry_id", e.id).eq("lifecycle", "live").order("created_at", { ascending: false }),
     supabase.from("job_tokens").select("job_id, entry_role, status, error, created_at").eq("bible_entry_id", e.id).order("created_at", { ascending: false }).limit(12),
     supabase.from("bible_entries").select("description, likeness_of, requires_consent").eq("id", e.id).maybeSingle(),
+    kind === "character" ? supabase.from("consent_releases").select("subject_name, rights_holder_name, is_guardian, subject_is_minor, state, expires_at, signed_at").eq("bible_entry_id", e.id).contains("permitted_lanes", ["voice_likeness"]).order("created_at", { ascending: false }) : Promise.resolve({ data: [] }),
+    getNav(),
   ]);
+  // A real person's voice: the release that covers it (the newest signed one), and who may record one.
+  const { data: proj2 } = await supabase.from("projects").select("cohort_id").eq("id", projectId).maybeSingle();
+  const canManage = !!nav?.cohorts.find((c) => c.id === proj2?.cohort_id)?.manage;
+  const newest = (releases ?? [])[0];
+  const state = voiceState(newest);
+  const realVoice = {
+    state,
+    release: state === "signed" && newest ? { subject: newest.subject_name, signer: newest.rights_holder_name, guardian: newest.is_guardian, minor: newest.subject_is_minor } : null,
+    canManage,
+  };
   const tabs = TABS[kind];
   const current = tabs.find((t) => t.key === tab)?.key ?? "look";
   const results: Result[] = (rows ?? []).map((r) => ({ id: r.id, assetId: r.asset_id, role: r.role, label: r.label, at: r.created_at, jobId: r.job_id, audio: (r.assets as { kind?: string } | null)?.kind === "audio" }));
@@ -104,7 +121,7 @@ export async function ElementPage({ projectId, kind, entryId, tab }: { projectId
               scenes={scenesOf(e.id)} results={results}
               pending={open.map((j) => ({ role: j.entry_role ?? "", status: j.status ?? "" }))}
               failed={failed.map((j) => j.error ?? "It didn't work.")[0] ?? null}
-              prices={prices} />
+              prices={prices} realVoice={realVoice} />
     </div>
   );
 }

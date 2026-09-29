@@ -58,5 +58,5 @@ Limits: people talking over each other don't separate cleanly; plan shots so spe
 | Portraits, location wides, shot frames | FLUX 2 pro (+ edit), Qwen multiple-angles |
 | Video (one engine per film) | LTX 2.5 image-to-video: start/end frame, camera_motion, 6-20 s |
 | Voice | Chatterbox speech-to-speech ($0.015/min) |
-| Speaker split | Demucs + ElevenLabs speech-to-text (diarize) |
+| Speaker split | Demucs + Whisper (diarize) |
 | Room tone, effects, music | sound-effects and music models already in the registry |

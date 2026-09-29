@@ -6,6 +6,7 @@ import { generateForEntry } from "@/app/p/[projectId]/scenes/generate";
 import { addAction, addDialogue, addScene, normName, parseScript, setHeading, slugFor } from "@/lib/script/screenplay";
 import { currentScript, writeScript } from "@/lib/script/sync";
 import { pickRoute, type RouteKey } from "@/lib/elements/routes";
+import { voiceState } from "@/lib/sound/consent";
 
 type Kind = "character" | "location" | "prop";
 export type What = "look" | "turnaround" | "angle" | "time" | "voice" | "room";
@@ -89,6 +90,11 @@ export async function chooseLook(projectId: string, entryId: string, assetId: st
 
 export async function chooseSound(projectId: string, entryId: string, which: "voice" | "room", assetId: string | null): Promise<Result> {
   const supabase = await createClient();
+  // A recording of a real person is only a Cast voice while a signed release covers voice work.
+  if (which === "voice" && assetId) {
+    const { data: a } = await supabase.from("assets").select("source").eq("id", assetId).maybeSingle();
+    if (a?.source === "uploaded" && (await voiceConsent(entryId)) !== "signed") return { error: "A real person's voice needs a signed release first." };
+  }
   const patch = which === "voice" ? { voice_asset_id: assetId } : { room_tone_asset_id: assetId };
   const { data, error } = await supabase.from("bible_entries").update(patch).eq("id", entryId).select("id");
   if (error || !data?.length) return { error: error?.message ?? "Nothing changed." };
@@ -198,4 +204,97 @@ export async function uploadStart(projectId: string, entryId: string, form: Form
   await supabase.from("bible_entry_assets").insert({ org_id: e.org_id, project_id: projectId, bible_entry_id: entryId, asset_id: r.id, role: "upload", label: file.name, created_by: user.id });
   revalidatePath(`/p/${projectId}`, "layout");
   return { ok: true, assetId: r.id };
+}
+
+// ---- A real person's voice ------------------------------------------------------------------------
+// Stock voices are made by a model. A recording of a real person (a student, a parent, a teacher) is
+// their likeness: it can only be stored together with a signed release that permits voice work
+// (lane voice_likeness), recorded by an instructor, with a guardian as signer when the person is under
+// 18. The release goes on the entry but does not mark the entry as depicting that person, since the
+// pictures are still made up; the orchestrator re-checks the release before converting any lines.
+
+async function canManage(projectId: string) {
+  const supabase = await createClient();
+  const [{ data: p }, { getNav }] = await Promise.all([supabase.from("projects").select("cohort_id").eq("id", projectId).maybeSingle(), import("@/lib/auth/nav")]);
+  const nav = p ? await getNav() : null;
+  return !!nav?.cohorts.find((c) => c.id === p!.cohort_id)?.manage;
+}
+
+// signed | revoked | expired | missing, for voice work on this entry. The newest voice release decides:
+// withdrawing revokes it, and a new signed release after that is new consent.
+async function voiceConsent(entryId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from("consent_releases").select("state, expires_at").eq("bible_entry_id", entryId).contains("permitted_lanes", ["voice_likeness"]).order("created_at", { ascending: false }).limit(1);
+  return voiceState(data?.[0]);
+}
+
+async function keepRecording(projectId: string, entryId: string, file: File): Promise<{ id: string } | { error: string }> {
+  const { storeUpload } = await import("@/lib/assets/store");
+  const r = await storeUpload(file, projectId, "audio");
+  if ("error" in r) return r;
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: e } = await supabase.from("bible_entries").select("org_id").eq("id", entryId).maybeSingle();
+  if (!e || !user) return { error: "Not found." };
+  const { error } = await supabase.from("bible_entry_assets").insert({ org_id: e.org_id, project_id: projectId, bible_entry_id: entryId, asset_id: r.id, role: "voice", label: "recording", created_by: user.id });
+  return error ? { error: error.message } : r;
+}
+
+export async function recordVoiceRelease(projectId: string, entryId: string, form: FormData): Promise<Result> {
+  if (!(await canManage(projectId))) return { error: "Only an instructor can record a release." };
+  const subject = String(form.get("subject_name") ?? "").trim();
+  const signer = String(form.get("rights_holder_name") ?? "").trim();
+  const minor = form.get("subject_is_minor") === "on";
+  const guardian = form.get("is_guardian") === "on";
+  const doc = form.get("signed_file") as File | null;
+  const rec = form.get("recording") as File | null;
+  if (!subject || !signer) return { error: "Say whose voice it is and who signed." };
+  if (minor && !guardian) return { error: "Someone under 18 needs a parent or guardian to sign." };
+  if (!doc || doc.size === 0) return { error: "Attach the signed release (PDF or photo)." };
+  if (!rec || rec.size === 0) return { error: "Attach the voice recording." };
+  if (!rec.type.startsWith("audio/")) return { error: "The recording must be an audio file." };
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data: e } = await supabase.from("bible_entries").select("org_id, project_id").eq("id", entryId).maybeSingle();
+  if (!e || e.project_id !== projectId || !user) return { error: "Not found." };
+  const { storeUpload } = await import("@/lib/assets/store");
+  // The signed paper first; the recording only once there is a release to hold it.
+  const signed = await storeUpload(doc, projectId, "document");
+  if ("error" in signed) return signed;
+  const expires = String(form.get("expires_at") ?? "");
+  const { data: rel, error } = await supabase.from("consent_releases").insert({
+    org_id: e.org_id, project_id: projectId, bible_entry_id: entryId, subject_name: subject, rights_holder_name: signer,
+    signer_email: String(form.get("signer_email") ?? "").trim() || null, is_guardian: guardian, subject_is_minor: minor,
+    permitted_lanes: ["voice_likeness"], permitted_uses: { transformations: ["speech_to_speech"] }, distribution: "cohort",
+    expires_at: expires ? new Date(expires).toISOString() : null, state: "signed", signed_at: new Date().toISOString(),
+    file_asset_id: signed.id, created_by: user.id,
+  }).select("id").single();
+  if (error) return { error: error.message };
+  const kept = await keepRecording(projectId, entryId, rec);
+  if ("error" in kept) return kept;
+  await supabase.from("consent_releases").update({ source_asset_id: kept.id }).eq("id", rel.id);
+  revalidatePath(`/p/${projectId}`, "layout");
+  return { ok: true };
+}
+
+export async function addVoiceRecording(projectId: string, entryId: string, form: FormData): Promise<Result> {
+  if (!(await canManage(projectId))) return { error: "Only an instructor can add a recording." };
+  if ((await voiceConsent(entryId)) !== "signed") return { error: "There's no signed release for this voice." };
+  const rec = form.get("recording") as File | null;
+  if (!rec || rec.size === 0 || !rec.type.startsWith("audio/")) return { error: "Attach an audio recording." };
+  const kept = await keepRecording(projectId, entryId, rec);
+  if ("error" in kept) return kept;
+  revalidatePath(`/p/${projectId}`, "layout");
+  return { ok: true };
+}
+
+// Withdrawing stops it at once: the orchestrator re-reads the releases before every voice split.
+export async function revokeVoiceRelease(projectId: string, entryId: string, reason: string): Promise<Result> {
+  if (!(await canManage(projectId))) return { error: "Only an instructor can withdraw a release." };
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("consent_releases").update({ state: "revoked", revoked_at: new Date().toISOString(), revoked_reason: reason.trim() || "withdrawn" })
+    .eq("bible_entry_id", entryId).eq("state", "signed").contains("permitted_lanes", ["voice_likeness"]).select("id");
+  if (error || !data?.length) return { error: error?.message ?? "No signed release to withdraw." };
+  revalidatePath(`/p/${projectId}`, "layout");
+  return { ok: true };
 }

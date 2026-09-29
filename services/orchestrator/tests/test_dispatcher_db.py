@@ -201,3 +201,32 @@ async def test_required_gate_without_classifier_fails_closed():
         assert job["status"] == "failed" and "no classifier" in job["error"]
     finally:
         await db.close()
+
+
+async def test_speaker_voices_reads_the_newest_voice_release():
+    """A real voice is usable only while the newest voice_likeness release is signed and unexpired."""
+    org, ana, instructor = "00000000-0000-4000-8000-000000000001", "50000000-0000-4000-8000-000000000001", "10000000-0000-4000-8000-000000000001"
+    db = await Db.connect(URL)
+    try:
+        sha = uuid.uuid4().hex * 2
+        a = await db._one("insert into public.assets (org_id, project_id, kind, source, r2_key, sha256, mime, bytes, created_by) "
+                          "values (%s, %s, 'audio', 'uploaded', %s, %s, 'audio/wav', 10, %s) returning id::text as id",
+                          org, PROJECT, f"{org}/{sha[:2]}/{sha}.wav", sha, instructor)
+        await db._one("update public.bible_entries set voice_asset_id = %s where id = %s returning id", a["id"], ana)
+
+        async def consent() -> str:
+            return (await db.speaker_voices(org, [ana], instructor))[0]["consent"]
+
+        assert await consent() == "missing"  # the fixture's release covers pictures, not voice
+        ins = ("insert into public.consent_releases (org_id, project_id, bible_entry_id, subject_name, rights_holder_name, permitted_lanes, "
+               "state, signed_at, revoked_at, expires_at, created_by, created_at) values (%s, %s, %s, 'Ana', 'Ana', '{voice_likeness}', "
+               "%s::public.consent_state, now(), %s, %s, %s, now() + %s::interval) returning id")
+        await db._one(ins, org, PROJECT, ana, "signed", None, None, instructor, "1 second")
+        rows = await db.speaker_voices(org, [ana], instructor)
+        assert rows[0]["consent"] == "signed" and rows[0]["source"] == "uploaded" and rows[0]["voice_asset_id"] == a["id"]
+        await db._one(ins, org, PROJECT, ana, "revoked", "now()", None, instructor, "2 seconds")
+        assert await consent() == "revoked"
+        await db._one(ins, org, PROJECT, ana, "signed", None, "2000-01-01", instructor, "3 seconds")
+        assert await consent() == "expired"
+    finally:
+        await db.close()

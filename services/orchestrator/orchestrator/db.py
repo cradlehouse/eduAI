@@ -149,6 +149,28 @@ class Db:
         r = await self._one("select r2_key from public.assets where org_id = %s and id = %s", org_id, asset_id)
         return r["r2_key"] if r else None
 
+    async def speaker_voices(self, org_id: str, entry_ids: list[str], requested_by: str | None) -> list[dict[str, Any]]:
+        """Each character's Cast voice as the database has it (never the job's inputs), with what decides
+        whether it may be used: is it a real person's (uploaded, or the entry needs consent), whether the
+        newest release on the entry that permits voice_likeness is signed and unexpired (read from the
+        releases directly: a voice-only release must not mark the entry, or its pictures would need consent
+        too; a release signed after a withdrawal is new consent), and whether
+        the person who asked is a minor in this org."""
+        if not entry_ids:
+            return []
+        async with self.pool.connection() as c:
+            cur = await c.execute(
+                "select e.id::text as entry_id, e.voice_asset_id::text as voice_asset_id, e.requires_consent, a.source::text as source, "
+                "case when v.state = 'signed' and (v.expires_at is null or v.expires_at > now()) then 'signed' "
+                "when v.state = 'signed' then 'expired' else coalesce(v.state::text, 'missing') end as consent, "
+                "eduai.is_minor_in(e.org_id, %s::uuid) as minor "
+                "from public.bible_entries e left join public.assets a on a.id = e.voice_asset_id "
+                "left join lateral (select r.state, r.expires_at from public.consent_releases r where r.bible_entry_id = e.id "
+                "and 'voice_likeness' = any (r.permitted_lanes) order by r.created_at desc limit 1) v on true "
+                "where e.org_id = %s and e.id = any(%s::uuid[])",
+                (requested_by, org_id, entry_ids))
+            return list(await cur.fetchall())
+
     # ---- lifecycle ------------------------------------------------------
     async def reserve(self, job_id: str, cents: int) -> bool:
         r = await self._one("select eduai.reserve_job(%s, %s) as ok", job_id, cents)

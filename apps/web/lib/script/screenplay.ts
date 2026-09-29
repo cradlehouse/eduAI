@@ -71,6 +71,10 @@ export function parseScript(text: string): Parsed {
 export const linesFor = (scene: ParsedScene, name: string) =>
   scene.blocks.filter((b): b is Extract<Block, { kind: "dialogue" }> => b.kind === "dialogue" && b.character === normName(name));
 
+// Everyone with at least one line anywhere in the script (normalised names).
+export const speakersIn = (text: string) =>
+  new Set(parseScript(text).scenes.flatMap((sc) => sc.blocks.flatMap((b) => (b.kind === "dialogue" ? [b.character] : []))));
+
 // Who speaks or is named in a scene (names in capitals in action count, as screenplays introduce people).
 export function namesIn(scene: ParsedScene) {
   const names = new Set<string>();

@@ -3,11 +3,12 @@ import Link from "next/link";
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Json } from "@/lib/db/types";
-import { chooseLook, chooseSound, hideResult, makeElement, saveAppearance, uploadStart, type What } from "./actions";
+import { addVoiceRecording, revokeVoiceRelease, chooseLook, chooseSound, hideResult, makeElement, recordVoiceRelease, saveAppearance, uploadStart, type What } from "./actions";
 
 type Kind = "character" | "location" | "prop";
 export type Result = { id: string; assetId: string; role: string; label: string; at: string; jobId: string | null; audio: boolean };
 type Entry = { id: string; name: string; appearance: string; description: string; reference: string | null; voice: string | null; room: string | null; likeness: string | null };
+export type RealVoice = { state: string; release: { subject: string; signer: string; guardian: boolean; minor: boolean } | null; canManage: boolean };
 type Prices = { look: number | null; edit: number | null; angle: number | null; voice: number | null; room: number | null };
 
 // Kokoro's stock voices, named for people choosing a voice rather than for engineers.
@@ -29,9 +30,9 @@ const ANGLES: { label: string; params: Record<string, number> }[] = [
 ];
 const TIMES = ["dawn", "midday", "golden hour", "dusk", "night"];
 
-export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, results, pending, failed, prices }: {
+export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, results, pending, failed, prices, realVoice }: {
   projectId: string; kind: Kind; base: string; tab: string; tabs: { key: string; label: string }[]; entry: Entry;
-  scenes: number[]; results: Result[]; pending: { role: string; status: string }[]; failed: string | null; prices: Prices;
+  scenes: number[]; results: Result[]; pending: { role: string; status: string }[]; failed: string | null; prices: Prices; realVoice?: RealVoice;
 }) {
   const router = useRouter();
   const [busy, start] = useTransition();
@@ -138,16 +139,21 @@ export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, result
           </div>
           <div className="flex flex-col gap-2 md:max-w-xl">
             {waiting("voice") > 0 && <div className="rounded-[8px] border border-dashed border-gold bg-gold-wash p-2 text-[12px] text-gold">Making a sample…</div>}
-            {of("voice").map((r) => (
-              <div key={r.id} className={`flex flex-wrap items-center gap-2 rounded-[8px] border p-2 ${entry.voice === r.assetId ? "border-chosen" : "border-card-edge"}`}>
-                <span className="w-40 truncate text-[12px]">{VOICES.find((v) => v.id === r.label)?.label ?? r.label}</span>
-                <audio controls preload="none" src={`/api/assets/${r.assetId}`} className="h-8 min-w-0 flex-1" />
-                {entry.voice === r.assetId ? <span className="text-[11px] text-chosen">{first}&apos;s voice</span>
-                  : <button className={chipGold} onClick={() => act(() => chooseSound(projectId, entry.id, "voice", r.assetId), `That's ${first}'s voice now.`)}>Use this voice</button>}
-              </div>
-            ))}
+            {of("voice").map((r) => {
+              const real = r.label === "recording";
+              const blocked = real && realVoice?.state !== "signed";
+              return (
+                <div key={r.id} className={`flex flex-wrap items-center gap-2 rounded-[8px] border p-2 ${entry.voice === r.assetId ? "border-chosen" : "border-card-edge"}`}>
+                  <span className="w-40 truncate text-[12px]">{real ? `Recording · ${realVoice?.release?.subject ?? "real voice"}` : VOICES.find((v) => v.id === r.label)?.label ?? r.label}</span>
+                  <audio controls preload="none" src={`/api/assets/${r.assetId}`} className="h-8 min-w-0 flex-1" />
+                  {entry.voice === r.assetId ? <span className={`text-[11px] ${blocked ? "text-drift" : "text-chosen"}`}>{first}&apos;s voice{blocked ? " · release not valid, lines keep the performed voice" : ""}</span>
+                    : blocked ? <span className="text-[11px] text-mute">needs a signed release</span>
+                    : <button className={chipGold} onClick={() => act(() => chooseSound(projectId, entry.id, "voice", r.assetId), `That's ${first}'s voice now.`)}>Use this voice</button>}
+                </div>
+              );
+            })}
           </div>
-          <p className="text-[11px] text-mute">Stock voices only. A real person&apos;s voice, including yours, needs a signed release first; ask your instructor.</p>
+          {realVoice && <RealVoicePanel projectId={projectId} entryId={entry.id} first={first} rv={realVoice} busy={busy} act={act} />}
         </>
       )}
 
@@ -233,6 +239,60 @@ export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, result
         </div>
       )}
       {entry.likeness && <p className="text-[11px] text-mute">Based on a real person ({entry.likeness}). <Link href={`/p/${projectId}/bible/${entry.id}`} className="underline">Release and consent</Link></p>}
+    </div>
+  );
+}
+
+// A real person's voice (a student, a parent, a teacher) instead of a stock one. It is their likeness, so
+// the recording is only kept with a signed release for voice work, recorded by an instructor, signed by a
+// parent or guardian when they are under 18. Students see what's needed and who to ask.
+function RealVoicePanel({ projectId, entryId, first, rv, busy, act }: {
+  projectId: string; entryId: string; first: string; rv: RealVoice; busy: boolean;
+  act: (fn: () => Promise<{ ok: true } | { error: string }>, ok?: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [minor, setMinor] = useState(true);
+  const head = <div className="text-[12px] font-medium">A real person&apos;s voice</div>;
+  if (rv.state === "signed" && rv.release) {
+    return (
+      <div className="glass flex flex-col gap-1.5 rounded-[10px] p-3 text-[12px] md:max-w-xl">
+        {head}
+        <p className="text-dim">Release on file: {rv.release.subject}&apos;s voice, signed by {rv.release.signer}{rv.release.guardian ? " (parent or guardian)" : ""}. Only for converting {first}&apos;s lines; a student under 18 choosing a take keeps the performed voice, so an instructor chooses those takes.</p>
+        {rv.canManage && (
+          <form className="flex flex-wrap items-center gap-2" action={(fd) => act(() => addVoiceRecording(projectId, entryId, fd), "Recording added. Choose it above.")}>
+            <input type="file" name="recording" accept="audio/*" required className="text-[11px]" />
+            <button className="btn" disabled={busy}>Add another recording</button>
+          </form>
+        )}
+        {rv.canManage && (
+          <div><button type="button" className="text-[11px] text-drift underline" disabled={busy} onClick={() => {
+            const reason = window.prompt("Withdraw the release? The recorded voice stops being used at once. Reason (optional):");
+            if (reason !== null) act(() => revokeVoiceRelease(projectId, entryId, reason), "Release withdrawn. Lines keep the performed voice.");
+          }}>Withdraw the release</button></div>
+        )}
+      </div>
+    );
+  }
+  const why = rv.state === "revoked" ? "The release for this voice was withdrawn, so it can't be used." : rv.state === "expired" ? "The release for this voice has expired." : null;
+  return (
+    <div className="glass flex flex-col gap-2 rounded-[10px] p-3 text-[12px] md:max-w-xl">
+      {head}
+      <p className="text-dim">{why ?? `Want ${first} to sound like a real person, maybe you? That's their likeness, so it needs a signed release first (from a parent or guardian if they're under 18).`} {rv.canManage ? "" : "Your instructor records it here."}</p>
+      {rv.canManage && !open && <div><button type="button" className="btn" onClick={() => setOpen(true)}>Record a release and a recording</button></div>}
+      {rv.canManage && open && (
+        <form className="grid gap-2 sm:grid-cols-2" action={(fd) => act(() => recordVoiceRelease(projectId, entryId, fd), `Release recorded. The recording is in the list above; choose it as ${first}'s voice.`)}>
+          <label className="label">Whose voice<input name="subject_name" required className="input mt-0.5 w-full" placeholder="the person in the recording" /></label>
+          <label className="label">Signed by<input name="rights_holder_name" required className="input mt-0.5 w-full" placeholder={minor ? "their parent or guardian" : "the person themselves"} /></label>
+          <label className="flex items-center gap-1.5 text-[11.5px] text-dim"><input type="checkbox" name="subject_is_minor" checked={minor} onChange={(e) => setMinor(e.target.checked)} /> They&apos;re under 18</label>
+          <label className="flex items-center gap-1.5 text-[11.5px] text-dim"><input type="checkbox" name="is_guardian" defaultChecked={minor} key={String(minor)} /> Signed by a parent or guardian</label>
+          <label className="label">Signer email (optional)<input name="signer_email" type="email" className="input mt-0.5 w-full" /></label>
+          <label className="label">Ends on (optional)<input name="expires_at" type="date" className="input mt-0.5 w-full" /></label>
+          <label className="label">The signed release (PDF or photo)<input type="file" name="signed_file" accept="application/pdf,image/png,image/jpeg,image/webp" required className="mt-0.5 block text-[11px]" /></label>
+          <label className="label">The recording (10–30 s of them talking)<input type="file" name="recording" accept="audio/*" required className="mt-0.5 block text-[11px]" /></label>
+          <p className="text-[11px] text-mute sm:col-span-2">The release covers voice work only (their lines converted to this voice), within the cohort. Withdrawing it here stops it at once.</p>
+          <div className="flex gap-2 sm:col-span-2"><button className="btn-primary" disabled={busy}>Record the release</button><button type="button" className="btn" onClick={() => setOpen(false)}>Cancel</button></div>
+        </form>
+      )}
     </div>
   );
 }

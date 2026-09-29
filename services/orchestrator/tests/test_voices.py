@@ -2,7 +2,7 @@ import io
 import wave
 from array import array
 
-from orchestrator.voices import assign_speakers, keep_only
+from orchestrator.voices import assign_speakers, keep_only, voice_allowed
 
 
 def _wav(n: int, rate: int = 1000, ch: int = 1) -> bytes:
@@ -76,3 +76,25 @@ def test_mix_places_loops_and_clips():
     assert out[10] == 10000            # room only
     assert out[60] == 30000            # voice + room
     assert out[120] == 10000           # voice ended after its 50 samples; room loops on
+
+
+def test_stock_voice_is_always_allowed():
+    assert voice_allowed({"voice_asset_id": "a", "source": "generated", "requires_consent": False, "consent": "not_required", "minor": True}) == (True, "stock voice")
+
+
+def test_real_voice_needs_a_signed_release():
+    uploaded = {"voice_asset_id": "a", "source": "uploaded", "requires_consent": False, "consent": "not_required", "minor": False}
+    assert voice_allowed(uploaded)[0] is False
+    marked = {"voice_asset_id": "a", "source": "generated", "requires_consent": True, "consent": "pending", "minor": False}
+    assert voice_allowed(marked)[0] is False
+    assert voice_allowed({**marked, "consent": "revoked"})[0] is False
+    assert voice_allowed({**marked, "consent": "signed"}) == (True, "real voice, release signed")
+
+
+def test_minor_cannot_use_a_real_voice_even_with_a_release():
+    row = {"voice_asset_id": "a", "source": "uploaded", "requires_consent": True, "consent": "signed", "minor": True}
+    assert voice_allowed(row)[0] is False
+
+
+def test_no_voice_keeps_ltx():
+    assert voice_allowed({"voice_asset_id": None})[0] is False

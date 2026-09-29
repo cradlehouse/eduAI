@@ -1,8 +1,20 @@
 "use client";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { chooseClip, chooseFrame, makeClip, makeFrames, saveCamera, setEndFrame, type Intent } from "./actions";
+import { checkFrame, chooseClip, chooseFrame, makeClip, makeFrames, saveCamera, setEndFrame, type Intent } from "./actions";
+
+type Check = NonNullable<Intent["checks"]>[string];
+
+// What the frame check found, in plain words (nothing ⇒ the frame is fine).
+function problems(c: Check): string[] {
+  if ("error" in c) return [];
+  const out: string[] = [];
+  if (c.extra_people) out.push("someone not in the Cast");
+  for (const p of c.people) out.push(...(!p.visible ? [`${p.name} is missing`] : !p.matches ? [`doesn't look like ${p.name}`] : []));
+  if (c.weather_indoors) out.push("weather inside");
+  return out;
+}
 
 export type Take = { id: string; layer: string; assetId: string; at: string; video: boolean };
 type Shot = { id: string; label: string; description: string; seconds: number; intent: Intent; frame: string | null; clip: string | null };
@@ -51,6 +63,16 @@ export function ShotStudio({ projectId, sceneId, tab, shot, who, locName, angles
   const price = (v: number | null) => (v != null ? <span className="mono ml-1.5 text-[11px] font-normal opacity-75">{v.toLocaleString()}</span> : null);
   const tile = (on: boolean) => `flex w-[78px] flex-col items-center gap-1 rounded-[7px] border p-1.5 text-[10.5px] ${on ? "border-gold text-ink" : "border-card-edge text-dim hover:text-ink"}`;
   const svg = (on: boolean, c: React.ReactNode) => <svg viewBox="0 0 30 24" className={`h-7 w-9 fill-none stroke-[1.4] ${on ? "stroke-gold" : "stroke-ink opacity-70"}`}>{c}</svg>;
+  // Every new frame gets checked once, one at a time, before anyone builds a clip on it.
+  const checking = useRef<string | null>(null);
+  const [checkNow, setCheckNow] = useState<string | null>(null);
+  useEffect(() => {
+    if (tab !== "frame" || checking.current) return;
+    const next = frames.find((f) => !it.checks?.[f.id]);
+    if (!next) return;
+    checking.current = next.id; setCheckNow(next.id);
+    checkFrame(projectId, shot.id, next.id).finally(() => { checking.current = null; setCheckNow(null); router.refresh(); });
+  }, [tab, frames, it.checks, projectId, shot.id, router]);
   const tabs = [{ k: "camera", l: "Camera", done: !!it.framing }, { k: "frame", l: "Frame", done: !!shot.frame }, { k: "clip", l: "Clip", done: !!shot.clip }];
   const lines = it.lines ?? [];
 
@@ -106,8 +128,9 @@ export function ShotStudio({ projectId, sceneId, tab, shot, who, locName, angles
                   <img src={`/api/assets/${f.assetId}`} alt="" className="absolute inset-0 h-full w-full object-cover" />
                   {chosen && <span className="absolute left-2 top-1.5 text-[11px] text-chosen [text-shadow:0_1px_2px_#000]">first frame</span>}
                   {end && <span className="absolute left-2 top-1.5 text-[11px] text-gold [text-shadow:0_1px_2px_#000]">end frame</span>}
+                  <FrameFlag check={it.checks?.[f.id]} running={checkNow === f.id} again={() => act(() => checkFrame(projectId, shot.id, f.id, true))} />
                   <div className="absolute inset-x-0 bottom-0 flex flex-wrap gap-1 bg-gradient-to-t from-black/85 to-transparent p-2 pt-6 md:opacity-0 md:group-hover:opacity-100">
-                    {!chosen && <button className="rounded-[5px] bg-gold px-2 py-1 text-[11px] font-medium text-[#1a1408]" onClick={() => act(() => chooseFrame(projectId, shot.id, f.id), "Frame chosen.", `${base}?tab=clip`)}>Use this frame</button>}
+                    {!chosen && <button className="rounded-[5px] bg-gold px-2 py-1 text-[11px] font-medium text-[#1a1408]" onClick={() => { const c = it.checks?.[f.id]; const p = c ? problems(c) : []; act(() => chooseFrame(projectId, shot.id, f.id), p.length ? `Frame chosen, though the check flagged: ${p.join(", ")}. The clip will carry it.` : "Frame chosen.", `${base}?tab=clip`); }}>Use this frame</button>}
                     {!chosen && <button className="rounded-[5px] border border-card-edge bg-[rgba(20,21,25,.92)] px-2 py-1 text-[11px]" onClick={() => act(() => setEndFrame(projectId, shot.id, end ? null : f.id))}>{end ? "Not the end frame" : "Use as end frame"}</button>}
                   </div>
                 </div>
@@ -197,5 +220,17 @@ export function ShotStudio({ projectId, sceneId, tab, shot, who, locName, angles
         </div>
       )}
     </div>
+  );
+}
+
+// The check's verdict on a frame: a quiet tick when it's fine, the problems in gold when it isn't.
+function FrameFlag({ check, running, again }: { check: Check | undefined; running: boolean; again: () => void }) {
+  const pill = "absolute right-2 top-1.5 max-w-[70%] rounded-[5px] bg-black/65 px-1.5 py-0.5 text-right text-[10.5px] leading-snug";
+  if (running || !check) return <span className={`${pill} text-mute`}>{running ? "checking…" : "not checked yet"}</span>;
+  if ("error" in check) return <button type="button" onClick={again} className={`${pill} text-mute hover:text-ink`} title={check.error}>check didn&apos;t run · again</button>;
+  const p = problems(check);
+  if (!p.length) return <span className={`${pill} text-ok`} title="Claude checked the people and the room">✓ looks right</span>;
+  return (
+    <button type="button" onClick={again} title={`${check.notes}\n\nClick to check again.`} className={`${pill} text-gold hover:text-ink`}>⚠ {p.join(" · ")}</button>
   );
 }

@@ -8,12 +8,18 @@ voice split per character → Edit timeline → Export (our own audio mix, 12–
 ## Open
 - **Rain indoors**: fix deployed (INT. prompts drop weather words), not yet re-tested. ~$1.40 to re-run
   the two test shots; the test project has ~$1.90 left.
-- **Frame check** (proposed, not built): Claude looks at each frame and flags someone not in Cast, the
-  wrong face, or weather indoors before a student builds a clip on it.
-- Cast tick in the left bar only checks looks, not voices.
-- Music track in Edit is a placeholder. Per-character level sliders don't reach the export mix yet
-  (voice / picture / room levels do).
-- Voice samples: stock voices only; real voices need the release flow.
+- **Built 28 Sep, not yet deployed or tried live** (needs migration 0129, a web deploy, a push for Render):
+  - Frame check: Claude (Opus 5.5, low effort) looks at each new frame beside the Cast looks and flags
+    someone not in Cast, the wrong face, a missing person, or weather indoors. Flags only; the student still
+    chooses. Stored per frame in `shots.intent.checks`.
+  - Cast tick: done when everyone has a look and everyone with a line has a voice.
+  - Music: made on the Edit page (Stable Audio, a hidden "Music" style entry), plays under the whole film,
+    loops if shorter, own level. Per-character voice levels now reach the export mix.
+  - Real voices: an instructor records a voice-only release (guardian signer if under 18) together with
+    the recording on the Cast Voice tab; the orchestrator re-reads the newest voice release before every
+    split and keeps LTX's voice otherwise. Following the existing minors rule, a take chosen by a student
+    under 18 keeps the performed voice for a real-voice character (an instructor chooses those takes).
+- Orchestrator DB tests: two fail on the LTX estimate (54 vs 24 cents), before and after these changes.
 - Warehouse demo project has no script; Tim's duplicate location entry there is still undeleted.
 
 ## Accounts and keys

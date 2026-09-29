@@ -10,6 +10,7 @@ export const ROUTES = {
   angle: ["qwen-angles@fal"],
   voice: ["kokoro@fal"],
   room: ["stable-audio-open@fal", "stable-audio-2.5@fal"],
+  music: ["stable-audio-open@fal", "stable-audio-2.5@fal"],
   clip: ["ltx-2.5-fast-i2v@fal"],
   clipFinish: ["ltx-2.5-pro-i2v@fal"],
 } as const;
