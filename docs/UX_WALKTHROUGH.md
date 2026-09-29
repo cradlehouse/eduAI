@@ -1,5 +1,7 @@
 # Project UI walkthrough — 26 Sep 2026
 
+> Outcome: rebuilt as the one-job-per-screen flow (PRODUCTION_FLOW.md, DESIGN.md §2 and §4), 26–28 Sep.
+
 Driven as the student account (qa-student) on the live site, from sign-in to the Scene workspace,
 after Tim reported the project UI "clunky as hell and unusable". Findings first, then the shape of
 the fix. Companion research: `docs/research/operational-flow-2026-09.md` (how LTX Studio, Martini

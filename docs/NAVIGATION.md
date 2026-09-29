@@ -1,5 +1,8 @@
 # Navigation
 
+> **28 Sep 2026:** inside a project, the project panel described below was replaced by the step rail
+> (Script, Cast, Locations, Props, Scenes, Edit). See DESIGN.md §2. Outside projects this still applies.
+
 Derived from a research pass (2026-09-12) over NN/g guidance (IA vs navigation, local vs global nav,
 breadcrumbs, duplicate links, universal navigation), design systems (Carbon UI Shell, Shopify app nav,
 Atlassian navigation system, GOV.UK breadcrumbs) and the navigation of Canvas LMS, Google Classroom,

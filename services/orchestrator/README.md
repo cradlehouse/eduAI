@@ -6,7 +6,7 @@ Python 3.12 · FastAPI · uv. Reads the job queue, talks to vendors, writes R2 a
 
 ```bash
 cd services/orchestrator
-cp ../../.env.example .env      # fill DATABASE_URL, R2_*, FAL_KEY, JOB_KINDS=generate
+cp ../../.env.example .env      # fill DATABASE_URL, R2_*, FAL_KEY, JOB_KINDS=generate  (a generate worker also claims render jobs: voice splits and exports)
 uv sync
 uv run uvicorn orchestrator.main:app --reload --port 8001
 ```

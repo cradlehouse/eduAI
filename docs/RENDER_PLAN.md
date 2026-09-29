@@ -1,6 +1,9 @@
 # Render plan: stills in class, video overnight
 
-Status: agreed direction (24 Sep 2026). Research behind it: `docs/research/*-2026-09.md`.
+Status: agreed direction (24 Sep 2026). **Update 28 Sep:** stills now use open Qwen-Image / Qwen edit
+(FLUX 2 edit is the fallback); in-class shot clips run on hosted LTX 2.5 image-to-video with sound; talking
+shots are split into per-character voice tracks (PRODUCTION_FLOW.md). Overnight/self-hosted steps below are
+still to do. Research behind it: `docs/research/*-2026-09.md`.
 
 ## The shape
 

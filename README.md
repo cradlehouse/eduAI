@@ -1,21 +1,22 @@
 # Imaje (repo: eduai)
 
-Working name for the AI film platform. Trimmed from `ai-film-platform-code-handoff.md`; the spec
-(`ai-film-platform-build-spec.md`) is the *why*, the handoff is the *how*, this file is *what exists*.
+AI film-making platform for schools (working name). Start with `CLAUDE.md` (where things are, commands,
+rules), then `docs/PRODUCTION_FLOW.md` (how it works), `docs/STATUS.md` (what's open), `docs/BUSINESS.md`,
+`docs/STACK.md`, `docs/DESIGN.md`. The original spec and handoff are history.
 
-## What exists (P1-01, P1-02)
+## Layout
 
 ```
 eduai/
-├── apps/web/                 Next.js 15 on Cloudflare Workers (OpenNext): login, /auth/callback, /invite/[token], role landing, shell stubs
-├── services/orchestrator/    FastAPI + dispatcher (P1-10): claim → gate → reserve → fal → R2 → settle
+├── apps/web/                 Next.js 15 on Cloudflare Workers (OpenNext): sign-in, cohorts, and the film steps Script → Cast → Locations → Props → Scenes → Edit
+├── services/orchestrator/    FastAPI + dispatcher: claim → gate → reserve → fal → R2 → settle; voice splits and exports (render jobs)
 ├── packages/db/
-│   ├── migrations/           → ../../supabase/migrations (0001–0014 schema, 0100 RLS enable, 0101 policies, generated)
+│   ├── migrations/           → ../../supabase/migrations (0001–0014 schema, 0100 RLS enable, 0101 policies generated, 0102–0128 since)
 │   ├── policies/             one RLS file per table → 0101
 │   └── seed/                 registry: models.csv · model_versions.csv + schemas/ · deployment_profiles.csv + profiles/
 │                             → models.sql (generated); seed.sql = demo org
 ├── infra/                    placeholder — render.yaml, Cloudflare webhook inbox, R2 lifecycle
-├── scripts/                  build-policies.sh · build-models-seed.mjs · check-rls.sql · db-test.sh · test/
+├── scripts/                  spike/ (paid model tests) · build-policies.sh · build-models-seed.mjs · check-rls.sql · db-test.sh · test/
 ├── supabase/                 config.toml + migrations/ (native layout; packages/db/migrations symlinks here)
 └── .github/workflows/ci.yml  generated-files check · migrations+RLS+smoke on postgres:17 · web lint+typecheck+build · orchestrator ruff+pytest
 ```
