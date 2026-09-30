@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/db/types";
-import { addAction, addDialogue, normName, parseScript, removeSnippet, setHeading, slugFor } from "@/lib/script/screenplay";
+import { addAction, addDialogue, addScene, normName, parseScript, removeSnippet, setHeading, slugFor } from "@/lib/script/screenplay";
 import { currentScript, writeScript } from "@/lib/script/sync";
 import { planShots, type ShotPlanT } from "@/lib/script/shotplan";
 
@@ -33,6 +33,35 @@ export async function setSceneLocation(projectId: string, sceneId: string, entry
   }
   done(projectId, sceneId);
   return { ok: true };
+}
+
+// A new scene from the Scenes screen: written into the script as its heading (INT. BUS STATION - NIGHT)
+// after scene N, at an existing location or a new one (which is added to Locations too). Returns the
+// new scene so the page can open it.
+export async function newScene(projectId: string, input: { after: number; intExt: "INT" | "EXT"; time: string; locationId?: string | null; place?: string }): Promise<{ ok: true; sceneId: string } | { error: string }> {
+  const supabase = await createClient();
+  const text = await currentScript(projectId);
+  const after = Math.max(0, Math.min(input.after, parseScript(text).scenes.length));
+  let locationId = input.locationId ?? null;
+  if (locationId) {
+    const { data: loc } = await supabase.from("bible_entries").select("name").eq("id", locationId).eq("project_id", projectId).maybeSingle();
+    if (!loc) return { error: "That location isn't in this project." };
+    const heading = slugFor(loc.name, input.intExt, input.time);
+    const w = await writeScript(projectId, addScene(text, after, heading), { source: "scene", label: `New scene ${after + 1}: ${heading}`, scene: after + 1 });
+    if ("error" in w) return { error: w.error ?? "Couldn't write it into the script." };
+  } else {
+    const place = input.place?.trim();
+    if (!place) return { error: "Pick a location or name a new place." };
+    const { addElement } = await import("@/app/p/[projectId]/elements/actions");
+    const r = await addElement({ projectId, kind: "location", name: place, appearance: "", after, intExt: input.intExt, time: input.time });
+    if ("error" in r) return r;
+    locationId = r.id;
+  }
+  const { data: row } = await supabase.from("scenes").select("id").eq("project_id", projectId).eq("position", after + 1).maybeSingle();
+  if (!row) return { error: "The scene was written into the script but didn't appear. Open the Script page to check it." };
+  await supabase.from("scenes").update({ location_entry_id: locationId }).eq("id", row.id);
+  revalidatePath(`/p/${projectId}`, "layout");
+  return { ok: true, sceneId: row.id };
 }
 
 export async function addToScene(projectId: string, sceneId: string, entryId: string): Promise<R> {
