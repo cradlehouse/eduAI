@@ -64,6 +64,21 @@ export async function newScene(projectId: string, input: { after: number; intExt
   return { ok: true, sceneId: row.id };
 }
 
+// A scene that exists here but not in the script (made before everything wrote into the script): write
+// its heading in at its place, so its lines, people and shots have somewhere to live.
+export async function sceneIntoScript(projectId: string, sceneId: string): Promise<R> {
+  const s = await sceneRow(sceneId);
+  if (!s) return { error: "Scene not found." };
+  const text = await currentScript(projectId);
+  const n = parseScript(text).scenes.length;
+  if (s.position <= n) return { ok: true };
+  const heading = s.heading || `INT. SCENE ${s.position} - DAY`;
+  const w = await writeScript(projectId, addScene(text, n, heading), { source: "scene", label: `Scene ${n + 1} written into the script: ${heading}`, scene: n + 1 });
+  if ("error" in w) return { error: w.error ?? "Couldn't write it into the script." };
+  done(projectId, sceneId);
+  return { ok: true };
+}
+
 export async function addToScene(projectId: string, sceneId: string, entryId: string): Promise<R> {
   const supabase = await createClient();
   const s = await sceneRow(sceneId);

@@ -2,8 +2,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { breakDownScript, type BreakdownT } from "@/lib/script/breakdown";
-import { removeSnippet } from "@/lib/script/screenplay";
-import { syncScenes } from "@/lib/script/sync";
+import { normHeading, parseScript, removeSnippet, setHeading } from "@/lib/script/screenplay";
+import { currentScript, syncScenes, writeScript } from "@/lib/script/sync";
 
 export async function saveScript(projectId: string, script: string): Promise<{ ok: true } | { error: string }> {
   const supabase = await createClient();
@@ -44,7 +44,7 @@ export async function runBreakdown(projectId: string, script: string) {
 const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
 
 // Apply what the student kept. Existing bible entries are matched by name (never duplicated); scenes
-// are matched by slugline; everything else is created. Nothing is deleted.
+// follow the script (see below); everything else is created. Nothing is deleted.
 export async function applyBreakdown(projectId: string, b: BreakdownT): Promise<{ ok: true; summary: string } | { error: string }> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -86,33 +86,33 @@ export async function applyBreakdown(projectId: string, b: BreakdownT): Promise<
     return { error: e instanceof Error ? e.message : "Could not save the bible entries." };
   }
 
-  const { data: scenes } = await supabase.from("scenes").select("id, position, heading, title").eq("project_id", projectId).order("position");
-  const byHeading = new Map((scenes ?? []).filter((s) => s.heading).map((s) => [norm(s.heading), s]));
-  let pos = (scenes ?? []).reduce((m, s) => Math.max(m, s.position), 0);
-  let scenesCreated = 0;
+  // Scenes come from the script, never from the breakdown alone: the breakdown's scene N is the script's
+  // scene N. Where it tidied a heading ("ext. of diner night" → EXT. DINER - NIGHT), the tidy heading is
+  // written into the script (logged, undoable) rather than made into a second scene beside it.
+  let text = await currentScript(projectId);
+  await syncScenes(projectId, text);
+  let tidied = 0;
   for (const s of [...b.scenes].sort((x, y) => x.number - y.number)) {
-    const locId = ids.get(`location:${norm(s.location)}`) ?? null;
-    const fields = { heading: s.heading, time_of_day: s.time_of_day, location_entry_id: locId, synopsis: s.synopsis, script_excerpt: s.excerpt };
-    let sceneId: string;
-    const cur = byHeading.get(norm(s.heading));
-    if (cur) {
-      await supabase.from("scenes").update(fields).eq("id", cur.id);
-      sceneId = cur.id;
-    } else {
-      pos += 1;
-      const { data, error } = await supabase.from("scenes").insert({ org_id: org, project_id: projectId, position: pos, title: s.heading, ...fields }).select("id").single();
-      if (error) return { error: `Scene ${s.number}: ${error.message}` };
-      sceneId = data.id; scenesCreated++;
+    const inScript = parseScript(text).scenes[s.number - 1];
+    if (!inScript) continue;
+    if (s.heading.trim() && normHeading(s.heading) !== normHeading(inScript.heading)) {
+      const ed = setHeading(text, s.number, s.heading);
+      const w = await writeScript(projectId, ed, { source: "script", label: `Scene ${s.number} heading tidied: ${normHeading(s.heading)}`, scene: s.number });
+      if (!("error" in w)) { text = ed.text; tidied++; }
     }
+    const { data: row } = await supabase.from("scenes").select("id").eq("project_id", projectId).eq("position", s.number).maybeSingle();
+    if (!row) continue;
+    const locId = ids.get(`location:${norm(s.location)}`) ?? null;
+    await supabase.from("scenes").update({ time_of_day: s.time_of_day, location_entry_id: locId, synopsis: s.synopsis }).eq("id", row.id);
     const links = [
       ...s.characters.map((n) => ids.get(`character:${norm(n)}`)),
       ...s.props.map((n) => ids.get(`prop:${norm(n)}`)),
     ].filter((x): x is string => !!x);
-    if (links.length) await supabase.from("scene_bible_entries").upsert(links.map((id) => ({ org_id: org, scene_id: sceneId, bible_entry_id: id })), { onConflict: "scene_id,bible_entry_id", ignoreDuplicates: true });
+    if (links.length) await supabase.from("scene_bible_entries").upsert(links.map((id) => ({ org_id: org, scene_id: row.id, bible_entry_id: id })), { onConflict: "scene_id,bible_entry_id", ignoreDuplicates: true });
   }
 
   const { data: after } = await supabase.from("projects").select("script").eq("id", projectId).maybeSingle();
   if (after?.script) await syncScenes(projectId, after.script);
   revalidatePath(`/p/${projectId}`, "layout");
-  return { ok: true, summary: `${created} added to the bible, ${updated} filled in, ${scenesCreated} scene${scenesCreated === 1 ? "" : "s"} created.` };
+  return { ok: true, summary: `${created} added to the bible, ${updated} filled in${tidied ? `, ${tidied} scene heading${tidied === 1 ? "" : "s"} tidied in the script` : ""}.` };
 }
