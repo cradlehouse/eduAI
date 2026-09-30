@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ShotPlanT } from "@/lib/script/shotplan";
-import { addLine, addToScene, cutLines, editBlock, keepShots, newCharacterInScene, proposeShots, removeFromScene, sceneIntoScript, setSceneLocation } from "./actions";
+import { addLine, addToScene, cutLines, editBlock, keepShots, newCharacterInScene, proposeShots, removeFromScene, removeStrayScene, sceneIntoScript, setSceneLocation } from "./actions";
 
 export type Asset = { id: string; name: string; kind: "character" | "location" | "prop"; image: string | null; look: string; inScene: boolean };
 export type SceneBlock = { i: number; kind: "action" | "dialogue"; who: string; text: string; raw: string };
@@ -87,6 +87,8 @@ export function SceneBoard({ projectId, scene, assets, blocks, shots }: { projec
           {!scene.inScript && <span className="text-[11px] text-drift">not in the script</span>}
           {!scene.inScript && <button type="button" disabled={busy} className="rounded-[5px] bg-gold px-2 py-0.5 text-[11px] font-medium text-[#1a1408]"
             onClick={() => start(async () => { setErr(null); const r = await sceneIntoScript(projectId, scene.id); if ("error" in r) setErr(r.error); else router.refresh(); })}>Put it in the script</button>}
+          {!scene.inScript && !shots.length && <button type="button" disabled={busy} className="rounded-[5px] border border-card-edge px-2 py-0.5 text-[11px] text-dim hover:text-ink"
+            onClick={() => { if (window.confirm("Remove this scene? It isn't in the script and has no shots.")) start(async () => { setErr(null); const r = await removeStrayScene(projectId, scene.id); if ("error" in r) setErr(r.error); else { router.push(`/p/${projectId}/scenes`); router.refresh(); } }); }}>Remove it</button>}
           <span className="ml-auto" />
           {shots.length > 0 && <Link href={`/p/${projectId}/scenes/${scene.id}/shots/${shots[0].id}`} className="btn">Shots ({shots.filter((s) => s.chosen).length}/{shots.length} chosen) →</Link>}
           <button type="button" disabled={planning || busy || !blocks.length} onClick={() => { setPlanning(true); setErr(null); start(async () => { const r = await proposeShots(projectId, scene.id); setPlanning(false); if ("error" in r) setErr(r.error ?? "Planning failed."); else setPlan(r.plan); }); }}

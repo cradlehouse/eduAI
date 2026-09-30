@@ -79,6 +79,20 @@ export async function sceneIntoScript(projectId: string, sceneId: string): Promi
   return { ok: true };
 }
 
+// An empty scene that isn't in the script (a leftover): remove it. Anything with shots is kept.
+export async function removeStrayScene(projectId: string, sceneId: string): Promise<{ ok: true } | { error: string }> {
+  const s = await sceneRow(sceneId);
+  if (!s) return { error: "Scene not found." };
+  if (parseScript(await currentScript(projectId)).scenes[s.position - 1]) return { error: "This scene is in the script; take it out there." };
+  const supabase = await createClient();
+  const { count } = await supabase.from("shots").select("id", { count: "exact", head: true }).eq("scene_id", sceneId);
+  if (count) return { error: "This scene has shots, so it's kept." };
+  const { error } = await supabase.from("scenes").delete().eq("id", sceneId);
+  if (error) return { error: error.message };
+  revalidatePath(`/p/${projectId}`, "layout");
+  return { ok: true };
+}
+
 export async function addToScene(projectId: string, sceneId: string, entryId: string): Promise<R> {
   const supabase = await createClient();
   const s = await sceneRow(sceneId);
