@@ -2,8 +2,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Json } from "@/lib/db/types";
-import { addAction, addDialogue, addScene, normName, parseScript, removeSnippet, setHeading, slugFor } from "@/lib/script/screenplay";
-import { currentScript, writeScript } from "@/lib/script/sync";
+import { addAction, addDialogue, addScene, normName, parseScript, removeSnippet, sceneIndex, setHeading, slugFor, splitLine } from "@/lib/script/screenplay";
+import { currentScript, syncScenes, writeScript } from "@/lib/script/sync";
 import { planShots, type ShotPlanT } from "@/lib/script/shotplan";
 
 type R = { ok: true } | { error: string };
@@ -13,6 +13,8 @@ async function sceneRow(sceneId: string) {
   const { data } = await supabase.from("scenes").select("id, org_id, project_id, position, heading, time_of_day, location_entry_id").eq("id", sceneId).maybeSingle();
   return data;
 }
+// This row's scene in the script (by position, checked against its heading), or null.
+const inScript = (text: string, s: { position: number; heading: string | null }) => sceneIndex(text, s.position, s.heading ?? "");
 const done = (projectId: string, sceneId: string) => { revalidatePath(`/p/${projectId}/scenes/${sceneId}`); revalidatePath(`/p/${projectId}`, "layout"); };
 
 // Where: the location dropped in. Optionally the scene heading follows (INT. DINER - NIGHT).
@@ -25,10 +27,11 @@ export async function setSceneLocation(projectId: string, sceneId: string, entry
   if (rewriteHeading) {
     const { data: loc } = await supabase.from("bible_entries").select("name, description").eq("id", entryId).maybeSingle();
     const text = await currentScript(projectId);
-    if (loc && parseScript(text).scenes[s.position - 1]) {
+    const n = inScript(text, s);
+    if (loc && n) {
       const ie = /^EXT/i.test(s.heading) || /\b(outside|exterior)\b/i.test(loc.name) ? "EXT" : "INT";
       const heading = slugFor(loc.name, ie, s.time_of_day || "");
-      await writeScript(projectId, setHeading(text, s.position, heading), { source: "scene", label: `Scene ${s.position} set in ${loc.name}: ${heading}`, scene: s.position });
+      await writeScript(projectId, setHeading(text, n, heading), { source: "scene", label: `Scene ${n} set in ${loc.name}: ${heading}`, scene: n });
     }
   }
   done(projectId, sceneId);
@@ -70,8 +73,9 @@ export async function sceneIntoScript(projectId: string, sceneId: string): Promi
   const s = await sceneRow(sceneId);
   if (!s) return { error: "Scene not found." };
   const text = await currentScript(projectId);
+  // Already there under another wording: the next sync folds this copy into that scene.
+  if (inScript(text, s)) { await syncScenes(projectId, text); done(projectId, sceneId); return { ok: true }; }
   const n = parseScript(text).scenes.length;
-  if (s.position <= n) return { ok: true };
   const heading = s.heading || `INT. SCENE ${s.position} - DAY`;
   const w = await writeScript(projectId, addScene(text, n, heading), { source: "scene", label: `Scene ${n + 1} written into the script: ${heading}`, scene: n + 1 });
   if ("error" in w) return { error: w.error ?? "Couldn't write it into the script." };
@@ -83,7 +87,7 @@ export async function sceneIntoScript(projectId: string, sceneId: string): Promi
 export async function removeStrayScene(projectId: string, sceneId: string): Promise<{ ok: true } | { error: string }> {
   const s = await sceneRow(sceneId);
   if (!s) return { error: "Scene not found." };
-  if (parseScript(await currentScript(projectId)).scenes[s.position - 1]) return { error: "This scene is in the script; take it out there." };
+  if (inScript(await currentScript(projectId), s)) return { error: "This scene is in the script; take it out there." };
   const supabase = await createClient();
   const { count } = await supabase.from("shots").select("id", { count: "exact", head: true }).eq("scene_id", sceneId);
   if (count) return { error: "This scene has shots, so it's kept." };
@@ -119,12 +123,13 @@ export async function cutLines(projectId: string, sceneId: string, texts: string
   if (!s) return { error: "Scene not found." };
   let text = await currentScript(projectId);
   for (const t of texts) {
-    const scene = parseScript(text).scenes[s.position - 1];
+    const n = inScript(text, s);
+    const scene = n ? parseScript(text).scenes[n - 1] : undefined;
     const b = scene?.blocks.find((x) => text.slice(x.start, x.end) === t);
     if (!b) continue;
     const next = removeSnippet(text, t);
     if (next) {
-      await writeScript(projectId, { text: next, snippet: "", at: b.start }, { source: "scene", label: `Cut from Scene ${s.position}: ${t.replace(/\s+/g, " ").slice(0, 80)}`, scene: s.position });
+      await writeScript(projectId, { text: next, snippet: "", at: b.start }, { source: "scene", label: `Cut from Scene ${n}: ${t.replace(/\s+/g, " ").slice(0, 80)}`, scene: n });
       text = next;
     }
   }
@@ -132,14 +137,37 @@ export async function cutLines(projectId: string, sceneId: string, texts: string
   return { ok: true };
 }
 
-// A line (or an action) written into the scene after block N; the script is the master copy.
+// A line (or an action) written into the scene after block N; the script is the master copy. The scene
+// is found by its heading as well as its number, so the line can't land in the scene next door; the
+// speaker is the Cast's own spelling of the name; and a line typed with its stage direction around the
+// quote (bob opens the door and shouts "when were you going to tell me") is written as an action, then
+// the line, as a screenplay has it.
 export async function addLine(projectId: string, sceneId: string, input: { who?: string; text: string; after: number | "end" | "top"; kind: "dialogue" | "action" }): Promise<R> {
   const s = await sceneRow(sceneId);
   if (!s) return { error: "Scene not found." };
-  const text = await currentScript(projectId);
-  if (!parseScript(text).scenes[s.position - 1]) return { error: "This scene isn't in the script. Add its heading on the Script page first." };
-  const ed = input.kind === "dialogue" && input.who ? addDialogue(text, s.position, input.after, input.who, input.text) : addAction(text, s.position, input.after, input.text);
-  const r = await writeScript(projectId, ed, { source: "scene", label: input.kind === "dialogue" ? `${normName(input.who ?? "")}: "${input.text.trim()}"` : input.text.trim().slice(0, 90), scene: s.position });
+  let text = await currentScript(projectId);
+  const n = inScript(text, s);
+  if (!n) return { error: "This scene isn't in the script yet. Use \"Put it in the script\" at the top first." };
+  let who = input.who ? normName(input.who) : "";
+  if (who) {
+    const supabase = await createClient();
+    const { data: cast } = await supabase.from("bible_entries").select("name").eq("project_id", projectId).eq("kind", "character");
+    who = (cast ?? []).map((c) => normName(c.name)).find((c) => c === who) ?? who;
+  }
+  const split = input.kind === "dialogue" && who ? splitLine(who, input.text) : null;
+  let ed;
+  if (split) {
+    const a = addAction(text, n, input.after, split.action);
+    text = a.text;
+    const blocks = parseScript(text).scenes[n - 1].blocks;
+    const at = blocks.findIndex((b) => b.kind === "action" && b.text === split.action);
+    const d = addDialogue(text, n, at >= 0 ? at : "end", who, split.line, split.paren);
+    ed = { text: d.text, snippet: `${a.snippet}\n\n${d.snippet}`, at: a.at };
+  } else {
+    ed = input.kind === "dialogue" && who ? addDialogue(text, n, input.after, who, input.text) : addAction(text, n, input.after, input.text);
+  }
+  const label = split ? `${who}: "${split.line}" (with "${split.action}")` : input.kind === "dialogue" ? `${who}: "${input.text.trim()}"` : input.text.trim().slice(0, 90);
+  const r = await writeScript(projectId, ed, { source: "scene", label, scene: n });
   if ("error" in r) return { error: r.error ?? "Could not write the script." };
   done(projectId, sceneId);
   return { ok: true };
@@ -153,7 +181,7 @@ export async function editBlock(projectId: string, sceneId: string, original: st
   const i = text.indexOf(original);
   if (i < 0) return { error: "That line changed in the script. Reload and try again." };
   const updated = text.slice(0, i) + next + text.slice(i + original.length);
-  const r = await writeScript(projectId, { text: updated, snippet: next, at: i }, { source: "scene", label: `Edited in Scene ${s.position}: ${next.replace(/\s+/g, " ").slice(0, 80)}`, scene: s.position });
+  const r = await writeScript(projectId, { text: updated, snippet: next, at: i }, { source: "scene", label: `Edited in Scene ${inScript(text, s) ?? s.position}: ${next.replace(/\s+/g, " ").slice(0, 80)}`, scene: inScript(text, s) ?? s.position });
   if ("error" in r) return { error: r.error ?? "Could not write the script." };
   done(projectId, sceneId);
   return { ok: true };
@@ -168,16 +196,19 @@ export async function newCharacterInScene(projectId: string, sceneId: string, in
   if (!s || !user) return { error: "Scene not found." };
   const name = normName(input.name);
   if (!name) return { error: "Give them a name." };
-  const { data: row, error } = await supabase.from("bible_entries").insert({
+  // Someone already in the Cast under that name is the same person, not a second one.
+  const { data: existing } = await supabase.from("bible_entries").select("id").eq("project_id", projectId).eq("kind", "character").eq("name", name).maybeSingle();
+  const { data: row, error } = existing ? { data: existing, error: null } : await supabase.from("bible_entries").insert({
     org_id: s.org_id, project_id: projectId, kind: "character", name, appearance: input.look.trim(), description: input.who.trim(),
     likeness_of: null, requires_consent: false, created_by: user.id,
   }).select("id").single();
   if (error || !row) return { error: error?.message ?? "Could not add them." };
-  await supabase.from("scene_bible_entries").insert({ org_id: s.org_id, scene_id: sceneId, bible_entry_id: row.id });
+  await supabase.from("scene_bible_entries").upsert({ org_id: s.org_id, scene_id: sceneId, bible_entry_id: row.id }, { onConflict: "scene_id,bible_entry_id", ignoreDuplicates: true });
   if (input.line.trim()) {
     const text = await currentScript(projectId);
-    if (parseScript(text).scenes[s.position - 1]) {
-      await writeScript(projectId, addDialogue(text, s.position, input.after, name, input.line), { source: "scene", label: `New character ${name}: "${input.line.trim()}"`, scene: s.position });
+    const n = inScript(text, s);
+    if (n) {
+      await writeScript(projectId, addDialogue(text, n, input.after, name, input.line), { source: "scene", label: `New character ${name}: "${input.line.trim()}"`, scene: n });
     }
   }
   done(projectId, sceneId);
@@ -188,7 +219,9 @@ export async function proposeShots(projectId: string, sceneId: string) {
   const supabase = await createClient();
   const s = await sceneRow(sceneId);
   if (!s) return { error: "Scene not found." } as const;
-  const scene = parseScript(await currentScript(projectId)).scenes[s.position - 1];
+  const script = await currentScript(projectId);
+  const sn = inScript(script, s);
+  const scene = sn ? parseScript(script).scenes[sn - 1] : undefined;
   if (!scene) return { error: "This scene isn't in the script yet." } as const;
   const [{ data: loc }, { data: links }] = await Promise.all([
     s.location_entry_id ? supabase.from("bible_entries").select("name, appearance").eq("id", s.location_entry_id).maybeSingle() : Promise.resolve({ data: null }),
@@ -206,7 +239,9 @@ export async function keepShots(projectId: string, sceneId: string, plan: ShotPl
   const supabase = await createClient();
   const s = await sceneRow(sceneId);
   if (!s) return { error: "Scene not found." };
-  const scene = parseScript(await currentScript(projectId)).scenes[s.position - 1];
+  const script = await currentScript(projectId);
+  const sn = inScript(script, s);
+  const scene = sn ? parseScript(script).scenes[sn - 1] : undefined;
   const [{ data: last }, { data: people }] = await Promise.all([
     supabase.from("shots").select("position").eq("scene_id", sceneId).order("position", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("bible_entries").select("id, name, kind").eq("project_id", projectId),

@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
-import { normHeading, parseScript, type Edit } from "./screenplay";
+import { normHeading, parseScript, sceneKey, type Edit } from "./screenplay";
 
 type Source = "scene" | "cast" | "locations" | "props" | "script";
 
@@ -38,6 +38,8 @@ export async function syncScenes(projectId: string, text: string) {
   for (const sc of parsed) {
     const h = normHeading(sc.heading);
     let i = pool.findIndex((r) => normHeading(r.heading || "") === h);
+    // The same scene written another way ("ext. of diner night" / EXT. DINER - NIGHT).
+    if (i < 0) i = pool.findIndex((r) => !!r.heading && sceneKey(r.heading) === sceneKey(sc.heading));
     // No same-heading row: reuse the next row whose heading appears nowhere in the script (a rename).
     if (i < 0) i = pool.findIndex((r) => !r.heading || !parsed.some((p) => normHeading(p.heading) === normHeading(r.heading)));
     const excerpt = text.slice(sc.start, sc.end);
@@ -54,6 +56,37 @@ export async function syncScenes(projectId: string, text: string) {
       if (made) order.push(made.id);
     }
   }
-  order.push(...pool.map((r) => r.id));
+  // A leftover row that is the same scene as one in the script is a duplicate: fold its people, place
+  // and shots into the script's scene and drop it, so nothing is planned or shot twice.
+  const keyOf = new Map<string, string>();
+  for (const [n, sc] of parsed.entries()) if (!keyOf.has(sceneKey(sc.heading))) keyOf.set(sceneKey(sc.heading), order[n]);
+  const kept = [];
+  for (const r of pool) {
+    const into = r.heading ? keyOf.get(sceneKey(r.heading)) : undefined;
+    if (into && (await mergeScene(r.id, into))) continue;
+    kept.push(r.id);
+  }
+  order.push(...kept);
   await supabase.rpc("set_scene_order", { p_project: projectId, p_ids: order });
+}
+
+async function mergeScene(fromId: string, intoId: string) {
+  const supabase = await createClient();
+  const [{ data: from }, { data: into }, { data: links }, { data: moving }, { data: last }] = await Promise.all([
+    supabase.from("scenes").select("org_id, location_entry_id").eq("id", fromId).maybeSingle(),
+    supabase.from("scenes").select("location_entry_id").eq("id", intoId).maybeSingle(),
+    supabase.from("scene_bible_entries").select("bible_entry_id").eq("scene_id", fromId),
+    supabase.from("shots").select("id").eq("scene_id", fromId).order("position"),
+    supabase.from("shots").select("position").eq("scene_id", intoId).order("position", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  if (!from || !into) return false;
+  if (links?.length) await supabase.from("scene_bible_entries").upsert(links.map((l) => ({ org_id: from.org_id, scene_id: intoId, bible_entry_id: l.bible_entry_id })), { onConflict: "scene_id,bible_entry_id", ignoreDuplicates: true });
+  if (!into.location_entry_id && from.location_entry_id) await supabase.from("scenes").update({ location_entry_id: from.location_entry_id }).eq("id", intoId);
+  let pos = last?.position ?? 0;
+  for (const sh of moving ?? []) {
+    const { error } = await supabase.from("shots").update({ scene_id: intoId, position: ++pos }).eq("id", sh.id);
+    if (error) return false; // keep the row rather than lose a shot
+  }
+  const { error } = await supabase.from("scenes").delete().eq("id", fromId);
+  return !error;
 }

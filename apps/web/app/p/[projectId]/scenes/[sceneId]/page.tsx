@@ -1,6 +1,6 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { parseScript } from "@/lib/script/screenplay";
+import { parseScript, sceneIndex } from "@/lib/script/screenplay";
 import { SceneStrip } from "../SceneStrip";
 import { stripData } from "../strip";
 import { SceneBoard, type Asset, type SceneBlock } from "./SceneBoard";
@@ -16,9 +16,11 @@ export default async function ScenePage({ params }: { params: Promise<{ projectI
     supabase.from("scene_bible_entries").select("bible_entry_id").eq("scene_id", sceneId),
     supabase.from("shots").select("id, position, label, selected_take_id").eq("scene_id", sceneId).order("position"),
   ]);
-  if (!scene) notFound();
+  // Gone: most likely folded into the same scene in the script (see syncScenes). Back to Scenes.
+  if (!scene) redirect(`/p/${projectId}/scenes`);
   const text = project?.script ?? "";
-  const parsed = parseScript(text).scenes[scene.position - 1];
+  const n = sceneIndex(text, scene.position, scene.heading ?? "");
+  const parsed = n ? parseScript(text).scenes[n - 1] : undefined;
   const blocks: SceneBlock[] = (parsed?.blocks ?? []).map((b, i) => ({
     i, kind: b.kind, who: b.kind === "dialogue" ? b.character : "", text: b.text, raw: text.slice(b.start, b.end),
   }));

@@ -1,5 +1,5 @@
 // Run: pnpm test:script (node strips the types; no test framework needed).
-import { parseScript, linesFor, addDialogue, addScene, addAction, removeSnippet, setHeading, slugFor } from "./screenplay.ts";
+import { parseScript, linesFor, addDialogue, addScene, addAction, removeSnippet, setHeading, slugFor, sceneKey, sameScene, sceneIndex, splitLine } from "./screenplay.ts";
 import assert from "node:assert";
 const s = `TITLE: Last Call
 
@@ -44,3 +44,25 @@ assert.ok(end.text.trim().endsWith("The PIE sits on the counter."));
 assert.equal(parseScript(setHeading(s, 2, "EXT. ROSIE'S DINER - DAWN").text).scenes[1].timeOfDay, "DAWN");
 assert.equal(slugFor("Diner inside", "INT", "night"), "INT. DINER - NIGHT");
 console.log("all ok");
+
+// The same scene written different ways is one scene; a different place or time is not.
+assert.ok(sameScene("ext. of diner night", "EXT. DINER - NIGHT"));
+assert.ok(sameScene("EXT. DINER EXTERIOR – NIGHT", "EXT. DINER - NIGHT"));
+assert.ok(sameScene("int. rosie's diner - night", "INT. ROSIE'S DINER – NIGHT"));
+assert.ok(!sameScene("INT. DINER - NIGHT", "EXT. DINER - NIGHT"));
+assert.ok(!sameScene("EXT. DINER - NIGHT", "EXT. DINER - DAY"));
+assert.ok(!sameScene("EXT. BUS STATION - NIGHT", "EXT. DINER - NIGHT"));
+assert.equal(sceneKey("ext. of diner night"), "EXT|DINER|NIGHT");
+console.log("sceneKey ok");
+
+// A row finds its own scene in the script, even when its number is off.
+const two = "INT. ROSIE'S DINER - NIGHT\n\nHi.\n\next. of diner night\n\nBob walks.\n";
+assert.equal(sceneIndex(two, 2, "EXT. DINER - NIGHT"), 2);
+assert.equal(sceneIndex(two, 3, "EXT. DINER - NIGHT"), 2);
+assert.equal(sceneIndex(two, 1, "EXT. DINER - NIGHT"), 2);
+assert.equal(sceneIndex(two, 3, "EXT. BUS STATION - DAY"), null);
+// Action and speech typed together are split.
+assert.deepEqual(splitLine("BOB", 'bob walks to the door pulls it open then shouts "when were you going to tell me"'),
+  { action: "BOB walks to the door pulls it open.", line: "When were you going to tell me?", paren: "(shouting)" });
+assert.equal(splitLine("BOB", "I'm leaving."), null);
+console.log("sceneIndex + splitLine ok");
