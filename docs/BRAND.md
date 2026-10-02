@@ -111,8 +111,8 @@ most about **principled**. Both have to be present for everyone.
 
 ## Proof we owe
 
-The principles only hold if the product backs them. Where each stands, and what closes the gap:
-`research/brand-claims-2026-10.md`.
+The principles only hold if the product backs them. Where each stands:
+`research/brand-claims-2026-10.md`. How we get there, staged with costs: `research/brand-roadmap-2026-10.md`.
 
 ## Hard rules
 

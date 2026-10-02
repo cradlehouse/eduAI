@@ -100,6 +100,9 @@ anthropic.com/legal/commercial-terms · fal.ai/legal/terms-of-service
 | **IP-D. Check finished shots** | A vision check on one or two keyframes for characters and logos | Higher | Catches what slips past the prompt check |
 | ~~Face recognition against celebrities~~ | Not recommended: running minors' faces through matching creates biometric data (amended COPPA, Apr 2026; state biometric laws) | — | — |
 
+**Status:** IP-A + IP-B built 2 Oct 2026 (commit `c946826`, not yet deployed); instructor override next.
+How each goal is reached, with costs and stages: `brand-roadmap-2026-10.md`.
+
 **Recommendation:** IP-A + IP-B first, with the instructor override; that's the minimum that makes
 "make your own" true. IP-C before festival season. IP-D only if instructors report things slipping
 through. A **festival-ready flag** (no third-party IP, all music licensed) would map the Pegasus rule
