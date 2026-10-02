@@ -1,7 +1,8 @@
 # Imaje (eduai)
 
 AI film-making platform for schools. First organisation: Pegasus Media Project (Niloo Jalilvand). Students
-are often minors: never upload real student faces or voices without a signed guardian release.
+are often minors: never upload real student faces or voices without a signed guardian release. Nobody under
+13 (decided 2 Oct 2026; migration 0130): inviter and invitee both confirm 13+.
 
 ## Where things are
 - `apps/web` — Next.js 15 (App Router) on Cloudflare Workers via OpenNext. Live: https://eduai-web.long-night-f7d0.workers.dev
@@ -9,7 +10,7 @@ are often minors: never upload real student faces or voices without a signed gua
 - `supabase/migrations` — Postgres schema (Supabase project `zhltmlguysknjeueabyy`). `packages/db/migrations` is a symlink to it: always `git add supabase/migrations/<file>`.
 - `packages/db/seed` — model registry: models.csv, model_versions.csv, deployment_profiles.csv, schemas/*.json, profiles/*.json.
 - `docs/PRODUCTION_FLOW.md` — how the product works (read this first). `docs/STATUS.md` — what's done, what's open.
-- `docs/BUSINESS.md` — customers, pricing, unit costs, hosting economics, licences, risks. `docs/STACK.md` — every layer and the standing rules. `docs/DESIGN.md` — tokens, layout, screens as built. `docs/BRAND.md` — brand principles (no copy yet); `docs/BRAND_BRIEF.md` — brief for a brand designer; `docs/research/brand-claims-2026-10.md` — what we can and can't claim on IP, likeness, environment.
+- `docs/BUSINESS.md` — customers, pricing, unit costs, hosting economics, licences, risks. `docs/STACK.md` — every layer and the standing rules. `docs/DESIGN.md` — tokens, layout, screens as built. `docs/BRAND.md` — brand principles (no copy yet); `docs/BRAND_BRIEF.md` — brief for a brand designer; `docs/research/brand-claims-2026-10.md` — what we can and can't claim on IP, likeness, environment; `docs/research/brand-roadmap-2026-10.md` — how we reach each promise. `docs/VOICES.md` — stock voices, honestly, and the path to licensed.
 - `docs/research/` — model, continuity, dialogue and self-hosting research. `docs/design/` — mockups.
 - `scripts/spike/` — paid model tests; they ask for a fal key (hidden). Keys pasted into chat can't be used.
 
@@ -25,6 +26,7 @@ are often minors: never upload real student faces or voices without a signed gua
 - "use server" files may only export async functions.
 - CSV registry fields can't contain commas.
 - Indoor shots: never write weather words into prompts (the models rain indoors).
+- Never call Imaje carbon neutral, green or regenerative; never claim the stack is licensed or "ethically trained" (see the brand research).
 
 ## Product decisions (agreed with Tim)
 - One screen, one job: Script → Cast → Locations → Props → Scene → Shot (Camera, Frame, Clip) → Edit.

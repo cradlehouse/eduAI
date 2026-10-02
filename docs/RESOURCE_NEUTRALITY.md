@@ -38,17 +38,32 @@ Rate each model version A/B/C on disclosure, same pattern as the other axes:
 
 Never publish a fabricated kWh-per-generation for a closed model. The absence of data is the finding.
 
-## Infrastructure decisions (the part the platform controls)
+## Infrastructure: what's true and the path (revised 2 Oct 2026)
 
-- **Database/backend: Supabase pinned to AWS Oregon (us-west-2).** One of three AWS regions named as
-  carbon-neutral rather than offset-purchased (Oregon, Frankfurt, GovCloud). Oregon runs substantially on
-  hydro and wind. **Status: done.** The eduAI project is in us-west-2.
-- **Self-hosted model compute: Crusoe Cloud**, not a generic GPU provider. Crusoe runs on stranded energy
-  (flare gas that would otherwise be burned for nothing) plus renewables. Versus CoreWeave, Lambda or RunPod,
-  which compete on speed and price. **Status: Phase 4**, draft profile `ltx-2.5@crusoe` in the registry.
+Two earlier claims were withdrawn after research (`research/brand-claims-2026-10.md` §3):
+- **"Carbon-neutral AWS region (Oregon)."** Amazon's 100% renewable figure is annual and certificate-based,
+  and disputed by its own employees' group; Amazon's Oregon demand pushed a local co-op onto fossil market
+  power. The database stays in us-west-2 (its grid is largely hydro), but we don't count certificate claims,
+  and the database is a tiny share of the footprint anyway.
+- **"Crusoe stranded-energy compute."** Crusoe sold its flare-gas business to NYDIG (Mar 2025) and builds
+  gas-turbine campuses in Texas. Its Iceland and Norway sites are clean but outside the US.
 
-Together: "infrastructure runs on a carbon-neutral AWS region and stranded-energy GPU compute". Specific and
-verifiable, not a vague sustainability promise.
+**We don't say "carbon neutral".** The public stance (mission page) is the path:
+1. **Estimate, labelled** — a range per take from published measurements (LTX-Video 0.9.7 ≈ 3.8 Wh per
+   5 s at 512×704 on an H100; energy ∝ length² and resolution²). Method on a public page.
+2. **Use less** — distilled LTX-2 drafts (8 steps vs 40), half resolution plus upscaler, short takes,
+   finals only for kept takes.
+3. **Measure** — on our own GPUs: NVML energy counter per job (Zeus/DCGM) + CPU/RAM share + idle share × PUE,
+   following the Green Software Foundation's SCI for AI; on receipts, discarded takes included.
+4. **Cleaner power, US data** — default Google Cloud us-west1 Oregon (83% hourly carbon-free, 98 g/kWh);
+   clean non-US grids (Québec, Iceland) only by a programme's written agreement.
+5. **Go beyond** — durable removal (Stripe Climate / Frontier, $450–550/t) for 2× the measured footprint,
+   reported as tonnes contracted vs delivered, called a contribution. Estimated ~$5–110 a school a month.
+
+Never say carbon neutral, net zero, climate positive, regenerative, green or sustainable about Imaje
+without a measured, published method (FTC Green Guides, California AB 1305, EU rules from 27 Sep 2026).
+Full roadmap: `research/brand-roadmap-2026-10.md` §4. The registry's `ltx-2.5@crusoe` draft profile should
+be re-pointed at whichever clean host the self-hosting spike picks.
 
 ## Positioning
 
@@ -81,7 +96,7 @@ and Replicate profile is `{"basis": "undisclosed"}` with `grid: unknown`. Nobody
 
 - No provider publishes real energy-per-generation for video. Revisit periodically; Google's 2025 text
   disclosure suggests the direction of travel.
-- Once the self-hosted stack runs on Crusoe, replace `third_party` with measured `gpu_watts × seconds` on
+- Once the self-hosted stack runs on our own clean-grid GPUs, replace `third_party` with measured `gpu_watts × seconds` on
   `ltx-2.5@crusoe` and move `ltx-2.5` to tier A. That is the one place the platform can claim A.
 - The orchestrator's estimate function (P1-10) reads `resource_model`; when `basis` is `undisclosed` it
   must write `{}` plus the tier, never a number.

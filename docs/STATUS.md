@@ -1,4 +1,16 @@
-# Status (28 Sep 2026)
+# Status (28 Sep 2026; updated 2 Oct)
+
+## 2 Oct 2026
+- **IP check live** (orchestrator, pushed): the prompt gate refuses copyrighted characters (named or
+  described), brands, famous people and living artists' styles, with a "make it your own" suggestion;
+  `ip_names.csv` is a hint list. Refusals show as "Refused · no charge". Not yet tried with live prompts.
+- **No under-13s** (migration 0130, applied): inviter confirms 13+ on the people page; invitee confirms on
+  accept; the old one-argument `accept_invite` call is refused.
+- **Mission page**: "carbon-neutral region" and "stranded-energy compute" claims withdrawn; honest footprint
+  path; stock voices described plainly; 13+ and the IP check added.
+- Brand: `BRAND.md` (principles), `BRAND_BRIEF.md`, `VOICES.md`, `research/brand-claims-2026-10.md`,
+  `research/brand-roadmap-2026-10.md`.
+
 
 ## Working end to end (tested with "Last Call (test)", project bdf29611…, $5 cap)
 Script breakdown → Cast (looks, voices) → Locations (master wide, angles, room tone) → Scene (drawer,
