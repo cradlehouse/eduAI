@@ -1,0 +1,196 @@
+name,kind,owner
+Mickey Mouse,character,Disney
+Minnie Mouse,character,Disney
+Donald Duck,character,Disney
+Goofy,character,Disney
+Elsa and Anna,character,Disney
+Moana,character,Disney
+Simba,character,Disney
+Buzz Lightyear,character,Pixar
+Woody and Buzz,character,Pixar
+Lightning McQueen,character,Pixar
+Wall-E,character,Pixar
+Spider-Man,character,Marvel
+Spiderman,character,Marvel
+Iron Man,character,Marvel
+Captain America,character,Marvel
+Black Panther,character,Marvel
+Hulk,character,Marvel
+Wolverine,character,Marvel
+Deadpool,character,Marvel
+Thanos,character,Marvel
+Groot,character,Marvel
+Avengers,character,Marvel
+X-Men,character,Marvel
+Superman,character,DC
+Batman,character,DC
+Wonder Woman,character,DC
+The Flash,character,DC
+Aquaman,character,DC
+Harley Quinn,character,DC
+Darth Vader,character,Lucasfilm
+Luke Skywalker,character,Lucasfilm
+Baby Yoda,character,Lucasfilm
+Grogu,character,Lucasfilm
+Yoda,character,Lucasfilm
+Stormtrooper,character,Lucasfilm
+Lightsaber,character,Lucasfilm
+Star Wars,character,Lucasfilm
+Indiana Jones,character,Lucasfilm
+Harry Potter,character,Warner Bros
+Hogwarts,character,Warner Bros
+Hermione,character,Warner Bros
+Voldemort,character,Warner Bros
+Gandalf,character,Tolkien Estate / Warner Bros
+Frodo,character,Tolkien Estate / Warner Bros
+Gollum,character,Tolkien Estate / Warner Bros
+Pikachu,character,Nintendo / The Pokemon Company
+Pokemon,character,Nintendo / The Pokemon Company
+Pokémon,character,Nintendo / The Pokemon Company
+Mario,character,Nintendo
+Luigi,character,Nintendo
+Princess Peach,character,Nintendo
+Bowser,character,Nintendo
+Link from Zelda,character,Nintendo
+Legend of Zelda,character,Nintendo
+Kirby,character,Nintendo
+Donkey Kong,character,Nintendo
+Sonic the Hedgehog,character,Sega
+Master Chief,character,Microsoft
+Minecraft,character,Microsoft
+Steve from Minecraft,character,Microsoft
+Creeper,character,Microsoft
+Fortnite,character,Epic Games
+Among Us,character,Innersloth
+Roblox,character,Roblox
+Shrek,character,DreamWorks
+Kung Fu Panda,character,DreamWorks
+SpongeBob,character,Paramount
+Patrick Star,character,Paramount
+Teenage Mutant Ninja Turtles,character,Paramount
+Ninja Turtles,character,Paramount
+Optimus Prime,character,Hasbro
+Transformers,character,Hasbro
+My Little Pony,character,Hasbro
+Barbie,character,Mattel
+Hello Kitty,character,Sanrio
+Totoro,character,Studio Ghibli
+No-Face,character,Studio Ghibli
+Naruto,character,Shueisha
+Goku,character,Shueisha
+Dragon Ball,character,Shueisha
+One Piece,character,Shueisha
+Luffy,character,Shueisha
+Demon Slayer,character,Shueisha
+Attack on Titan,character,Kodansha
+Sailor Moon,character,Kodansha
+Bart Simpson,character,Disney / 20th Century
+Homer Simpson,character,Disney / 20th Century
+The Simpsons,character,Disney / 20th Century
+Rick and Morty,character,Warner Bros
+Scooby-Doo,character,Warner Bros
+Bugs Bunny,character,Warner Bros
+Looney Tunes,character,Warner Bros
+Tom and Jerry,character,Warner Bros
+Peppa Pig,character,Hasbro
+Bluey,character,Ludo Studio / BBC
+Paw Patrol,character,Spin Master
+James Bond,character,Eon / Amazon MGM
+007,character,Eon / Amazon MGM
+Jack Sparrow,character,Disney
+Wednesday Addams,character,Addams estate / MGM
+Stranger Things,character,Netflix
+Squid Game,character,Netflix
+Godzilla,character,Toho
+Pac-Man,character,Bandai Namco
+Five Nights at Freddy's,character,Scott Cawthon
+Coca-Cola,brand,Coca-Cola
+Pepsi,brand,PepsiCo
+Nike,brand,Nike
+Adidas,brand,Adidas
+McDonald's,brand,McDonald's
+Starbucks,brand,Starbucks
+iPhone,brand,Apple
+MacBook,brand,Apple
+Apple logo,brand,Apple
+Google logo,brand,Google
+Tesla,brand,Tesla
+Ferrari,brand,Ferrari
+Lamborghini,brand,Lamborghini
+Red Bull,brand,Red Bull
+Gatorade,brand,PepsiCo
+Doritos,brand,PepsiCo
+Monster Energy,brand,Monster
+Supreme,brand,Supreme
+Louis Vuitton,brand,LVMH
+Gucci,brand,Kering
+Chanel,brand,Chanel
+Rolex,brand,Rolex
+Lego,brand,Lego
+PlayStation,brand,Sony
+Xbox,brand,Microsoft
+Nintendo Switch,brand,Nintendo
+YouTube,brand,Google
+TikTok,brand,ByteDance
+Instagram,brand,Meta
+Netflix logo,brand,Netflix
+Disney castle,brand,Disney
+Hayao Miyazaki,artist,living
+Miyazaki,artist,living
+Studio Ghibli,artist,studio
+Ghibli,artist,studio
+Pixar style,artist,studio
+Disney style,artist,studio
+Wes Anderson,artist,living
+Tim Burton,artist,living
+Christopher Nolan,artist,living
+Quentin Tarantino,artist,living
+Denis Villeneuve,artist,living
+Greta Gerwig,artist,living
+Jordan Peele,artist,living
+Guillermo del Toro,artist,living
+Steven Spielberg,artist,living
+Martin Scorsese,artist,living
+Spike Lee,artist,living
+Makoto Shinkai,artist,living
+Greg Rutkowski,artist,living
+Karla Ortiz,artist,living
+Kelly McKernan,artist,living
+Sarah Andersen,artist,living
+Loish,artist,living
+Artgerm,artist,living
+Simon Stålenhag,artist,living
+Simon Stalenhag,artist,living
+James Jean,artist,living
+Beeple,artist,living
+Banksy,artist,living
+Takashi Murakami,artist,living
+Yayoi Kusama,artist,living
+Kaws,artist,living
+Shepard Fairey,artist,living
+Taylor Swift,famous_person,living
+Beyoncé,famous_person,living
+Beyonce,famous_person,living
+Drake,famous_person,living
+Billie Eilish,famous_person,living
+Zendaya,famous_person,living
+Tom Holland,famous_person,living
+Timothée Chalamet,famous_person,living
+Timothee Chalamet,famous_person,living
+Dwayne Johnson,famous_person,living
+The Rock,famous_person,living
+Keanu Reeves,famous_person,living
+Elon Musk,famous_person,living
+Donald Trump,famous_person,living
+Joe Biden,famous_person,living
+Kamala Harris,famous_person,living
+Barack Obama,famous_person,living
+MrBeast,famous_person,living
+LeBron James,famous_person,living
+Patrick Mahomes,famous_person,living
+Simone Biles,famous_person,living
+Lionel Messi,famous_person,living
+Cristiano Ronaldo,famous_person,living
+Kim Kardashian,famous_person,living
+Ariana Grande,famous_person,living
+Bad Bunny,famous_person,living

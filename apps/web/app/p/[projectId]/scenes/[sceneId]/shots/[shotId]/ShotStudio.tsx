@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { checkFrame, chooseClip, chooseFrame, makeClip, makeFrames, saveCamera, setEndFrame, type Intent } from "./actions";
+import { FailureNote } from "@/components/FailureNote";
 
 type Check = NonNullable<Intent["checks"]>[string];
 
@@ -202,7 +203,7 @@ export function ShotStudio({ projectId, sceneId, tab, shot, who, locName, angles
       )}
 
       {msg && <p className={`text-[12px] ${msg.ok ? "text-ok" : "text-drift"}`}>{msg.text}</p>}
-      {failed && !pending.frames && !pending.clips && <p className="text-[12px] text-drift">The last one didn&apos;t work: {failed}</p>}
+      {failed && !pending.frames && !pending.clips && <FailureNote error={failed} />}
 
       {(tab === "frame" || (tab === "clip" && shot.frame)) && (
         <div className="glass sticky bottom-3 mt-auto flex flex-col gap-2 rounded-[10px] p-2.5 shadow-[0_14px_34px_rgba(0,0,0,.45)]">

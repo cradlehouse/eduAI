@@ -6,6 +6,7 @@ import { addReference, addRelease, deleteEntry, revokeRelease, setEntryAssetLife
 import { EntryStudio } from "./EntryStudio";
 import { JobWatcher } from "@/app/p/[projectId]/scenes/JobWatcher";
 import type { Database } from "@/lib/db/types";
+import { readFailure } from "@/lib/refusal";
 type Option = Database["public"]["Functions"]["model_options"]["Returns"][number];
 
 const input = "input";
@@ -202,7 +203,7 @@ export default async function EntryPage({ params, searchParams }: { params: Prom
             {(jobs ?? []).length === 0 ? <p className="mt-1 text-[11px] text-mute">Nothing generated for this entry yet.</p> : (
               <ul className="mt-1 flex flex-col text-[11px]">
                 {(jobs ?? []).map((j) => (
-                  <li key={j.job_id} className="kv border-t border-glass-edge"><span>{j.entry_role} <span className={j.status === "rejected" || j.status === "failed" ? "text-drift" : "text-mute"}>· {j.status === "rejected" ? "refused · no charge" : j.status}</span>{j.error && <span className="block text-drift">{j.error}</span>}</span><span className="mono text-dim">{(j.actual_tokens ?? j.estimated_tokens ?? 0).toLocaleString()}</span></li>
+                  <li key={j.job_id} className="kv border-t border-glass-edge"><span>{j.entry_role} <span className={j.status === "rejected" || j.status === "failed" ? "text-drift" : "text-mute"}>· {j.status === "rejected" ? "refused · no charge" : j.status}</span>{j.error && <span className="block text-drift">{((f) => f.refused ? f.reason : f.text)(readFailure(j.error))}</span>}</span><span className="mono text-dim">{(j.actual_tokens ?? j.estimated_tokens ?? 0).toLocaleString()}</span></li>
                 ))}
               </ul>
             )}

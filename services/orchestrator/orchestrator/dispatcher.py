@@ -152,11 +152,11 @@ class Dispatcher:
             except Exception as e:  # noqa: BLE001 — the gate failing closed is the safe default
                 await self.db.release(jid, "failed", f"prompt gate unavailable: {e}")
                 return None
-            decision.reason = decision.reason[:500]
+            decision.reason, decision.suggestion, decision.note = decision.reason[:500], decision.suggestion[:500], decision.note[:300]
             payload = {"stage": "prompt", "tier": tier, **decision.as_dict()}
             if not decision.allowed:
                 await self.db.event(jid, "policy_rejected", payload)
-                await self.db.release(jid, "rejected", f"prompt gate: {decision.category}. {decision.reason}".strip())
+                await self.db.release(jid, "rejected", decision.release_message())
                 return None
             await self.db.event(jid, "policy_approved", payload)
             return decision

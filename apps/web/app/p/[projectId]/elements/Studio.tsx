@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Json } from "@/lib/db/types";
 import { addVoiceRecording, revokeVoiceRelease, chooseLook, chooseSound, hideResult, makeElement, recordVoiceRelease, saveAppearance, uploadStart, type What } from "./actions";
+import { FailureNote } from "@/components/FailureNote";
 
 type Kind = "character" | "location" | "prop";
 export type Result = { id: string; assetId: string; role: string; label: string; at: string; jobId: string | null; audio: boolean };
@@ -209,7 +210,7 @@ export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, result
       )}
 
       {msg && <p className={`text-[12px] ${msg.ok ? "text-ok" : "text-drift"}`}>{msg.text}</p>}
-      {failed && !pending.length && <p className="text-[12px] text-drift">The last one didn&apos;t work: {failed}</p>}
+      {failed && !pending.length && <FailureNote error={failed} />}
 
       {tab === "look" && (
         <div className="glass sticky bottom-3 mt-auto flex flex-col gap-2 rounded-[10px] border-card-edge p-2.5 shadow-[0_14px_34px_rgba(0,0,0,.45)]">
