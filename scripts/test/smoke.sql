@@ -351,7 +351,12 @@ begin
   assert r.status = 'not_found', 'preview of unknown token';
   assert public.my_landing() = '/c/00000000-0000-4000-8000-000000000020', 'student lands on their cohort: ' || public.my_landing();
   begin
-    perform public.accept_invite('mismatch-token');   -- open invite, but for a different email
+    perform public.accept_invite('mismatch-token');   -- no 13+ confirmation: refused before anything else
+    raise exception 'accepting without confirming 13+ should fail';
+  exception when others then assert sqlerrm = 'age_13_plus_required', sqlerrm;
+  end;
+  begin
+    perform public.accept_invite('mismatch-token', true);   -- open invite, but for a different email
     raise exception 'accepting someone else''s invite should fail';
   exception when others then assert sqlerrm = 'invite_email_mismatch', sqlerrm;
   end;

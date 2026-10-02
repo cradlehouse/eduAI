@@ -920,6 +920,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           accepted_user_id: string | null
+          age_13_plus_attested: boolean
           cohort_id: string | null
           created_at: string
           email: string
@@ -936,6 +937,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           accepted_user_id?: string | null
+          age_13_plus_attested?: boolean
           cohort_id?: string | null
           created_at?: string
           email: string
@@ -952,6 +954,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           accepted_user_id?: string | null
+          age_13_plus_attested?: boolean
           cohort_id?: string | null
           created_at?: string
           email?: string
@@ -1404,6 +1407,7 @@ export type Database = {
       }
       memberships: {
         Row: {
+          age_13_plus_confirmed_at: string | null
           created_at: string
           id: string
           is_minor: boolean
@@ -1413,6 +1417,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          age_13_plus_confirmed_at?: string | null
           created_at?: string
           id?: string
           is_minor?: boolean
@@ -1422,6 +1427,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          age_13_plus_confirmed_at?: string | null
           created_at?: string
           id?: string
           is_minor?: boolean
@@ -3428,7 +3434,7 @@ export type Database = {
     }
     Functions: {
       accept_invite: {
-        Args: { p_token: string }
+        Args: { p_age_13_plus?: boolean; p_token: string }
         Returns: Database["public"]["Enums"]["member_role"]
       }
       add_org_credential: {

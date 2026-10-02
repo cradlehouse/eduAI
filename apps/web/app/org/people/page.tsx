@@ -63,6 +63,9 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
           <label className="flex items-center gap-2 text-sm md:col-span-2">
             <input type="checkbox" name="is_minor" /> These people are under 18 (forces content tier M, guardian signer, no personal social accounts)
           </label>
+          <label className="flex items-center gap-2 text-sm md:col-span-2">
+            <input type="checkbox" name="age_13_plus" required /> Everyone I&apos;m inviting is 13 or older (Imaje isn&apos;t for under-13s)
+          </label>
           <button type="submit" className="btn-primary md:col-span-2">Create invites</button>
         </form>
       </section>

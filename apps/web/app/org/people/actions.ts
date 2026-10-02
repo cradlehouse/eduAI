@@ -37,13 +37,15 @@ export async function createInvites(formData: FormData) {
   const projectId = String(formData.get("project_id") ?? "") || null;
   const projectRole = (String(formData.get("project_role") ?? "") || null) as ProjectRole | null;
   const isMinor = formData.get("is_minor") === "on";
+  const age13 = formData.get("age_13_plus") === "on";
 
+  if (!age13) redirect(`/org/people?error=${encodeURIComponent("Imaje is for people aged 13 and over. Confirm everyone you're inviting is 13 or older.")}`);
   if (ok.length === 0) redirect(`/org/people?error=${encodeURIComponent("No valid email addresses.")}`);
   if (projectId && !cohortId) redirect(`/org/people?error=${encodeURIComponent("A project invite needs its cohort.")}`);
 
   const rows = ok.map((email) => ({
     org_id: org.id, email, role, cohort_id: cohortId, project_id: projectId,
-    project_role: projectId ? projectRole ?? "director" : null, is_minor: isMinor, invited_by: user.id,
+    project_role: projectId ? projectRole ?? "director" : null, is_minor: isMinor, age_13_plus_attested: true, invited_by: user.id,
   }));
   const { error } = await supabase.from("invites").insert(rows);
   if (error) redirect(`/org/people?error=${encodeURIComponent(error.message)}`);

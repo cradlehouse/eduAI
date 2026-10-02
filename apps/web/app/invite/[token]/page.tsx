@@ -69,6 +69,10 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
       <p className="mb-3 text-sm">Signed in as <strong>{user.email}</strong>.</p>
       <form action={acceptInvite}>
         <input type="hidden" name="token" value={token} />
+        <label className="mb-3 flex items-start gap-2 text-sm">
+          <input type="checkbox" name="age_13_plus" required className="mt-1" />
+          <span>I&apos;m 13 or older. Imaje isn&apos;t for anyone under 13.</span>
+        </label>
         <button type="submit" className="w-full btn-primary">
           Accept invite
         </button>
