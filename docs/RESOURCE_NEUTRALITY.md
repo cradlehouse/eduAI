@@ -57,8 +57,10 @@ Two earlier claims were withdrawn after research (`research/brand-claims-2026-10
    following the Green Software Foundation's SCI for AI; on receipts, discarded takes included.
 4. **Cleaner power, US data** — default Google Cloud us-west1 Oregon (83% hourly carbon-free, 98 g/kWh);
    clean non-US grids (Québec, Iceland) only by a programme's written agreement.
-5. **Go beyond** — durable removal (Stripe Climate / Frontier, $450–550/t) for 2× the measured footprint,
-   reported as tonnes contracted vs delivered, called a contribution. Estimated ~$5–110 a school a month.
+5. **No credits** (Tim, 2 Oct 2026) — we don't buy offsets, renewable certificates or carbon removal to
+   make the numbers look better. The only route to near-zero is the electricity itself: hydro or geothermal
+   grids. Even then, the hardware's manufacturing footprint remains, so the honest claim is "runs on hydro
+   power, measured per take", never "carbon neutral".
 
 Never say carbon neutral, net zero, climate positive, regenerative, green or sustainable about Imaje
 without a measured, published method (FTC Green Guides, California AB 1305, EU rules from 27 Sep 2026).

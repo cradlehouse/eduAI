@@ -43,5 +43,6 @@ model already learned. Only a model trained from the start on clean data support
 - Ethovox (SAG-AFTRA) hasn't launched.
 - Emilia-trained models use non-commercial or CC-tagged YouTube data.
 
-Decision for Tim: budget and timing for step 2. The first move is quotes from Dallas voice talent.
+**Parked (Tim, 2 Oct 2026):** steps 2–4 are on the back burner; no voice actor budget now. Step 1 (credits
+page) is the only voice work planned.
 Sources: `research/brand-roadmap-2026-10.md` §3 and the research behind it.

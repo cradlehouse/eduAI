@@ -25,7 +25,7 @@ export default function Mission() {
         </section>
         <section className="card p-5">
           <div className="label mb-2 text-dim">Footprint, honestly</div>
-          <p className="text-sm leading-relaxed">We don&apos;t call Imaje carbon neutral, because we can&apos;t measure it yet. We rate what each model discloses, never invent a number, and are building towards measuring every take on our own machines, then funding carbon removal beyond it.</p>
+          <p className="text-sm leading-relaxed">We don&apos;t call Imaje carbon neutral, because we can&apos;t measure it yet. We rate what each model discloses, never invent a number, and are building towards measuring every take on machines running on clean power. We don&apos;t buy carbon credits.</p>
         </section>
       </div>
 
@@ -57,8 +57,7 @@ export default function Mission() {
         <li><b>Estimate, labelled as an estimate.</b> A range of energy, carbon and water for each take, from published measurements, with the method on a public page.</li>
         <li><b>Use less.</b> Quick drafts in class by default, short takes, and a final render only for the takes a student keeps.</li>
         <li><b>Measure.</b> Once rendering runs on our own machines, read the actual energy of every take and show it on the receipt, discarded takes included.</li>
-        <li><b>Cleaner power.</b> Run those machines where the grid is cleanest, keeping student data in the US.</li>
-        <li><b>Go beyond it.</b> Fund durable carbon removal for more than we measure, reported in tonnes contracted and delivered, and called a contribution, not neutrality.</li>
+        <li><b>Clean power at the source.</b> Run those machines where the grid itself is hydro or geothermal, keeping student data in the US. Clean electricity, not certificates: we don&apos;t buy offsets or carbon credits to make the numbers look better.</li>
       </ol>
 
       <h2 className="display mb-3 text-2xl">Why open models</h2>

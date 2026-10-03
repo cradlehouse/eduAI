@@ -13,10 +13,10 @@ Tim; nothing is decided. *Unverified* marks anything from secondary sources or n
 | **IP in what students make** | **Built 2 Oct** (prompt check); output check later | Instructor override next; keyframe check if things slip through | Pennies per take |
 | **Licensed sound** (music, effects, room tone, transcription) | **0–3 months** | Recorded and licensed libraries, Stable Audio 3, swap Whisper for Parakeet, a credits page | ~$0 |
 | **Licensed stills** (portraits, locations, frames) | **0–2 months**, after a test | Bria FIBO on fal (trained on 479M licensed images, pays contributors per generation) | About the same as today |
-| **Licensed, consented stock voices** | **~6 months** | Commission 8–12 paid voice actors; train a voice model from scratch on public-domain speech plus their recordings | ~$10–25k |
+| **Licensed, consented stock voices** | **Parked** (Tim, 2 Oct) | Commission 8–12 paid voice actors; train a voice model from scratch on public-domain speech plus their recordings | ~$10–25k |
 | **Licensed video** | **Not reachable on our principles today** | Either give up open weights (Adobe Firefly Video, enterprise) or wait for a licensed open model (est. 12–36 months) | Firefly ~$1k+/month (*unverified*); building our own $1.5–5M+ |
 | **Measured footprint** per take | **With the self-hosting spike** | GPU energy meter per job, grid carbon, a public method page | Engineering time |
-| **Beyond our footprint** | **Any time after measuring** | Durable carbon removal at 2× measured, framed as contribution | ~$5–110 per school per month |
+| ~~Beyond our footprint~~ | **Dropped** (Tim, 2 Oct): no carbon credits or removal purchases | Clean power at the source instead | — |
 | **Whole stack "without taking"** | **Not before a licensed video model and voice conversion exist** | — | — |
 
 The pattern is the same across all three promises: **protected** can be finished this autumn,
