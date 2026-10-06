@@ -11,6 +11,10 @@ Gmail.
 
 ## 1. Lightricks (LTX-2 / LTX 2.5)
 
+**Status: sent 6 Oct 2026 by Tim.** The licensing form redirects companies under the $10M threshold to
+Hugging Face, so it reaches no one; email went instead (dpo@ltx.io is the published route). If there's
+no reply in ~2 weeks: post the two key questions on the LTX-2 Community tab on Hugging Face, then LinkedIn.
+
 **Send via:** licensing form https://ltx.io/forms/ltx-licensing-form (linked from ltx.io/model/licensing).
 CEO Zeev Farbman is publicly quoted (Shutterstock release, Dec 2024), but has no published email.
 
