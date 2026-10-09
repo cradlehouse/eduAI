@@ -124,6 +124,12 @@ The principles only hold if the product backs them. Where each stands:
 
 ## Open (for Tim)
 
-- The name. "Imaje" is the working name; trademark and domain checks haven't been done.
+- The name. "Imaje" is the working name. A first-pass US trademark read (9 Oct 2026, AI-assisted, not
+  verified by an attorney) found no live IMAJE mark (Markem-Imaje's printer marks were cancelled 2020/2023),
+  but two risks for an AI image/film product: **IMAIGE** (Reg. 7474137, Imaige Inc., Class 42 AI multimedia
+  SaaS, live since Aug 2024) is close in look and sound, and "Imaje" reads as a misspelling of "image",
+  which the USPTO can treat as merely descriptive. Markem-Imaje still trades under the name abroad. Next:
+  an attorney clearance search (a few hundred dollars) in Classes 9, 41 and 42, before any identity spend.
+  Alternatives floated: za'atar (cultural-ownership and search caveats).
 - Who does the identity work, and when (see `BRAND_BRIEF.md`).
 - The decisions in `research/brand-claims-2026-10.md` (which gaps to close before the Pegasus pitch).

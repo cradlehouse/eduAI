@@ -51,7 +51,7 @@ Hold these together (more in `BRAND.md`, "Tensions to hold"):
   primary action, cyan for "the chosen take", coral for problems; neutral sans type; "the images are the
   personality". The identity can extend or challenge this, but the product's colour meanings stay.
 - **Principles** (`BRAND.md`): eight, with what each rules out.
-- **A working name** that hasn't been tested. Naming is in scope if the designer thinks it should be.
+- **A working name** with known trademark risk (see `BRAND.md`, Open). Naming is likely in scope.
 
 ## What we need
 
