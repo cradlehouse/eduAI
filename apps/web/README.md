@@ -1,6 +1,6 @@
 # apps/web
 
-Next.js 15 (App Router) on Cloudflare Workers via OpenNext. Live: https://eduai-web.long-night-f7d0.workers.dev
+Next.js 15 (App Router) on Cloudflare Workers via OpenNext. Live: https://imaje.app (also https://eduai-web.long-night-f7d0.workers.dev)
 
 Rules: never holds a vendor key, never calls a vendor, never holds the service-role key. Uploads go to R2
 through the Worker's bucket binding (no credentials), content-addressed by sha256, and the `assets` row is

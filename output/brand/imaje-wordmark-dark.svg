@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="370" viewBox="0 0 760 370" role="img" aria-labelledby="title">
+  <title id="title">Imaje wordmark on charcoal</title>
+  <path fill="#171819" d="M0 0H760V370H0Z"/>
+  <g transform="translate(50 35)" fill="#F5F5F2" fill-rule="evenodd">
+    <path d="M0 87 57 80V220H0Z"/>
+    <path d="M68 84H116V96C134 77 163 76 184 95C209 73 258 78 258 120V220H207V127C207 111 190 111 190 127V220H140V127C140 111 123 111 123 127V220H68Z"/>
+    <path d="M340 80C296 80 266 109 266 151C266 195 296 224 335 224C352 224 366 218 375 210V220H421V151C421 109 389 80 340 80ZM343 122A29 29 0 1 1 343 180A29 29 0 1 1 343 122Z"/>
+    <path d="M435 87 492 80V211C492 263 458 290 400 290H379V242H402C425 242 435 230 435 208Z"/>
+    <path d="M659 165H554C558 189 588 195 606 176L652 196C635 220 608 227 580 225C533 223 505 194 505 151C505 110 535 80 581 80C633 80 662 112 659 165ZM555 136H607C603 114 561 113 555 136Z"/>
+    <circle cx="28.5" cy="39" r="35" fill="#FFB000"/>
+    <circle cx="28.5" cy="39" r="16" fill="#171819"/>
+    <circle cx="463.5" cy="39" r="35"/>
+    <circle cx="463.5" cy="39" r="16" fill="#FFB000"/>
+  </g>
+</svg>

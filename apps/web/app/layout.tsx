@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Imaje",
-  description: "Imaje: a studio where young filmmakers make films with AI, with integrity and a real resource footprint.",
+  description: "Imaje: a studio where young filmmakers make films with AI, with integrity and an honest footprint.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

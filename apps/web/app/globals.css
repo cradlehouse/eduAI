@@ -15,8 +15,9 @@
   --color-ink: #f2f0eb;
   --color-dim: rgba(242, 240, 235, 0.55);
   --color-mute: rgba(242, 240, 235, 0.32);
-  --color-gold: #f2b441;
-  --color-gold-wash: rgba(242, 180, 65, 0.06);
+  --color-brand: #ffb000;  /* the logo amber (output/brand) */
+  --color-gold: #ffb000;
+  --color-gold-wash: rgba(255, 176, 0, 0.06);
   --color-chosen: #69d2ff;
   --color-chosen-wash: rgba(105, 210, 255, 0.12);
   --color-drift: #ff7a59;
@@ -33,7 +34,7 @@ html { font-size: 13px; }
 body { background: var(--color-bg-deep); color: var(--color-ink); font-family: var(--font-sans); line-height: 1.35; font-weight: 400; }
 b, strong { font-weight: 500; }
 h1, h2, h3 { font-weight: 400; }
-::selection { background: rgba(242, 180, 65, 0.3); }
+::selection { background: rgba(255, 176, 0, 0.3); }
 :focus-visible { outline: 2px solid var(--color-gold); outline-offset: 2px; }
 
 .canvas { background-color: var(--color-bg); background-image: radial-gradient(var(--color-grid) 1px, transparent 1px); background-size: 22px 22px; }
@@ -63,9 +64,9 @@ h1, h2, h3 { font-weight: 400; }
   .bar.over > i { background: var(--color-drift); }
 }
 
-@keyframes pulse-gold { 0%, 100% { border-color: var(--color-card-edge); } 50% { border-color: rgba(242, 180, 65, 0.3); } }
+@keyframes pulse-gold { 0%, 100% { border-color: var(--color-card-edge); } 50% { border-color: rgba(255, 176, 0, 0.3); } }
 @media (prefers-reduced-motion: reduce) {
-  .imgcard.generating { animation: none; border-color: rgba(242, 180, 65, 0.3); }
+  .imgcard.generating { animation: none; border-color: rgba(255, 176, 0, 0.3); }
   * { transition-duration: 0ms !important; }
 }
 

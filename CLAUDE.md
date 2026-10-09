@@ -5,7 +5,7 @@ are often minors: never upload real student faces or voices without a signed gua
 13 (decided 2 Oct 2026; migration 0130): inviter and invitee both confirm 13+.
 
 ## Where things are
-- `apps/web` — Next.js 15 (App Router) on Cloudflare Workers via OpenNext. Live: https://eduai-web.long-night-f7d0.workers.dev
+- `apps/web` — Next.js 15 (App Router) on Cloudflare Workers via OpenNext. Live: https://imaje.app (also https://eduai-web.long-night-f7d0.workers.dev)
 - `services/orchestrator` — Python/FastAPI job worker on Render (auto-deploys on push to main): runs generations via fal, voice splits, exports.
 - `supabase/migrations` — Postgres schema (Supabase project `zhltmlguysknjeueabyy`). `packages/db/migrations` is a symlink to it: always `git add supabase/migrations/<file>`.
 - `packages/db/seed` — model registry: models.csv, model_versions.csv, deployment_profiles.csv, schemas/*.json, profiles/*.json.

@@ -33,8 +33,8 @@ enabled = true
 
 [auth]
 enabled = true
-site_url = "https://eduai-web.long-night-f7d0.workers.dev"
-additional_redirect_urls = ["https://eduai-web.long-night-f7d0.workers.dev/**", "http://localhost:3000/**"]
+site_url = "https://imaje.app"
+additional_redirect_urls = ["https://imaje.app/**", "https://eduai-web.long-night-f7d0.workers.dev/**", "http://localhost:3000/**"]
 jwt_expiry = 3600
 enable_signup = true
 

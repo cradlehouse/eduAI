@@ -6,6 +6,8 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "observability": { "enabled": true },
+  // imaje.app (registered 9 Oct 2026, same Cloudflare account). The workers.dev URL keeps working.
+  "routes": [{ "pattern": "imaje.app", "custom_domain": true }],
   // Direct R2 binding: uploads (bible references, signed releases) are hashed and stored by the Worker
   // with no credentials. The orchestrator uses S3 keys for the same bucket; keys are compatible.
   "r2_buckets": [{ "binding": "ASSETS_BUCKET", "bucket_name": "eduai-assets" }],

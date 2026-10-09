@@ -7,6 +7,7 @@ import { AppTree, type Scope } from "./AppTree";
 import { ProjectPanel, type StageCounts } from "./ProjectPanel";
 import { signOut } from "@/app/welcome/actions";
 import { SessionGuard } from "./SessionGuard";
+import { Logo } from "./Logo";
 import { StepRail, type Steps } from "./StepRail";
 
 // Global header (breadcrumb = scope switcher, avatar menu top right) + the one app tree on the left,
@@ -65,7 +66,7 @@ function Header({ nav, crumbs, base, sections }: { nav: Nav; crumbs: CrumbSeg[];
   const name = nav.email.split("@")[0];
   return (
     <header className="glass m-3 mb-0 flex items-center gap-4 rounded-[10px] px-4 py-2">
-        <Link href="/" className="display text-[15px]">Imaje</Link>
+        <Link href="/" className="text-ink" aria-label="Imaje"><Logo className="h-5 w-auto" /></Link>
         <Crumb segs={crumbs} base={base} sections={sections} />
         <details className="relative ml-auto">
           <summary className="flex h-8 w-8 cursor-pointer list-none items-center justify-center rounded-full bg-field text-xs text-ink">{(name[0] ?? "?").toUpperCase()}</summary>

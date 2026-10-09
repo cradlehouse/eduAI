@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" role="img" aria-labelledby="title desc">
+  <title id="title">Imaje logo - dark presentation</title>
+  <desc id="desc">Warm white Imaje wordmark and ij monogram with reciprocal orange dots on charcoal. Vector interpretation of the selected concept.</desc>
+  <defs>
+    <g id="letters" fill="currentColor" fill-rule="evenodd">
+      <path d="M0 87 57 80V220H0Z"/>
+      <path d="M68 84H116V96C134 77 163 76 184 95C209 73 258 78 258 120V220H207V127C207 111 190 111 190 127V220H140V127C140 111 123 111 123 127V220H68Z"/>
+      <path d="M340 80C296 80 266 109 266 151C266 195 296 224 335 224C352 224 366 218 375 210V220H421V151C421 109 389 80 340 80ZM343 122A29 29 0 1 1 343 180A29 29 0 1 1 343 122Z"/>
+      <path d="M435 87 492 80V211C492 263 458 290 400 290H379V242H402C425 242 435 230 435 208Z"/>
+      <path d="M659 165H554C558 189 588 195 606 176L652 196C635 220 608 227 580 225C533 223 505 194 505 151C505 110 535 80 581 80C633 80 662 112 659 165ZM555 136H607C603 114 561 113 555 136Z"/>
+    </g>
+    <g id="dots">
+      <circle cx="28.5" cy="39" r="35" fill="#FFB000"/>
+      <circle cx="28.5" cy="39" r="16" fill="#171819"/>
+      <circle cx="463.5" cy="39" r="35" fill="#F5F5F2"/>
+      <circle cx="463.5" cy="39" r="16" fill="#FFB000"/>
+    </g>
+    <g id="monogram">
+      <path fill="#F5F5F2" d="M0 88 57 73V190L0 205ZM92 88 149 73V198C149 254 115 282 54 282H23V233H56C82 233 92 220 92 197Z"/>
+      <circle cx="28.5" cy="35" r="32" fill="#FFB000"/>
+      <circle cx="28.5" cy="35" r="15" fill="#171819"/>
+      <circle cx="120.5" cy="35" r="32" fill="#F5F5F2"/>
+      <circle cx="120.5" cy="35" r="15" fill="#FFB000"/>
+    </g>
+  </defs>
+  <path fill="#171819" d="M0 0H1200V800H0Z"/>
+  <g transform="translate(237 55) scale(1.1)" color="#F5F5F2"><use href="#letters"/><use href="#dots"/></g>
+  <use href="#monogram" transform="translate(535 402) scale(.88)"/>
+  <g transform="translate(461 695) scale(.42)" color="#F5F5F2">
+    <use href="#letters"/>
+    <g fill="#F5F5F2" stroke="#171819" stroke-width="0">
+      <path fill-rule="evenodd" d="M63.5 39A35 35 0 1 1-6.5 39A35 35 0 1 1 63.5 39ZM44.5 39A16 16 0 1 0 12.5 39A16 16 0 1 0 44.5 39ZM498.5 39A35 35 0 1 1 428.5 39A35 35 0 1 1 498.5 39ZM479.5 39A16 16 0 1 0 447.5 39A16 16 0 1 0 479.5 39Z"/>
+    </g>
+  </g>
+</svg>
