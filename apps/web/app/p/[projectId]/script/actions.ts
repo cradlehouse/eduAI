@@ -3,10 +3,14 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { breakDownScript, type BreakdownT } from "@/lib/script/breakdown";
 import { normHeading, parseScript, removeSnippet, setHeading } from "@/lib/script/screenplay";
-import { currentScript, syncScenes, writeScript } from "@/lib/script/sync";
+import { currentScript, holdForSignoff, syncScenes, writeScript } from "@/lib/script/sync";
 
-export async function saveScript(projectId: string, script: string): Promise<{ ok: true } | { error: string }> {
+export async function saveScript(projectId: string, script: string, label = "Script edited on the Script page"): Promise<{ ok: true; pending?: true; message?: string } | { error: string }> {
   const supabase = await createClient();
+  const { data: cur } = await supabase.from("projects").select("script").eq("id", projectId).maybeSingle();
+  if ((cur?.script ?? "") === script) return { ok: true };
+  const held = await holdForSignoff(projectId, { before: cur?.script ?? "", after: script, label, source: "script", scene: null, snippet: "" });
+  if (held) { revalidatePath(`/p/${projectId}`, "layout"); return held; }
   const { data, error } = await supabase.from("projects").update({ script, script_updated_at: new Date().toISOString() }).eq("id", projectId).select("id");
   if (error) return { error: error.message };
   if (!data?.length) return { error: "You can't edit this project's script." };
@@ -27,8 +31,9 @@ export async function undoScriptChange(projectId: string, changeId: string): Pro
   if (!ch.snippet) return { error: "This one can't be undone here. Use Drafts: go back to the draft saved just before it." };
   const next = removeSnippet(proj?.script ?? "", ch.snippet);
   if (next === null) return { error: "That text isn't in the script any more (it was edited by hand), so there is nothing to undo." };
-  const saved = await saveScript(projectId, next);
+  const saved = await saveScript(projectId, next, "Undo a change");
   if ("error" in saved) return saved;
+  if (saved.pending) return { ok: true };
   await supabase.from("script_changes").update({ undone_at: new Date().toISOString() }).eq("id", changeId);
   revalidatePath(`/p/${projectId}`, "layout");
   return { ok: true };
@@ -69,8 +74,9 @@ export async function restoreDraft(projectId: string, draftId: string): Promise<
   if ("error" in d) return d;
   const kept = await saveDraftIfChanged(projectId, `Before going back to Draft ${d.number}`, true);
   if ("error" in kept && kept.error) return { error: kept.error };
-  const saved = await saveScript(projectId, d.script);
+  const saved = await saveScript(projectId, d.script, `Go back to Draft ${d.number}`);
   if ("error" in saved) return saved;
+  if (saved.pending) return { ok: true };
   const supabase = await createClient();
   const { data: project } = await supabase.from("projects").select("org_id").eq("id", projectId).maybeSingle();
   if (project) await supabase.from("script_changes").insert({ org_id: project.org_id, project_id: projectId, source: "script", label: `Went back to Draft ${d.number}`, snippet: "" });

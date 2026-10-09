@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { parseScript, sceneIndex } from "@/lib/script/screenplay";
@@ -26,7 +27,10 @@ export default async function ScenePage({ params }: { params: Promise<{ projectI
   }));
   const inScene = new Set((links ?? []).map((l) => l.bible_entry_id));
   const assets: Asset[] = (entries ?? []).map((e) => ({ id: e.id, name: e.name, kind: e.kind as Asset["kind"], image: e.reference_asset_id, look: e.appearance, inScene: inScene.has(e.id) || e.id === scene.location_entry_id }));
-  const strip = await stripData(projectId);
+  const [strip, { count: held }] = await Promise.all([
+    stripData(projectId),
+    supabase.from("signoff_requests").select("id", { count: "exact", head: true }).eq("project_id", projectId).eq("kind", "script").eq("status", "pending"),
+  ]);
   const state = strip.ready.scenes.find((x) => x.id === sceneId);
   const { data: noter } = scene.plan_note && scene.plan_note_by ? await supabase.from("users").select("email, display_name").eq("id", scene.plan_note_by).maybeSingle() : { data: null };
   const setup: Setup = {
@@ -36,6 +40,7 @@ export default async function ScenePage({ params }: { params: Promise<{ projectI
   return (
     <div className="flex flex-col gap-2">
       <SceneStrip projectId={projectId} scenes={strip.scenes} current={sceneId} locations={strip.locations} />
+      {!!held && <p className="rounded-[8px] border border-gold/50 bg-gold-wash px-3 py-1.5 text-[12px] text-dim">{held} script change{held === 1 ? " is" : "s are"} waiting for sign-off, so {held === 1 ? "it isn't" : "they aren't"} in the scene yet. <Link href={`/p/${projectId}`} className="text-gold underline">See {held === 1 ? "it" : "them"} on the Script page →</Link></p>}
       <SceneBoard projectId={projectId} scene={{ id: scene.id, position: scene.position, heading: parsed?.heading || scene.heading || scene.title || `Scene ${scene.position}`, locationId: scene.location_entry_id, inScript: !!parsed }}
                   assets={assets} blocks={blocks} shots={(shots ?? []).map((s) => ({ id: s.id, label: s.label, chosen: !!s.selected_take_id }))} setup={setup} />
     </div>

@@ -5,6 +5,8 @@ import { setLook } from "./scenes/actions";
 import { ScriptStudio } from "./ScriptStudio";
 import { ScriptChanges } from "./ScriptChanges";
 import { ScriptDrafts } from "./ScriptDrafts";
+import { SignoffList } from "@/components/SignoffList";
+import { loadSignoffs } from "@/lib/signoff/load";
 import { getProject } from "@/lib/projects/data";
 import { getNav } from "@/lib/auth/nav";
 
@@ -21,6 +23,7 @@ export default async function ProjectHome({ params }: { params: Promise<{ projec
     getProject(projectId),
     getNav(),
   ]);
+  const signoffs = await loadSignoffs({ projectId });
   // Crew, the cohort's instructors and org admins can edit; anyone else in the cohort only reads.
   const canEdit = !!data?.isMember || !!nav?.cohorts.find((c) => c.id === data?.project.cohort_id)?.manage;
   const list = entries ?? [];
@@ -49,6 +52,7 @@ export default async function ProjectHome({ params }: { params: Promise<{ projec
         </form>
       </div>
       <p className="text-[12px] text-gold">{next.step === "script" ? next.text : <Link href={next.href} className="underline decoration-gold/40 underline-offset-2 hover:decoration-gold">Next: {next.text} →</Link>}</p>
+      <SignoffList items={signoffs} title={signoffs.some((x) => x.status === "pending") ? "Waiting for sign-off" : "Sign-off"} />
       <ScriptStudio projectId={projectId} initial={project?.script ?? ""} existing={list.map((e) => ({ kind: e.kind, name: e.name }))} canEdit={canEdit} />
       {!canEdit && <p className="text-[12px] text-mute">You&apos;re viewing this script. Only the crew can change it.</p>}
       <ScriptDrafts projectId={projectId} canEdit={canEdit} current={project?.script ?? ""}

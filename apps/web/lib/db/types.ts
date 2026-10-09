@@ -2036,6 +2036,7 @@ export type Database = {
           roles_needed: string[]
           script: string
           script_updated_at: string | null
+          signoff: Json
           slug: string
           status: Database["public"]["Enums"]["project_status"]
           title: string
@@ -2054,6 +2055,7 @@ export type Database = {
           roles_needed?: string[]
           script?: string
           script_updated_at?: string | null
+          signoff?: Json
           slug: string
           status?: Database["public"]["Enums"]["project_status"]
           title: string
@@ -2072,6 +2074,7 @@ export type Database = {
           roles_needed?: string[]
           script?: string
           script_updated_at?: string | null
+          signoff?: Json
           slug?: string
           status?: Database["public"]["Enums"]["project_status"]
           title?: string
@@ -2572,6 +2575,72 @@ export type Database = {
             columns: ["org_id", "selected_take_id"]
             isOneToOne: false
             referencedRelation: "takes"
+            referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
+      signoff_requests: {
+        Row: {
+          approvals: Json
+          decided_at: string | null
+          decided_by: string | null
+          detail: Json
+          id: string
+          kind: string
+          note: string | null
+          org_id: string
+          project_id: string
+          requested_at: string
+          requested_by: string | null
+          roles: string[]
+          status: string
+          title: string
+        }
+        Insert: {
+          approvals?: Json
+          decided_at?: string | null
+          decided_by?: string | null
+          detail?: Json
+          id?: string
+          kind: string
+          note?: string | null
+          org_id: string
+          project_id: string
+          requested_at?: string
+          requested_by?: string | null
+          roles?: string[]
+          status?: string
+          title: string
+        }
+        Update: {
+          approvals?: Json
+          decided_at?: string | null
+          decided_by?: string | null
+          detail?: Json
+          id?: string
+          kind?: string
+          note?: string | null
+          org_id?: string
+          project_id?: string
+          requested_at?: string
+          requested_by?: string | null
+          roles?: string[]
+          status?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "signoff_requests_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "signoff_requests_org_id_project_id_fkey"
+            columns: ["org_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["org_id", "id"]
           },
         ]
@@ -3517,6 +3586,11 @@ export type Database = {
         Args: { p_entry: string; p_lane: Database["public"]["Enums"]["lane"] }
         Returns: string
       }
+      can_manage_project_for: { Args: { p_project: string }; Returns: boolean }
+      decide_signoff: {
+        Args: { p_approve: boolean; p_note?: string; p_request: string }
+        Returns: string
+      }
       decide_signup: {
         Args: { p_approve: boolean; p_request: string }
         Returns: string
@@ -3586,6 +3660,7 @@ export type Database = {
         Args: { p_project: string; p_roles: string[] }
         Returns: string
       }
+      signoff_roles_for: { Args: { p_request: string }; Returns: string[] }
       webhook_ingest: {
         Args: {
           p_body: string

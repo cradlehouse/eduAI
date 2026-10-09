@@ -3,6 +3,7 @@ import { getNav } from "@/lib/auth/nav";
 import { getProject } from "@/lib/projects/data";
 import { createClient } from "@/lib/supabase/server";
 import { removeMember, setRoles } from "./actions";
+import { SignoffSetting } from "./SignoffSetting";
 
 export default async function MembersPage({ params, searchParams }: { params: Promise<{ projectId: string }>; searchParams: Promise<{ ok?: string; error?: string }> }) {
   const { projectId } = await params;
@@ -12,16 +13,21 @@ export default async function MembersPage({ params, searchParams }: { params: Pr
   if (!nav.cohorts.some((c) => c.id === data.project.cohort_id) && !data.isMember) redirect("/");
   const manage = nav.cohorts.find((c) => c.id === data.project.cohort_id)?.manage ?? false;
   const supabase = await createClient();
-  const { data: org } = await supabase.from("orgs").select("project_roles").eq("id", data.project.org_id).maybeSingle();
+  const [{ data: org }, { data: proj }] = await Promise.all([
+    supabase.from("orgs").select("project_roles").eq("id", data.project.org_id).maybeSingle(),
+    supabase.from("projects").select("signoff").eq("id", projectId).maybeSingle(),
+  ]);
+  const scriptRoles = ((proj?.signoff ?? {}) as Record<string, string[]>).script ?? [];
   const roleList = org?.project_roles ?? [];
   const name = (u: { email: string; display_name: string | null } | null) => u?.display_name ?? u?.email ?? "?";
 
   return (
     <div className="max-w-3xl">
-      <h1 className="display mb-1 text-2xl">Members</h1>
+      <h1 className="display mb-1 text-2xl">Crew</h1>
       <p className="mb-4 text-sm text-dim">The crew and their roles. Roles are credits, not permissions; you can hold more than one.</p>
       {ok && <p className="mb-4 rounded-[6px] bg-ok/10 p-2 text-sm text-ok">{ok}</p>}
       {error && <p className="mb-4 rounded-[6px] bg-drift/10 p-2 text-sm text-drift">{error}</p>}
+      {(data.isMember || manage) && <SignoffSetting projectId={projectId} current={scriptRoles} manage={manage} />}
       <ul className="flex flex-col gap-3">
         {data.members.map((m) => {
           const editable = manage || m.user_id === nav.userId;

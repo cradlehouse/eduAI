@@ -1,6 +1,24 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import { normHeading, parseScript, sceneKey, type Edit } from "./screenplay";
+import { applyScriptSignoff, requestSignoff, signoffFor, type ScriptDetail } from "@/lib/signoff/server";
+import type { Json } from "@/lib/db/types";
+
+// A script change on a production with sign-off on (and a caller who can't sign it alone) is held as a
+// request. Returns null when it can go straight in; otherwise what to tell the caller.
+export async function holdForSignoff(projectId: string, d: ScriptDetail): Promise<{ ok: true; pending: true; message: string } | { error: string } | null> {
+  const so = await signoffFor(projectId, "script");
+  if (so.free) return null;
+  const r = await requestSignoff(projectId, "script", d.label, d as unknown as Json, so.roles);
+  if ("error" in r) return { error: r.error ?? "Couldn't send it for sign-off." };
+  if (r.approved) {
+    const a = await applyScriptSignoff(r.id);
+    if ("error" in a) return { error: a.error ?? "Couldn't apply it." };
+    await syncScenes(projectId, a.after);
+    return { ok: true, pending: true, message: "Signed off and added to the script." };
+  }
+  return { ok: true, pending: true, message: `Sent for sign-off by the ${so.roles.join(" and the ")}. It goes into the script once they approve.` };
+}
 
 type Source = "scene" | "cast" | "locations" | "props" | "script";
 
@@ -8,8 +26,11 @@ type Source = "scene" | "cast" | "locations" | "props" | "script";
 // change ("added in Scene 2 · who · when", undoable), and the scenes table re-follows the script.
 export async function writeScript(projectId: string, edit: Edit, change: { source: Source; label: string; scene?: number | null }) {
   const supabase = await createClient();
-  const { data: project } = await supabase.from("projects").select("org_id").eq("id", projectId).maybeSingle();
+  const { data: project } = await supabase.from("projects").select("org_id, script").eq("id", projectId).maybeSingle();
   if (!project) return { error: "Project not found." };
+  // If this production asks for sign-off on script changes, it becomes a request instead (lib/signoff).
+  const held = await holdForSignoff(projectId, { before: project.script ?? "", after: edit.text, label: change.label, source: change.source, scene: change.scene ?? null, snippet: edit.snippet });
+  if (held) return held;
   const { data, error } = await supabase.from("projects").update({ script: edit.text, script_updated_at: new Date().toISOString() }).eq("id", projectId).select("id");
   if (error || !data?.length) return { error: error?.message ?? "You can't edit this project's script." };
   await supabase.from("script_changes").insert({ org_id: project.org_id, project_id: projectId, source: change.source, label: change.label, snippet: edit.snippet, scene_position: change.scene ?? null });

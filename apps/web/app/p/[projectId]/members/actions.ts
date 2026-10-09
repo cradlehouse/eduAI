@@ -14,7 +14,18 @@ export async function setRoles(formData: FormData) {
   const roles = Array.from(formData.getAll("roles")).map(String).filter(Boolean);
   if (roles.length === 0) back(projectId, { error: "Keep at least one role." });
   const supabase = await createClient();
-  const { data, error } = await supabase.from("project_members").update({ roles }).eq("project_id", projectId).eq("user_id", String(formData.get("user_id"))).select("user_id");
+  // With sign-off on, the roles that sign are handed out by the educator, so nobody can give themselves
+  // the writer's role to skip it. Keeping a role you already have is fine.
+  const userId = String(formData.get("user_id"));
+  const [{ data: project }, { data: manage }, { data: cur }] = await Promise.all([
+    supabase.from("projects").select("signoff").eq("id", projectId).maybeSingle(),
+    supabase.rpc("can_manage_project_for", { p_project: projectId }),
+    supabase.from("project_members").select("roles").eq("project_id", projectId).eq("user_id", userId).maybeSingle(),
+  ]);
+  const signing = new Set(Object.values((project?.signoff ?? {}) as Record<string, string[]>).flat());
+  const added = roles.filter((r) => signing.has(r) && !(cur?.roles ?? []).includes(r));
+  if (!manage && added.length) back(projectId, { error: `Sign-off is on, so only your educator can make someone the ${added.join(" or ")}.` });
+  const { data, error } = await supabase.from("project_members").update({ roles }).eq("project_id", projectId).eq("user_id", userId).select("user_id");
   if (error) back(projectId, { error: error.message });
   if (!data?.length) back(projectId, { error: "Nothing changed: you can only edit your own roles unless you're an instructor." });
   revalidatePath(`/p/${projectId}/members`);
