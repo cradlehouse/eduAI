@@ -24,12 +24,56 @@ export async function undoScriptChange(projectId: string, changeId: string): Pro
     supabase.from("projects").select("script").eq("id", projectId).maybeSingle(),
   ]);
   if (!ch || ch.undone_at) return { error: "That change is already undone." };
-  if (!ch.snippet) return { error: "A cut line can't be put back from here. Add it again from the scene." };
+  if (!ch.snippet) return { error: "This one can't be undone here. Use Drafts: go back to the draft saved just before it." };
   const next = removeSnippet(proj?.script ?? "", ch.snippet);
   if (next === null) return { error: "That text isn't in the script any more (it was edited by hand), so there is nothing to undo." };
   const saved = await saveScript(projectId, next);
   if ("error" in saved) return saved;
   await supabase.from("script_changes").update({ undone_at: new Date().toISOString() }).eq("id", changeId);
+  revalidatePath(`/p/${projectId}`, "layout");
+  return { ok: true };
+}
+
+// Drafts (migration 0132). The live script is the working draft; saving copies it as the next
+// numbered draft. Skipped when nothing changed since the last one, so automatic saves don't pile up.
+async function saveDraftIfChanged(projectId: string, reason: string, auto: boolean) {
+  const supabase = await createClient();
+  const [{ data: proj }, { data: last }] = await Promise.all([
+    supabase.from("projects").select("script").eq("id", projectId).maybeSingle(),
+    supabase.from("script_drafts").select("number, script").eq("project_id", projectId).order("number", { ascending: false }).limit(1).maybeSingle(),
+  ]);
+  if (!proj?.script?.trim()) return { number: null };
+  if (last && last.script === proj.script) return { number: last.number };
+  const { data, error } = await supabase.rpc("save_script_draft", { p_project: projectId, p_reason: reason, p_auto: auto });
+  if (error) return { error: error.message };
+  return { number: data as number };
+}
+
+export async function saveDraft(projectId: string, note: string): Promise<{ ok: true; number: number | null } | { error: string }> {
+  const r = await saveDraftIfChanged(projectId, note.trim() || "New draft", false);
+  if ("error" in r && r.error) return { error: r.error };
+  revalidatePath(`/p/${projectId}`);
+  return { ok: true, number: "number" in r ? r.number ?? null : null };
+}
+
+export async function getDraft(projectId: string, draftId: string): Promise<{ script: string; number: number } | { error: string }> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("script_drafts").select("script, number").eq("id", draftId).eq("project_id", projectId).maybeSingle();
+  return data ?? { error: "Draft not found." };
+}
+
+// Going back: the current script is saved as a draft first, so nothing is lost; then the old draft's
+// text becomes the live script and the scenes re-follow it.
+export async function restoreDraft(projectId: string, draftId: string): Promise<{ ok: true } | { error: string }> {
+  const d = await getDraft(projectId, draftId);
+  if ("error" in d) return d;
+  const kept = await saveDraftIfChanged(projectId, `Before going back to Draft ${d.number}`, true);
+  if ("error" in kept && kept.error) return { error: kept.error };
+  const saved = await saveScript(projectId, d.script);
+  if ("error" in saved) return saved;
+  const supabase = await createClient();
+  const { data: project } = await supabase.from("projects").select("org_id").eq("id", projectId).maybeSingle();
+  if (project) await supabase.from("script_changes").insert({ org_id: project.org_id, project_id: projectId, source: "script", label: `Went back to Draft ${d.number}`, snippet: "" });
   revalidatePath(`/p/${projectId}`, "layout");
   return { ok: true };
 }
@@ -52,6 +96,7 @@ export async function applyBreakdown(projectId: string, b: BreakdownT): Promise<
   const { data: project } = await supabase.from("projects").select("org_id").eq("id", projectId).maybeSingle();
   if (!project) return { error: "Project not found." };
   const org = project.org_id;
+  await saveDraftIfChanged(projectId, "Before keeping a breakdown", true);
 
   const { data: existing } = await supabase.from("bible_entries").select("id, kind, name, appearance, description").eq("project_id", projectId);
   const byKey = new Map((existing ?? []).map((e) => [`${e.kind}:${norm(e.name)}`, e]));

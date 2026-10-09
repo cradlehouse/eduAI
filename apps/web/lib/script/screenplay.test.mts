@@ -66,3 +66,14 @@ assert.deepEqual(splitLine("BOB", 'bob walks to the door pulls it open then shou
   { action: "BOB walks to the door pulls it open.", line: "When were you going to tell me?", paren: "(shouting)" });
 assert.equal(splitLine("BOB", "I'm leaving."), null);
 console.log("sceneIndex + splitLine ok");
+
+// Comparing drafts.
+import { diffLines, changedHunks } from "./diff.ts";
+{
+  const d = diffLines("A\nB\nC\nD\n", "A\nB2\nC\nD\nE\n");
+  assert.deepStrictEqual(d.map((l) => `${l.kind[0]}${l.text}`), ["sA", "rB", "aB2", "sC", "sD", "aE"]);
+  const h = changedHunks(d, 0);
+  assert.equal(h.added, 2); assert.equal(h.removed, 1);
+  assert.deepStrictEqual(h.shown.map((l) => l.kind), ["removed", "added", "gap", "added"]);
+  assert.deepStrictEqual(diffLines("same\n", "same"), [{ kind: "same", text: "same" }]);
+}

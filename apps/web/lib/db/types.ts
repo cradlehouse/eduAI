@@ -2394,6 +2394,57 @@ export type Database = {
           },
         ]
       }
+      script_drafts: {
+        Row: {
+          auto: boolean
+          created_at: string
+          created_by: string | null
+          id: string
+          number: number
+          org_id: string
+          project_id: string
+          reason: string
+          script: string
+        }
+        Insert: {
+          auto?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          number: number
+          org_id: string
+          project_id: string
+          reason?: string
+          script: string
+        }
+        Update: {
+          auto?: boolean
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          number?: number
+          org_id?: string
+          project_id?: string
+          reason?: string
+          script?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "script_drafts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "orgs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "script_drafts_org_id_project_id_fkey"
+            columns: ["org_id", "project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["org_id", "id"]
+          },
+        ]
+      }
       shot_bible_entries: {
         Row: {
           bible_entry_id: string
@@ -3512,6 +3563,10 @@ export type Database = {
       }
       my_landing: { Args: never; Returns: string }
       revoke_org_credential: { Args: { p_id: string }; Returns: boolean }
+      save_script_draft: {
+        Args: { p_auto?: boolean; p_project: string; p_reason: string }
+        Returns: number
+      }
       set_project_budget_tokens: {
         Args: { p_project: string; p_tokens: number }
         Returns: number

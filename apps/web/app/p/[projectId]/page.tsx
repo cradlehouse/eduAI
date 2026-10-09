@@ -4,19 +4,27 @@ import { loadReadiness } from "@/lib/project/load";
 import { setLook } from "./scenes/actions";
 import { ScriptStudio } from "./ScriptStudio";
 import { ScriptChanges } from "./ScriptChanges";
+import { ScriptDrafts } from "./ScriptDrafts";
+import { getProject } from "@/lib/projects/data";
+import { getNav } from "@/lib/auth/nav";
 
 // Step 1: the script. The film's settings are set once here; everything added on other pages is
 // written back into the script and listed underneath, with undo.
 export default async function ProjectHome({ params }: { params: Promise<{ projectId: string }> }) {
   const { projectId } = await params;
   const supabase = await createClient();
-  const [{ data: project }, { data: entries }, { data: changes }] = await Promise.all([
+  const [{ data: project }, { data: entries }, { data: changes }, { data: drafts }, data, nav] = await Promise.all([
     supabase.from("projects").select("title, logline, script, look, orgs(looks)").eq("id", projectId).maybeSingle(),
     supabase.from("bible_entries").select("kind, name, appearance, reference_asset_id").eq("project_id", projectId),
     supabase.from("script_changes").select("id, source, label, scene_position, created_at, created_by").eq("project_id", projectId).is("undone_at", null).order("created_at", { ascending: false }).limit(20),
+    supabase.from("script_drafts").select("id, number, reason, auto, created_by, created_at").eq("project_id", projectId).order("number", { ascending: false }).limit(30),
+    getProject(projectId),
+    getNav(),
   ]);
+  // Crew, the cohort's instructors and org admins can edit; anyone else in the cohort only reads.
+  const canEdit = !!data?.isMember || !!nav?.cohorts.find((c) => c.id === data?.project.cohort_id)?.manage;
   const list = entries ?? [];
-  const who = [...new Set((changes ?? []).map((c) => c.created_by).filter((x): x is string => !!x))];
+  const who = [...new Set([...(changes ?? []), ...(drafts ?? [])].map((c) => c.created_by).filter((x): x is string => !!x))];
   const { data: people } = who.length ? await supabase.from("users").select("id, email, display_name").in("id", who) : { data: [] as { id: string; email: string; display_name: string | null }[] };
   const nameOf = (id: string | null) => { const u = (people ?? []).find((p) => p.id === id); return u ? (u.display_name || u.email.split("@")[0]) : ""; };
   const looks = (project?.orgs?.looks ?? []) as { key: string; label: string; prompt: string }[];
@@ -41,7 +49,10 @@ export default async function ProjectHome({ params }: { params: Promise<{ projec
         </form>
       </div>
       <p className="text-[12px] text-gold">{next.step === "script" ? next.text : <Link href={next.href} className="underline decoration-gold/40 underline-offset-2 hover:decoration-gold">Next: {next.text} →</Link>}</p>
-      <ScriptStudio projectId={projectId} initial={project?.script ?? ""} existing={list.map((e) => ({ kind: e.kind, name: e.name }))} canEdit />
+      <ScriptStudio projectId={projectId} initial={project?.script ?? ""} existing={list.map((e) => ({ kind: e.kind, name: e.name }))} canEdit={canEdit} />
+      {!canEdit && <p className="text-[12px] text-mute">You&apos;re viewing this script. Only the crew can change it.</p>}
+      <ScriptDrafts projectId={projectId} canEdit={canEdit} current={project?.script ?? ""}
+                    drafts={(drafts ?? []).map((d) => ({ id: d.id, number: d.number, reason: d.reason, auto: d.auto, by: nameOf(d.created_by), at: d.created_at }))} />
       <ScriptChanges projectId={projectId} changes={(changes ?? []).map((c) => ({ id: c.id, source: c.source, label: c.label, scene: c.scene_position, at: c.created_at, by: nameOf(c.created_by) }))} />
     </div>
   );
