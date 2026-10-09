@@ -153,8 +153,11 @@ export async function applyBreakdown(projectId: string, b: BreakdownT): Promise<
     }
     const { data: row } = await supabase.from("scenes").select("id").eq("project_id", projectId).eq("position", s.number).maybeSingle();
     if (!row) continue;
+    // Never clear what a student set: the location is only filled in when the scene has none. (Unticking a
+    // location in the review used to set the scene's location to nothing.)
     const locId = ids.get(`location:${norm(s.location)}`) ?? null;
-    await supabase.from("scenes").update({ time_of_day: s.time_of_day, location_entry_id: locId, synopsis: s.synopsis }).eq("id", row.id);
+    await supabase.from("scenes").update({ time_of_day: s.time_of_day, synopsis: s.synopsis }).eq("id", row.id);
+    if (locId) await supabase.from("scenes").update({ location_entry_id: locId }).eq("id", row.id).is("location_entry_id", null);
     const links = [
       ...s.characters.map((n) => ids.get(`character:${norm(n)}`)),
       ...s.props.map((n) => ids.get(`prop:${norm(n)}`)),
@@ -165,5 +168,5 @@ export async function applyBreakdown(projectId: string, b: BreakdownT): Promise<
   const { data: after } = await supabase.from("projects").select("script").eq("id", projectId).maybeSingle();
   if (after?.script) await syncScenes(projectId, after.script);
   revalidatePath(`/p/${projectId}`, "layout");
-  return { ok: true, summary: `${created} added to the bible, ${updated} filled in${tidied ? `, ${tidied} scene heading${tidied === 1 ? "" : "s"} tidied in the script` : ""}.` };
+  return { ok: true, summary: `${created} added to the film, ${updated} filled in${tidied ? `, ${tidied} scene heading${tidied === 1 ? "" : "s"} tidied in the script` : ""}.` };
 }
