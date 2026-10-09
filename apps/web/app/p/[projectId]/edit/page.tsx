@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { JobWatcher } from "@/app/p/[projectId]/scenes/JobWatcher";
 import { pickRoute } from "@/lib/elements/routes";
+import { loadReadiness } from "@/lib/project/load";
 import { Editor, type Clip, type Levels } from "./Editor";
 
 // Step 7: the chosen takes in script order, with their sound on separate tracks: one per character
@@ -42,14 +43,21 @@ export default async function EditPage({ params }: { params: Promise<{ projectId
       if (!t) continue;
       const tr = (tracks ?? []).filter((x) => x.take_id === t.id);
       clips.push({
-        shotId: sh.id, sceneId: sc.id, scene: sc.position, label: sh.label, video: t.asset_id,
+        shotId: sh.id, sceneId: sc.id, scene: sc.position, shot: sh.position, label: sh.label, video: t.asset_id,
         seconds: Number((t.assets as { duration_s?: number } | null)?.duration_s ?? 6),
         voices: tr.filter((x) => x.kind === "voice").map((x) => ({ name: x.bible_entry_id ? byId.get(x.bible_entry_id)?.name ?? "Voice" : "Voice", assetId: x.asset_id })),
         room: sc.location_entry_id ? byId.get(sc.location_entry_id)?.room_tone_asset_id ?? null : null,
       });
     }
   }
-  const total = (shots ?? []).length;
+  // What isn't in the film yet, so the timeline never looks finished when it isn't.
+  const ready = await loadReadiness(projectId);
+  const gaps = ready.scenes.filter((s) => s.state !== "done").map((s) => ({
+    href: `/p/${projectId}/scenes/${s.id}`,
+    text: `Scene ${s.position} · ${s.heading}: ${!s.shots ? (s.ready ? "shots not planned yet" : `not set up (${s.missing.join(", ")})`) : `${s.chosen} of ${s.shots} shots have a take`}`,
+  }));
+  const sounds = (people ?? []).filter((p) => ready.entries[p.id]?.needed && ["no voice yet", "no room tone"].includes(ready.entries[p.id].status))
+    .map((p) => ({ href: `/p/${projectId}/${p.kind === "location" ? "locations" : "cast"}/${p.id}?tab=${ready.entries[p.id].tab}`, text: `${p.name}: ${ready.entries[p.id].status}` }));
   const edit = (project?.edit ?? {}) as { levels?: Levels; music?: string | null };
   const levels = (edit.levels ?? {}) as Levels;
   const lastExport = exports?.[0] ?? null;
@@ -61,8 +69,17 @@ export default async function EditPage({ params }: { params: Promise<{ projectId
       <JobWatcher active={exporting || musicBusy} />
       <div className="flex flex-wrap items-baseline gap-3">
         <h1 className="text-[20px]">Edit</h1>
-        <span className="text-[12px] text-mute">{project?.title} · {clips.length} of {total} shots chosen</span>
+        <span className="text-[12px] text-mute">{project?.title} · {ready.film.chosen} of {ready.film.shots} shots chosen · {ready.film.planned} of {ready.film.scenes} scenes planned</span>
       </div>
+      {(gaps.length > 0 || sounds.length > 0) && (
+        <section className="rounded-[10px] border border-gold/50 bg-gold-wash p-3 text-[12px]">
+          <div className="font-medium text-gold">Not in the film yet</div>
+          <ul className="mt-1 flex flex-col gap-0.5">
+            {[...gaps, ...sounds].map((g) => <li key={g.href + g.text}><Link href={g.href} className="text-dim underline decoration-card-edge underline-offset-2 hover:text-ink">{g.text} →</Link></li>)}
+          </ul>
+          <p className="mt-1.5 text-mute">You can export now; the film will only have what&apos;s chosen so far.</p>
+        </section>
+      )}
       {!clips.length ? (
         <p className="text-[12px] text-dim">No chosen takes yet. <Link href={`/p/${projectId}/scenes`} className="underline">Go to Scenes</Link>, and in each shot choose the take you want in the film.</p>
       ) : (

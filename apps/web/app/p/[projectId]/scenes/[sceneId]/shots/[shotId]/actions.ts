@@ -66,7 +66,7 @@ async function framePieces(shotId: string) {
   const people = entries.filter((e) => e.kind === "character" && (on.size === 0 || on.has(e.name.toUpperCase()) || named.some((n) => n.id === e.id)));
   const interior = /^\s*(INT|I\/E|INT\.?\/EXT)/i.test(sc?.heading ?? "");
   const props = entries.filter((e) => e.kind === "prop");
-  return { s, intent, loc, people, props, interior };
+  return { s, intent, loc, people, props, interior, heading: sc?.heading ?? "" };
 }
 
 // The readiness check (eduai.shot_ready) asks for an objective, continuity and camera language. The
@@ -99,6 +99,8 @@ export async function makeFrames(projectId: string, shotId: string, input: { ext
   const lead = LEAD[framing] ?? LEAD.medium;
   const cast = p.people.map((e) => `${e.name}: ${e.appearance || "as in the reference"}`).join(". ");
   const names = p.people.map((e) => e.name).join(" and ");
+  const wet = [p.s.description, p.loc?.appearance, input.extra].some((t) => !!t && WEATHER.test(t));
+  const night = /\bNIGHT\b/i.test(p.heading);
   const prompt = [
     `${lead}. ${dryIndoors(p.s.description, p.interior)}`,
     cast && `People: ${cast}.`,
@@ -107,7 +109,8 @@ export async function makeFrames(projectId: string, shotId: string, input: { ext
       ? `Background: ${p.loc.name}, the same room as the location reference, softly out of focus behind them.`
       : `Place: ${p.loc.name}${p.loc.appearance ? `, ${dryIndoors(p.loc.appearance, p.interior)}` : ""}; keep the room exactly as in the first reference.`),
     p.props.length ? `Objects: ${p.props.map((e) => `${e.name}${e.appearance ? ` (${e.appearance})` : ""}`).join(", ")}.` : "",
-    p.interior && "Indoors; the window glass is wet and dark outside.",
+    // Only when the shot's own words have weather (dropped above): say it as wet glass, not as rain.
+    p.interior && wet && `Indoors; the window glass is wet${night ? " and dark outside" : ""}.`,
     dryIndoors(input.extra?.trim() ?? "", p.interior),
     "Mouths closed, a still moment just before the action.",
   ].filter(Boolean).join(" ");

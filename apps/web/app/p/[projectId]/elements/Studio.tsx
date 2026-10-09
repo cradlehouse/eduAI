@@ -31,8 +31,10 @@ const ANGLES: { label: string; params: Record<string, number> }[] = [
 ];
 const TIMES = ["dawn", "midday", "golden hour", "dusk", "night"];
 
-export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, results, pending, failed, prices, realVoice }: {
+export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, results, pending, failed, prices, realVoice, need = "", speaks = false }: {
   projectId: string; kind: Kind; base: string; tab: string; tabs: { key: string; label: string }[]; entry: Entry;
+  // The tab with something the film needs (marked gold), and whether this character has lines.
+  need?: string; speaks?: boolean;
   scenes: number[]; results: Result[]; pending: { role: string; status: string }[]; failed: string | null; prices: Prices; realVoice?: RealVoice;
 }) {
   const router = useRouter();
@@ -81,7 +83,9 @@ export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, result
         <nav className="ml-auto flex flex-wrap gap-1.5 text-[12px]">
           {tabs.map((t, i) => {
             const done = t.key === "look" ? !!entry.reference : t.key === "voice" ? !!entry.voice : t.key === "room" ? !!entry.room : t.key === "turnaround" ? of("turnaround").length >= 3 : of(t.key).length > 0;
-            return <Link key={t.key} href={`${base}/${entry.id}?tab=${t.key}`} className={`rounded-full border px-3 py-1 ${tab === t.key ? "border-gold text-ink" : done ? "border-card-edge text-ok" : "border-card-edge text-mute hover:text-dim"}`}>{i + 1} · {t.label}{done ? " ✓" : ""}</Link>;
+            // Say which steps are optional, so a tick on the list means what it says.
+            const note = done ? " ✓" : t.key === "voice" && !speaks ? " · not needed, no lines" : t.key === "turnaround" || t.key === "angle" || t.key === "time" ? " · optional" : "";
+            return <Link key={t.key} href={`${base}/${entry.id}?tab=${t.key}`} className={`rounded-full border px-3 py-1 ${tab === t.key ? "border-gold text-ink" : need === t.key ? "border-gold/60 text-gold" : done ? "border-card-edge text-ok" : "border-card-edge text-mute hover:text-dim"}`}>{i + 1} · {t.label}{note}{need === t.key && tab !== t.key ? " •" : ""}</Link>;
           })}
         </nav>
       </div>
@@ -91,7 +95,7 @@ export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, result
           <div className="grid gap-2 md:grid-cols-[1fr_auto]">
             <label className="label">{kind === "character" ? "What they look like" : "What it looks like"} <span className="text-mute">(from the script; goes into every shot)</span>
               <textarea rows={2} value={look} onChange={(e) => setLook(e.target.value)} className={`input mt-0.5 w-full text-[12.5px] ${look ? "" : "border-gold"}`}
-                        placeholder={kind === "character" ? "woman, early 20s, curly auburn hair tied back, freckles, mint-green diner uniform" : kind === "location" ? "small American diner at night, chrome counter, red booths, rain on the window" : "slice of cherry pie on a chipped white plate"} />
+                        placeholder={kind === "character" ? "woman, early 20s, curly auburn hair tied back, freckles, mint-green diner uniform" : kind === "location" ? "small American diner at night, chrome counter, red booths, a flickering neon sign" : "slice of cherry pie on a chipped white plate"} />
             </label>
             {kind === "character" && (
               <label className="label md:w-64">Who they are<textarea rows={2} value={who} onChange={(e) => setWho(e.target.value)} className="input mt-0.5 w-full text-[12.5px]" placeholder="waitress, leaving town" /></label>
@@ -228,7 +232,7 @@ export function Studio({ projectId, kind, base, tab, tabs, entry, scenes, result
               start(async () => { const r = await uploadStart(projectId, entry.id, fd); if ("error" in r) setMsg({ ok: false, text: r.error }); else { setStartImg(r.assetId); router.refresh(); } });
             }} />
             <input value={extra} onChange={(e) => setExtra(e.target.value)} className="input min-w-0 flex-1 text-[12.5px]"
-                   placeholder={startImg ? "What to change: same face, hair shorter, darker coat" : kind === "character" ? "Anything to add: three-quarter view, soft window light" : "Anything to add: from the doorway, rain on the glass"} />
+                   placeholder={startImg ? "What to change: same face, hair shorter, darker coat" : kind === "character" ? "Anything to add: three-quarter view, soft window light" : "Anything to add: from the doorway, warm evening light"} />
           </div>
           <div className="flex flex-wrap items-center gap-2 text-[12px]">
             <label className="flex items-center gap-1 text-mute">Images<select value={count} onChange={(e) => setCount(Number(e.target.value))} className="input py-0.5 text-[12px]">{[1, 2, 3, 4].map((n) => <option key={n}>{n}</option>)}</select></label>

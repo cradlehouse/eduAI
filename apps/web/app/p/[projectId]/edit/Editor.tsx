@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { chooseMusic, exportFilm, makeMusic, saveLevels } from "./actions";
 
-export type Clip = { shotId: string; sceneId: string; scene: number; label: string; video: string; seconds: number; voices: { name: string; assetId: string }[]; room: string | null };
+export type Clip = { shotId: string; sceneId: string; scene: number; shot: number; label: string; video: string; seconds: number; voices: { name: string; assetId: string }[]; room: string | null };
 export type Levels = Record<string, number>;
 export type Music = { chosen: string | null; pieces: { assetId: string; label: string }[]; busy: boolean; failed: string | null; price: number | null };
 
@@ -107,7 +107,7 @@ export function Editor({ projectId, clips, levels: initial, exporting, exportAss
             <button type="button" className="btn-primary" onClick={() => (playing ? video.current?.pause() : (setPlaying(true), video.current?.play()))}>{playing ? "Pause" : "Play"}</button>
             <button type="button" className="btn" onClick={() => { setI(0); setPlaying(false); if (video.current) video.current.currentTime = 0; }}>From the top</button>
           </div>
-          <div className="text-mute">Shot {i + 1} of {clips.length}: <span className="text-ink">{clip?.label}</span> (scene {clip?.scene})</div>
+          <div className="text-mute">Shot {i + 1} of {clips.length}: <span className="text-ink">{clip?.scene}.{clip?.shot} {clip?.label}</span> (scene {clip?.scene}, shot {clip?.shot})</div>
           <Link href={`/p/${projectId}/scenes/${clip?.sceneId}/shots/${clip?.shotId}?tab=clip`} className="text-[11px] text-dim underline">Not working? Open this shot</Link>
           <div className="mt-auto border-t border-glass-edge pt-2">
             {exportAsset && <a href={`/api/assets/${exportAsset}`} download className="btn mb-2 block text-center">Download the film</a>}
@@ -124,7 +124,7 @@ export function Editor({ projectId, clips, levels: initial, exporting, exportAss
 
       <div className="glass overflow-x-auto rounded-[10px] p-3">
         <div className="flex min-w-max flex-col gap-1.5">
-          {row("picture", "Picture", clips.map((c, k) => box(k, k === i ? "border-chosen bg-chosen-wash text-ink" : "border-card-edge bg-card text-dim", `${c.scene}. ${c.label}`, () => { setI(k); })), true)}
+          {row("picture", "Picture", clips.map((c, k) => box(k, k === i ? "border-chosen bg-chosen-wash text-ink" : "border-card-edge bg-card text-dim", `${c.scene}.${c.shot} ${c.label}`, () => { setI(k); })), true)}
           {names.map((n) => row(`voice:${n}`, n, clips.map((c, k) => c.voices.some((v) => v.name === n) ? box(k, "border-gold/60 bg-gold-wash text-gold", n) : null), true))}
           {row("room", "Room", clips.map((c, k) => c.room ? box(k, "border-ok/40 bg-ok/10 text-ok", "room tone") : null), true)}
           {row("music", "Music", music.chosen

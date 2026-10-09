@@ -8,6 +8,9 @@ import { addLine, addToScene, cutLines, editBlock, keepShots, newCharacterInScen
 export type Asset = { id: string; name: string; kind: "character" | "location" | "prop"; image: string | null; look: string; inScene: boolean };
 export type SceneBlock = { i: number; kind: "action" | "dialogue"; who: string; text: string; raw: string };
 type Scene = { id: string; position: number; heading: string; locationId: string | null; inScript: boolean };
+// What still has to be set before planning (from lib/project/readiness), and the reason given if the
+// student planned anyway.
+export type Setup = { missing: string[]; note: { text: string; by: string; at: string } | null };
 type Pop =
   | { type: "lines"; asset: Asset }
   | { type: "location"; asset: Asset }
@@ -20,7 +23,7 @@ const norm = (s: string) => s.replace(/\(.*?\)/g, "").trim().toUpperCase();
 
 // The Scene step: drag a location into Where and people into Who. Dropping a person shows their lines
 // in this scene (from the script); a new person can be added with a line, which goes into the script.
-export function SceneBoard({ projectId, scene, assets, blocks, shots }: { projectId: string; scene: Scene; assets: Asset[]; blocks: SceneBlock[]; shots: { id: string; label: string; chosen: boolean }[] }) {
+export function SceneBoard({ projectId, scene, assets, blocks, shots, setup }: { projectId: string; scene: Scene; assets: Asset[]; blocks: SceneBlock[]; shots: { id: string; label: string; chosen: boolean }[]; setup: Setup }) {
   const router = useRouter();
   const [busy, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
@@ -30,8 +33,23 @@ export function SceneBoard({ projectId, scene, assets, blocks, shots }: { projec
   const [planning, setPlanning] = useState(false);
   const [editing, setEditing] = useState<number | null>(null);
   const [draft, setDraft] = useState("");
-  const [newLine, setNewLine] = useState<{ who: string; text: string; kind: "dialogue" | "action" }>({ who: "", text: "", kind: "dialogue" });
+  // A new line starts as action, so "Add" works before anyone is in the scene; pick a name for dialogue.
+  const [newLine, setNewLine] = useState<{ who: string; text: string; kind: "dialogue" | "action" }>({ who: "", text: "", kind: "action" });
+  const [askWhy, setAskWhy] = useState(false);
+  const [why, setWhy] = useState("");
 
+  const ready = setup.missing.length === 0 || !!setup.note;
+  const planNow = (note?: string) => {
+    setPlanning(true); setErr(null);
+    start(async () => {
+      const r = await proposeShots(projectId, scene.id, note);
+      setPlanning(false);
+      if ("error" in r) setErr(r.error ?? "Planning failed.");
+      else { setPlan(r.plan); setAskWhy(false); if (note) router.refresh(); }
+    });
+  };
+  const canAdd = !busy && !!newLine.text.trim() && (newLine.kind === "action" || !!newLine.who);
+  const addNew = () => run(() => addLine(projectId, scene.id, { who: newLine.who, text: newLine.text, after: "end", kind: newLine.kind }), () => setNewLine({ who: newLine.who, text: "", kind: newLine.kind }));
   const loc = assets.find((a) => a.id === scene.locationId) ?? null;
   const people = assets.filter((a) => a.kind === "character" && a.inScene);
   const props = assets.filter((a) => a.kind === "prop" && a.inScene);
@@ -91,15 +109,47 @@ export function SceneBoard({ projectId, scene, assets, blocks, shots }: { projec
             onClick={() => { if (window.confirm("Remove this scene? It isn't in the script and has no shots.")) start(async () => { setErr(null); const r = await removeStrayScene(projectId, scene.id); if ("error" in r) setErr(r.error); else { router.push(`/p/${projectId}/scenes`); router.refresh(); } }); }}>Remove it</button>}
           <span className="ml-auto" />
           {shots.length > 0 && <Link href={`/p/${projectId}/scenes/${scene.id}/shots/${shots[0].id}`} className="btn">Shots ({shots.filter((s) => s.chosen).length}/{shots.length} chosen) →</Link>}
-          <button type="button" disabled={planning || busy || !blocks.length} onClick={() => { setPlanning(true); setErr(null); start(async () => { const r = await proposeShots(projectId, scene.id); setPlanning(false); if ("error" in r) setErr(r.error ?? "Planning failed."); else setPlan(r.plan); }); }}
+          <button type="button" disabled={planning || busy || !blocks.length || !ready} onClick={() => planNow()}
+                  title={!blocks.length ? "The scene needs lines first" : !ready ? "Set the scene up first, or plan anyway below" : undefined}
                   className="btn-primary">{planning ? "Planning…" : shots.length ? "Plan more shots" : "Plan the shots →"}</button>
         </div>
+
+        {blocks.length > 0 && !shots.length && (setup.missing.length > 0 || setup.note) && (
+          <section className="rounded-[10px] border border-gold/50 bg-gold-wash p-3 text-[12px]">
+            {setup.note ? (
+              <p className="text-dim">Planned before the scene was set up ({setup.missing.join(", ") || "now set"}). <span className="text-ink">Why: &ldquo;{setup.note.text}&rdquo;</span> <span className="text-mute">{setup.note.by} · {new Date(setup.note.at).toLocaleDateString()}</span></p>
+            ) : (
+              <>
+                <div className="font-medium text-gold">Before planning</div>
+                <ul className="mt-1 flex flex-col gap-0.5">
+                  <li className="text-ok">✓ What happens: {blocks.length} line{blocks.length === 1 ? "" : "s"}</li>
+                  <li className={setup.missing.includes("a location") ? "text-ink" : "text-ok"}>{setup.missing.includes("a location") ? "○ Set the location: drop one into Where, or press + next to it" : "✓ Location set"}</li>
+                  {setup.missing.filter((m) => m !== "a location").map((m) => <li key={m} className="text-ink">○ Add {m}: the script puts them in this scene</li>)}
+                  <li className="text-mute">○ Props (optional)</li>
+                </ul>
+                {!askWhy ? (
+                  <button type="button" onClick={() => setAskWhy(true)} className="mt-2 text-[11.5px] text-mute underline hover:text-dim">Plan anyway…</button>
+                ) : (
+                  <div className="mt-2 flex flex-col gap-1.5">
+                    <label className="label text-dim">Why plan now? Your instructor sees this.
+                      <textarea autoFocus rows={2} value={why} onChange={(e) => setWhy(e.target.value)} className="input mt-0.5 w-full text-[12.5px]" placeholder="It's an establishing shot of the outside; nobody's in it yet." />
+                    </label>
+                    <span className="flex gap-1.5">
+                      <button type="button" disabled={busy || planning || why.trim().length < 3} onClick={() => planNow(why)} className="btn-primary py-0.5 text-[11.5px]">Plan anyway</button>
+                      <button type="button" onClick={() => setAskWhy(false)} className="btn py-0.5 text-[11.5px]">Cancel</button>
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
 
         <div className="grid gap-2 sm:grid-cols-[minmax(180px,1.2fr)_2fr_1fr]">
           <div {...dropZone("where", "location")} className={`flex min-h-[64px] items-center gap-2 rounded-[8px] border p-2 text-[12px] ${loc ? "border-gold bg-gold-wash" : "border-dashed border-card-edge"} ${over === "where" ? "ring-2 ring-gold" : ""}`}>
             {loc ? <>{thumb(loc, "h-11 w-16 shrink-0 rounded-[5px]")}<span className="min-w-0 flex-1"><span className="block text-[10.5px] text-mute">Where</span>{loc.name}</span>
               <button type="button" onClick={() => run(() => removeFromScene(projectId, scene.id, loc.id))} className="text-mute hover:text-ink" title="Remove">×</button></>
-              : <span className="w-full text-center text-mute">Where? Drop a location here</span>}
+              : <span className="w-full text-center text-mute">Set the location: drop one here</span>}
           </div>
           <div {...dropZone("who", "character")} className={`flex min-h-[64px] flex-wrap items-center gap-1.5 rounded-[8px] border border-dashed border-card-edge p-2 text-[12px] ${over === "who" ? "ring-2 ring-gold" : ""}`}>
             <span className="w-full text-[10.5px] text-mute">Who</span>
@@ -110,7 +160,7 @@ export function SceneBoard({ projectId, scene, assets, blocks, shots }: { projec
               </span>
             ))}
             {speakers.filter((s) => !people.some((p) => norm(p.name) === s)).map((s) => <span key={s} className="rounded-full border border-dashed border-card-edge px-2 py-0.5 text-[11px] text-mute" title="Speaks in the script but isn't in Cast yet">{s}?</span>)}
-            {!people.length && !speakers.length && <span className="text-mute">Drop people here</span>}
+            {!people.length && !speakers.length && <span className="text-mute">Add the characters in this scene: drop them here</span>}
           </div>
           <div {...dropZone("props", "prop")} className={`flex min-h-[64px] flex-wrap items-center gap-1.5 rounded-[8px] border border-dashed border-card-edge p-2 text-[12px] ${over === "props" ? "ring-2 ring-gold" : ""}`}>
             <span className="w-full text-[10.5px] text-mute">Props</span>
@@ -145,14 +195,14 @@ export function SceneBoard({ projectId, scene, assets, blocks, shots }: { projec
             ))}
             <li className="grid grid-cols-[84px_1fr] gap-2 border-t border-glass-edge py-1.5 text-[12px]">
               <select value={newLine.kind === "action" ? "__action" : newLine.who} onChange={(e) => setNewLine((l) => (e.target.value === "__action" ? { ...l, kind: "action" } : { ...l, kind: "dialogue", who: e.target.value }))} className="input py-0.5 text-[11px]">
-                <option value="">who?</option>
+                <option value="" disabled>who?</option>
                 {[...new Set([...people.map((p) => norm(p.name)), ...speakers])].map((n) => <option key={n} value={n}>{n}</option>)}
                 <option value="__action">action</option>
               </select>
               <span className="flex gap-1.5">
-                <input value={newLine.text} onChange={(e) => setNewLine((l) => ({ ...l, text: e.target.value }))} placeholder={newLine.kind === "action" ? "She crosses to him." : "+ a line"} className="input min-w-0 flex-1 py-0.5 text-[12px]" />
-                <button type="button" disabled={busy || !newLine.text.trim() || (newLine.kind === "dialogue" && !newLine.who)} className="btn py-0.5 text-[11px]"
-                        onClick={() => run(() => addLine(projectId, scene.id, { who: newLine.who, text: newLine.text, after: "end", kind: newLine.kind }), () => setNewLine({ who: newLine.who, text: "", kind: newLine.kind }))}>Add</button>
+                <input value={newLine.text} onChange={(e) => setNewLine((l) => ({ ...l, text: e.target.value }))} onKeyDown={(e) => { if (e.key === "Enter" && canAdd) { e.preventDefault(); addNew(); } }}
+                       placeholder={newLine.kind === "action" ? "What happens: she crosses to him." : `What ${newLine.who} says`} className="input min-w-0 flex-1 py-0.5 text-[12px]" />
+                <button type="button" disabled={!canAdd} className="btn py-0.5 text-[11px]" onClick={addNew}>Add</button>
               </span>
             </li>
           </ol>

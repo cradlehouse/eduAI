@@ -3,14 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { parseScript, sceneIndex } from "@/lib/script/screenplay";
 import { SceneStrip } from "../SceneStrip";
 import { stripData } from "../strip";
-import { SceneBoard, type Asset, type SceneBlock } from "./SceneBoard";
+import { SceneBoard, type Asset, type SceneBlock, type Setup } from "./SceneBoard";
 
 // One scene: where it is, who's in it, what happens (the script's own lines), then plan the shots.
 export default async function ScenePage({ params }: { params: Promise<{ projectId: string; sceneId: string }> }) {
   const { projectId, sceneId } = await params;
   const supabase = await createClient();
   const [{ data: scene }, { data: project }, { data: entries }, { data: links }, { data: shots }] = await Promise.all([
-    supabase.from("scenes").select("id, position, heading, title, location_entry_id").eq("id", sceneId).maybeSingle(),
+    supabase.from("scenes").select("id, position, heading, title, location_entry_id, plan_note, plan_note_by, plan_note_at").eq("id", sceneId).maybeSingle(),
     supabase.from("projects").select("script").eq("id", projectId).maybeSingle(),
     supabase.from("bible_entries").select("id, name, kind, appearance, reference_asset_id").eq("project_id", projectId).in("kind", ["character", "location", "prop"]).order("name"),
     supabase.from("scene_bible_entries").select("bible_entry_id").eq("scene_id", sceneId),
@@ -27,11 +27,17 @@ export default async function ScenePage({ params }: { params: Promise<{ projectI
   const inScene = new Set((links ?? []).map((l) => l.bible_entry_id));
   const assets: Asset[] = (entries ?? []).map((e) => ({ id: e.id, name: e.name, kind: e.kind as Asset["kind"], image: e.reference_asset_id, look: e.appearance, inScene: inScene.has(e.id) || e.id === scene.location_entry_id }));
   const strip = await stripData(projectId);
+  const state = strip.ready.scenes.find((x) => x.id === sceneId);
+  const { data: noter } = scene.plan_note && scene.plan_note_by ? await supabase.from("users").select("email, display_name").eq("id", scene.plan_note_by).maybeSingle() : { data: null };
+  const setup: Setup = {
+    missing: state?.missing ?? [],
+    note: scene.plan_note ? { text: scene.plan_note, by: noter ? noter.display_name || noter.email.split("@")[0] : "", at: scene.plan_note_at ?? "" } : null,
+  };
   return (
     <div className="flex flex-col gap-2">
       <SceneStrip projectId={projectId} scenes={strip.scenes} current={sceneId} locations={strip.locations} />
       <SceneBoard projectId={projectId} scene={{ id: scene.id, position: scene.position, heading: parsed?.heading || scene.heading || scene.title || `Scene ${scene.position}`, locationId: scene.location_entry_id, inScript: !!parsed }}
-                  assets={assets} blocks={blocks} shots={(shots ?? []).map((s) => ({ id: s.id, label: s.label, chosen: !!s.selected_take_id }))} />
+                  assets={assets} blocks={blocks} shots={(shots ?? []).map((s) => ({ id: s.id, label: s.label, chosen: !!s.selected_take_id }))} setup={setup} />
     </div>
   );
 }

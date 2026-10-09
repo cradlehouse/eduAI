@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { loadReadiness } from "@/lib/project/load";
 import { setLook } from "./scenes/actions";
 import { ScriptStudio } from "./ScriptStudio";
 import { ScriptChanges } from "./ScriptChanges";
@@ -18,13 +20,7 @@ export default async function ProjectHome({ params }: { params: Promise<{ projec
   const { data: people } = who.length ? await supabase.from("users").select("id, email, display_name").in("id", who) : { data: [] as { id: string; email: string; display_name: string | null }[] };
   const nameOf = (id: string | null) => { const u = (people ?? []).find((p) => p.id === id); return u ? (u.display_name || u.email.split("@")[0]) : ""; };
   const looks = (project?.orgs?.looks ?? []) as { key: string; label: string; prompt: string }[];
-  const count = (kind: string) => list.filter((e) => e.kind === kind).length;
-  const hasScript = !!project?.script?.trim();
-  const unlooked = list.filter((e) => (e.kind === "character" || e.kind === "location") && !e.reference_asset_id).length;
-  const next = !hasScript ? "Write or paste the script, then break it down."
-    : count("character") + count("location") === 0 ? "Break the script down to find the cast and the locations."
-    : unlooked > 0 ? `Next: ${unlooked} character${unlooked === 1 ? "" : "s"} or location${unlooked === 1 ? "" : "s"} still need a look. Start with Cast.`
-    : "Next: Scenes. Put the people in each scene and plan the shots.";
+  const { next } = await loadReadiness(projectId);
 
   return (
     <div className="flex flex-col gap-4">
@@ -44,7 +40,7 @@ export default async function ProjectHome({ params }: { params: Promise<{ projec
           <button className="btn py-1 text-[12px]">Set</button>
         </form>
       </div>
-      <p className="text-[12px] text-gold">{next}</p>
+      <p className="text-[12px] text-gold">{next.step === "script" ? next.text : <Link href={next.href} className="underline decoration-gold/40 underline-offset-2 hover:decoration-gold">Next: {next.text} →</Link>}</p>
       <ScriptStudio projectId={projectId} initial={project?.script ?? ""} existing={list.map((e) => ({ kind: e.kind, name: e.name }))} canEdit />
       <ScriptChanges projectId={projectId} changes={(changes ?? []).map((c) => ({ id: c.id, source: c.source, label: c.label, scene: c.scene_position, at: c.created_at, by: nameOf(c.created_by) }))} />
     </div>

@@ -2257,6 +2257,9 @@ export type Database = {
           id: string
           location_entry_id: string | null
           org_id: string
+          plan_note: string | null
+          plan_note_at: string | null
+          plan_note_by: string | null
           position: number
           project_id: string
           script_excerpt: string
@@ -2271,6 +2274,9 @@ export type Database = {
           id?: string
           location_entry_id?: string | null
           org_id: string
+          plan_note?: string | null
+          plan_note_at?: string | null
+          plan_note_by?: string | null
           position: number
           project_id: string
           script_excerpt?: string
@@ -2285,6 +2291,9 @@ export type Database = {
           id?: string
           location_entry_id?: string | null
           org_id?: string
+          plan_note?: string | null
+          plan_note_at?: string | null
+          plan_note_by?: string | null
           position?: number
           project_id?: string
           script_excerpt?: string
@@ -2321,6 +2330,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["org_id", "id"]
+          },
+          {
+            foreignKeyName: "scenes_plan_note_by_fkey"
+            columns: ["plan_note_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
           },
         ]
       }

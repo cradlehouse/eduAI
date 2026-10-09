@@ -97,7 +97,7 @@ export function EntryStudio({ projectId, entryId, kind, masterAssetId, refAssetI
                 <select className="bg-transparent outline-none" value={zoom} onChange={(e) => setZoom(Number(e.target.value))}>
                   {[[0, "wide"], [2, "wide-ish"], [5, "medium"], [8, "tight"], [10, "close"]].map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                 </select></label>
-              <input className={`${sel} min-w-40 flex-1`} placeholder="notes (optional): toward the exit, rain on the floor" value={note} onChange={(e) => setNote(e.target.value)} />
+              <input className={`${sel} min-w-40 flex-1`} placeholder="notes (optional): toward the exit, one light on" value={note} onChange={(e) => setNote(e.target.value)} />
               <button type="button" disabled={pending} onClick={() => run("angle", angleRoute, angleInputs, "background")} className="btn-primary flex items-center gap-2 disabled:opacity-40">
                 <span>{pending ? "…" : "Make angle"}</span>{estimates.angle != null && <span className="mono text-[11px] opacity-80">{estimates.angle.toLocaleString()}</span>}
               </button>
@@ -111,7 +111,7 @@ export function EntryStudio({ projectId, entryId, kind, masterAssetId, refAssetI
         <div className="text-[12px] font-medium">{kind === "location" ? "Test it" : kind === "character" ? "Test her" : "Test it"} <span className="ml-2 font-normal text-mute">tests tune the {kind}; they never go in the film</span></div>
         {!editRoute ? <p className="mt-1 text-[11px] text-drift">Your school has no edit route enabled.</p> : (
           <div className="mt-2 flex items-center gap-2">
-            <input className={`${sel} flex-1`} placeholder={kind === "location" ? "low angle from bay 1, rain on concrete" : "three-quarter, under sodium light, looking over her shoulder"} value={testPrompt} onChange={(e) => setTestPrompt(e.target.value)} />
+            <input className={`${sel} flex-1`} placeholder={kind === "location" ? "low angle from bay 1, wet concrete outside" : "three-quarter, under sodium light, looking over her shoulder"} value={testPrompt} onChange={(e) => setTestPrompt(e.target.value)} />
             <button type="button" disabled={pending || refs.length === 0} onClick={() => run("test", editRoute, testInputs, kind === "character" ? "character" : "background")} className="btn-primary flex items-center gap-2 disabled:opacity-40" title={refs.length === 0 ? "Add a reference image first" : undefined}>
               <span>{pending ? "…" : "Generate"}</span>{estimates.test != null && <span className="mono text-[11px] opacity-80">{estimates.test.toLocaleString()}</span>}
             </button>

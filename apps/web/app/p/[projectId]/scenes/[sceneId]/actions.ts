@@ -5,6 +5,7 @@ import type { Json } from "@/lib/db/types";
 import { addAction, addDialogue, addScene, normName, parseScript, removeSnippet, sceneIndex, setHeading, slugFor, splitLine } from "@/lib/script/screenplay";
 import { currentScript, syncScenes, writeScript } from "@/lib/script/sync";
 import { planShots, type ShotPlanT } from "@/lib/script/shotplan";
+import { loadReadiness } from "@/lib/project/load";
 
 type R = { ok: true } | { error: string };
 
@@ -215,7 +216,9 @@ export async function newCharacterInScene(projectId: string, sceneId: string, in
   return { ok: true };
 }
 
-export async function proposeShots(projectId: string, sceneId: string) {
+// Planning waits for the scene to be set up (its location, and the people the script puts in it). A
+// student can plan anyway by saying why; the reason stays on the scene for the instructor to see.
+export async function proposeShots(projectId: string, sceneId: string, note?: string) {
   const supabase = await createClient();
   const s = await sceneRow(sceneId);
   if (!s) return { error: "Scene not found." } as const;
@@ -223,6 +226,15 @@ export async function proposeShots(projectId: string, sceneId: string) {
   const sn = inScript(script, s);
   const scene = sn ? parseScript(script).scenes[sn - 1] : undefined;
   if (!scene) return { error: "This scene isn't in the script yet." } as const;
+  const state = (await loadReadiness(projectId)).scenes.find((x) => x.id === sceneId);
+  if (state && !state.ready) {
+    const why = note?.trim() ?? "";
+    if (why.length < 3) return { error: `Set this scene up first: ${state.missing.join(", ")}. Or plan anyway and say why.`, missing: state.missing } as const;
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from("scenes").update({ plan_note: why.slice(0, 500), plan_note_by: user?.id ?? null, plan_note_at: new Date().toISOString() }).eq("id", sceneId);
+    if (error) return { error: error.message } as const;
+    done(projectId, sceneId);
+  }
   const [{ data: loc }, { data: links }] = await Promise.all([
     s.location_entry_id ? supabase.from("bible_entries").select("name, appearance").eq("id", s.location_entry_id).maybeSingle() : Promise.resolve({ data: null }),
     supabase.from("scene_bible_entries").select("bible_entries(name, kind)").eq("scene_id", sceneId),

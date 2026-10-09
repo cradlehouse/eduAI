@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { priceOf } from "@/lib/elements/routes";
 import { JobWatcher } from "@/app/p/[projectId]/scenes/JobWatcher";
-import { normName, speakersIn } from "@/lib/script/screenplay";
+import { loadReadiness } from "@/lib/project/load";
 import { getNav } from "@/lib/auth/nav";
 import { voiceState } from "@/lib/sound/consent";
 import { AddElement } from "./AddElement";
@@ -22,24 +22,24 @@ export const TABS: Record<Kind, { key: string; label: string }[]> = {
 // steps as tabs, and a prompt bar that only makes pictures (or sounds) of this one element.
 export async function ElementPage({ projectId, kind, entryId, tab }: { projectId: string; kind: Kind; entryId?: string; tab?: string }) {
   const supabase = await createClient();
-  const [{ data: list }, { data: scenes }, { data: links }, { data: proj }] = await Promise.all([
+  const [{ data: list }, { data: scenes }, ready] = await Promise.all([
     supabase.from("bible_entries").select("id, name, appearance, reference_asset_id, voice_asset_id, room_tone_asset_id").eq("project_id", projectId).eq("kind", kind).order("created_at"),
-    supabase.from("scenes").select("id, position, heading, location_entry_id").eq("project_id", projectId).order("position"),
-    supabase.from("scene_bible_entries").select("scene_id, bible_entry_id"),
-    supabase.from("projects").select("script").eq("id", projectId).maybeSingle(),
+    supabase.from("scenes").select("id, position, heading").eq("project_id", projectId).order("position"),
+    loadReadiness(projectId),
   ]);
-  const speaking = speakersIn(proj?.script ?? "");
   const entries = list ?? [];
   const base = `/p/${projectId}/${PATH[kind]}`;
   const sceneList = (scenes ?? []).map((s) => ({ position: s.position, heading: s.heading || `Scene ${s.position}` }));
-  const scenesOf = (id: string) => (scenes ?? []).filter((s) => s.location_entry_id === id || (links ?? []).some((l) => l.scene_id === s.id && l.bible_entry_id === id)).map((s) => s.position);
-  const status = (e: (typeof entries)[number]) =>
-    !e.reference_asset_id ? (kind === "location" ? "no wide yet" : "no look yet")
-    : kind === "character" && !e.voice_asset_id && speaking.has(normName(e.name)) ? "no voice yet"
-    : kind === "location" && !e.room_tone_asset_id ? "no room tone" : "";
+  const scenesOf = (id: string) => ready.entries[id]?.scenes ?? [];
+  const stateOf = (id: string) => ready.entries[id] ?? { status: "", tab: "look", needed: false, scenes: [] };
 
-  // Straight to the next one that needs work (or the first): one element at a time.
-  if (!entryId && entries.length) redirect(`${base}/${(entries.find((x) => status(x)) ?? entries[0]).id}`);
+  // Straight to the one that most needs work (something the film needs, then anything missing, then
+  // the first), on the tab that needs it: one element at a time.
+  if (!entryId && entries.length) {
+    const pick = entries.find((x) => stateOf(x.id).needed) ?? entries.find((x) => stateOf(x.id).status) ?? entries[0];
+    const t = stateOf(pick.id).tab;
+    redirect(`${base}/${pick.id}${t !== "look" ? `?tab=${t}` : ""}`);
+  }
   const e = entryId ? entries.find((x) => x.id === entryId) : undefined;
   if (entryId && !e) notFound();
 
@@ -47,15 +47,15 @@ export async function ElementPage({ projectId, kind, entryId, tab }: { projectId
     <aside className="glass flex w-full shrink-0 flex-col gap-1 rounded-[10px] p-2 md:w-[210px]">
       <div className="flex items-center justify-between px-1.5 pb-1 pt-0.5 text-[11px] text-mute"><span>{TITLE[kind]} · {entries.length}</span></div>
       {entries.map((x) => {
-        const st = status(x);
+        const st = stateOf(x.id);
         return (
-          <Link key={x.id} href={`${base}/${x.id}`} className={`flex items-center gap-2 rounded-[7px] p-1.5 text-[12.5px] ${x.id === entryId ? "bg-field text-ink outline outline-1 outline-card-edge" : "text-dim hover:bg-field"}`}>
+          <Link key={x.id} href={`${base}/${x.id}${st.tab !== "look" ? `?tab=${st.tab}` : ""}`} className={`flex items-center gap-2 rounded-[7px] p-1.5 text-[12.5px] ${x.id === entryId ? "bg-field text-ink outline outline-1 outline-card-edge" : "text-dim hover:bg-field"}`}>
             {x.reference_asset_id
               // eslint-disable-next-line @next/next/no-img-element
               ? <img src={`/api/assets/${x.reference_asset_id}`} alt="" className="h-8 w-8 shrink-0 rounded-[6px] object-cover" />
               : <span className="h-8 w-8 shrink-0 rounded-[6px] border border-dashed border-card-edge bg-field" />}
             <span className="min-w-0 flex-1 truncate">{x.name}</span>
-            {st ? <span className="shrink-0 text-[10px] text-gold">{st}</span> : <span className="shrink-0 text-[10px] text-ok">✓</span>}
+            {st.status ? <span className={`shrink-0 text-right text-[10px] ${st.needed ? "text-gold" : "text-mute"}`}>{st.status}</span> : <span className="shrink-0 text-[10px] text-ok">✓</span>}
           </Link>
         );
       })}

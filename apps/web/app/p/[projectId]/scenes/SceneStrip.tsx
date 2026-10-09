@@ -13,9 +13,12 @@ export function SceneStrip({ projectId, scenes, current, locations }: { projectI
   const [open, setOpen] = useState(scenes.length === 0);
   const [busy, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
-  const [where, setWhere] = useState<string>(locations[0]?.id ?? "new");
+  const [where, setWhereRaw] = useState<string>(locations[0]?.id ?? "new");
   const [place, setPlace] = useState("");
-  const [intExt, setIntExt] = useState<"INT" | "EXT">("INT");
+  // Inside or out follows the place's name, so DINER EXTERIOR doesn't start as "Inside".
+  const outside = (name: string) => (/\b(exterior|outside|outdoors?|street|lot|road|park|yard|garden|roof|beach|forest)\b/i.test(name) ? "EXT" : "INT");
+  const [intExt, setIntExt] = useState<"INT" | "EXT">(outside(locations[0]?.name ?? ""));
+  const setWhere = (id: string) => { setWhereRaw(id); const l = locations.find((x) => x.id === id); if (l) setIntExt(outside(l.name)); };
   const [time, setTime] = useState("NIGHT");
   const [after, setAfter] = useState(String(scenes.length));
   const sel = "input py-1 text-[12px]";
@@ -50,7 +53,7 @@ export function SceneStrip({ projectId, scenes, current, locations }: { projectI
               <option value="new">A new place…</option>
             </select>
           </label>
-          {where === "new" && <label className="label">New place<input autoFocus value={place} onChange={(e) => setPlace(e.target.value)} className={`${sel} mt-0.5 block`} placeholder="Bus station" /></label>}
+          {where === "new" && <label className="label">New place<input autoFocus value={place} onChange={(e) => { setPlace(e.target.value); setIntExt(outside(e.target.value)); }} className={`${sel} mt-0.5 block`} placeholder="Bus station" /></label>}
           <label className="label">Inside or out<select value={intExt} onChange={(e) => setIntExt(e.target.value as "INT" | "EXT")} className={`${sel} mt-0.5 block`}><option value="INT">Inside</option><option value="EXT">Outside</option></select></label>
           <label className="label">When<select value={time} onChange={(e) => setTime(e.target.value)} className={`${sel} mt-0.5 block`}>{["DAY", "NIGHT", "DAWN", "DUSK", "CONTINUOUS"].map((t) => <option key={t}>{t}</option>)}</select></label>
           <label className="label">Goes

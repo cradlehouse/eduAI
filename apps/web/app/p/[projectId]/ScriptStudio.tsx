@@ -74,7 +74,7 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
           <span className="text-[11px] text-mute">sluglines like INT. WAREHOUSE – NIGHT help the breakdown</span>
         </div>
         <textarea value={script} onChange={(e) => { setScript(e.target.value); setDirty(true); }} readOnly={!canEdit} spellCheck
-                  placeholder={"INT. WAREHOUSE – NIGHT\n\nRain on the roof. MAYA (30s) steps through the loading door…\n\nMAYA\nIs anyone in here?"}
+                  placeholder={"INT. WAREHOUSE – NIGHT\n\nA single bulb swings overhead. MAYA (30s) steps through the loading door…\n\nMAYA\nIs anyone in here?"}
                   className="input mono mt-2 min-h-[60vh] flex-1 resize-y text-[12px] leading-relaxed" />
         {canEdit && (
           <div className="mt-2 flex items-center gap-2">
