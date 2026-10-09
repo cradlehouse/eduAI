@@ -8,28 +8,28 @@ export async function getNav() {
   if (!user) return null;
   const [{ data: memberships }, { data: instructing }, { data: enrolled }] = await Promise.all([
     supabase.from("memberships").select("role, is_minor, orgs(id, name, logo_url, mark_url)").eq("user_id", user.id),
-    supabase.from("cohort_instructors").select("cohorts(id, name)").eq("user_id", user.id),
-    supabase.from("enrolments").select("cohorts(id, name)").eq("user_id", user.id).eq("status", "active"),
+    supabase.from("cohort_instructors").select("cohorts(id, name, slug)").eq("user_id", user.id),
+    supabase.from("enrolments").select("cohorts(id, name, slug)").eq("user_id", user.id).eq("status", "active"),
   ]);
   const isAdmin = (memberships ?? []).some((m) => m.role === "admin" || m.role === "owner");
-  const cohorts = new Map<string, { id: string; name: string; manage: boolean }>();
+  const cohorts = new Map<string, { id: string; name: string; slug: string; manage: boolean }>();
   for (const r of instructing ?? []) if (r.cohorts) cohorts.set(r.cohorts.id, { ...r.cohorts, manage: true });
   if (isAdmin) {
-    const { data: all } = await supabase.from("cohorts").select("id, name");
+    const { data: all } = await supabase.from("cohorts").select("id, name, slug");
     for (const c of all ?? []) cohorts.set(c.id, { ...c, manage: true });
   }
   for (const r of enrolled ?? []) if (r.cohorts && !cohorts.has(r.cohorts.id)) cohorts.set(r.cohorts.id, { ...r.cohorts, manage: false });
-  const { data: myProjects } = await supabase.from("project_members").select("project_id, roles, projects(id, title, cohort_id)").eq("user_id", user.id);
+  const { data: myProjects } = await supabase.from("project_members").select("project_id, roles, projects(id, title, slug, cohort_id)").eq("user_id", user.id);
   const manageIds = [...cohorts.values()].filter((c) => c.manage).map((c) => c.id);
   const { data: managed } = manageIds.length
-    ? await supabase.from("projects").select("id, title, cohort_id").in("cohort_id", manageIds).order("title")
-    : { data: [] as { id: string; title: string; cohort_id: string }[] };
-  const projectsByCohort: Record<string, { id: string; title: string }[]> = {};
-  for (const p of managed ?? []) (projectsByCohort[p.cohort_id] ??= []).push({ id: p.id, title: p.title });
+    ? await supabase.from("projects").select("id, title, slug, cohort_id").in("cohort_id", manageIds).order("title")
+    : { data: [] as { id: string; title: string; slug: string; cohort_id: string }[] };
+  const projectsByCohort: Record<string, { id: string; title: string; slug: string }[]> = {};
+  for (const p of managed ?? []) (projectsByCohort[p.cohort_id] ??= []).push({ id: p.id, title: p.title, slug: p.slug });
   for (const m of myProjects ?? []) {
     if (!m.projects) continue;
     const list = (projectsByCohort[m.projects.cohort_id] ??= []);
-    if (!list.some((x) => x.id === m.projects!.id)) list.push({ id: m.projects.id, title: m.projects.title });
+    if (!list.some((x) => x.id === m.projects!.id)) list.push({ id: m.projects.id, title: m.projects.title, slug: m.projects.slug });
   }
   return {
     projectsByCohort,
@@ -38,7 +38,13 @@ export async function getNav() {
     org: memberships?.[0]?.orgs ?? null,
     orgs: (memberships ?? []).flatMap((m) => (m.orgs ? [m.orgs] : [])),
     cohorts: [...cohorts.values()],
-    myProjects: (myProjects ?? []).flatMap((m) => (m.projects ? [{ id: m.projects.id, title: m.projects.title, cohort_id: m.projects.cohort_id, roles: m.roles }] : [])),
+    myProjects: (myProjects ?? []).flatMap((m) => (m.projects ? [{ id: m.projects.id, title: m.projects.title, slug: m.projects.slug, cohort_id: m.projects.cohort_id, roles: m.roles }] : [])),
   };
 }
 export type Nav = NonNullable<Awaited<ReturnType<typeof getNav>>>;
+
+// Readable links (migration 0135): /c/autumn-2026, /p/last-call. Falls back to the ID, which the
+// middleware redirects to the readable link, so a missing name never breaks a link.
+export const cohortHref = (nav: Nav, id: string) => `/c/${nav.cohorts.find((c) => c.id === id)?.slug ?? id}`;
+export const projectHref = (nav: Nav, id: string) =>
+  `/p/${nav.myProjects.find((p) => p.id === id)?.slug ?? Object.values(nav.projectsByCohort).flat().find((p) => p.id === id)?.slug ?? id}`;

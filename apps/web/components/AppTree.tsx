@@ -23,12 +23,12 @@ export function AppTree({ nav, scope }: { nav: Nav; scope: Scope }) {
           const open = c.id === openCohort;
           return (
             <div key={c.id}>
-              <NavItem href={`/c/${c.id}`} exact={open} icon="GraduationCap" mark={c.manage ? "instructor" : undefined}>{c.name}</NavItem>
+              <NavItem href={`/c/${c.slug}`} exact={open} icon="GraduationCap" mark={c.manage ? "instructor" : undefined}>{c.name}</NavItem>
               {open && (
                 <div>
-                  <NavItem href={`/c/${c.id}/team`} depth={1} icon="Users">Team</NavItem>
-                  <NavItem href={`/c/${c.id}/projects`} depth={1} icon="Clapperboard">Projects</NavItem>
-                  {c.manage && <NavItem href={`/c/${c.id}/schedule`} depth={1} icon="CalendarDays">Schedule</NavItem>}
+                  <NavItem href={`/c/${c.slug}/team`} depth={1} icon="Users">Team</NavItem>
+                  <NavItem href={`/c/${c.slug}/projects`} depth={1} icon="Clapperboard">Projects</NavItem>
+                  {c.manage && <NavItem href={`/c/${c.slug}/schedule`} depth={1} icon="CalendarDays">Schedule</NavItem>}
                 </div>
               )}
             </div>

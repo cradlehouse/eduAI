@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getProject } from "@/lib/projects/data";
-import { getNav } from "@/lib/auth/nav";
+import { cohortHref, getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
 import { SidebarNote } from "@/components/Sidebar";
@@ -19,19 +19,20 @@ export default async function ProjectLayout({ children, params }: { children: Re
   // Sibling projects for the header dropdown: mine in this cohort, or all of them for instructors.
   const [{ data: sib }, ready] = await Promise.all([
     manage
-      ? supabase.from("projects").select("id, title").eq("cohort_id", project.cohort_id).order("title")
-      : Promise.resolve({ data: nav.myProjects.filter((p) => p.cohort_id === project.cohort_id).map((p) => ({ id: p.id, title: p.title })) }),
+      ? supabase.from("projects").select("id, title, slug").eq("cohort_id", project.cohort_id).order("title")
+      : Promise.resolve({ data: nav.myProjects.filter((p) => p.cohort_id === project.cohort_id).map((p) => ({ id: p.id, title: p.title, slug: p.slug })) }),
     loadReadiness(projectId),
   ]);
   // Each step: done (tick), waiting on something (gold dot), or neither. See lib/project/readiness.
   const steps = ready.steps;
-  const base = `/p/${projectId}`;
+  // Links use the readable name; the middleware maps it back to the ID (migration 0135).
+  const base = `/p/${project.slug}`;
   const cohortName = project.cohorts?.name ?? "Cohort";
 
   return (
     <Shell nav={nav}
-      crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home", image: nav.org?.mark_url }, { label: cohortName, href: `/c/${project.cohort_id}` },
-               { label: project.title, href: base, siblings: (sib ?? []).map((p) => ({ id: p.id, label: p.title, href: `/p/${p.id}` })) }]}
+      crumbs={[{ label: nav.org?.name ?? "Imaje", href: "/home", image: nav.org?.mark_url }, { label: cohortName, href: cohortHref(nav, project.cohort_id) },
+               { label: project.title, href: base, siblings: (sib ?? []).map((p) => ({ id: p.id, label: p.title, href: `/p/${p.slug}` })) }]}
       base={base} sections={SECTIONS} flush
       budget={budget ? { spent: budget.spent_tokens ?? 0, total: budget.total_tokens ?? 0, scope: budget.scope } : null}
       scope={{ cohortId: project.cohort_id, projectId }}

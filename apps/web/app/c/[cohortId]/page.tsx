@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getNav } from "@/lib/auth/nav";
+import { getNav, projectHref } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { currentModule, getModules } from "@/lib/projects/data";
 
@@ -13,7 +13,7 @@ export default async function CohortHome({ params }: { params: Promise<{ cohortI
   const [{ data: cohort }, { data: enrolled }, { data: projects }, { data: pending }] = await Promise.all([
     supabase.from("cohorts").select("name, starts_on, ends_on, courses(title)").eq("id", cohortId).maybeSingle(),
     supabase.from("enrolments").select("user_id, users(email, display_name)").eq("cohort_id", cohortId).eq("status", "active"),
-    supabase.from("projects").select("id, title, status, roles_needed, crew_cap, project_members(user_id, roles)").eq("cohort_id", cohortId).order("created_at"),
+    supabase.from("projects").select("id, slug, title, status, roles_needed, crew_cap, project_members(user_id, roles)").eq("cohort_id", cohortId).order("created_at"),
     manage ? supabase.from("signup_requests").select("id").eq("status", "pending") : Promise.resolve({ data: [] as { id: string }[] }),
   ]);
   if (!cohort) notFound();
@@ -59,8 +59,8 @@ export default async function CohortHome({ params }: { params: Promise<{ cohortI
           ) : (
             <ul className="text-sm">
               {manage
-                ? (projects ?? []).map((p) => <li key={p.id}><Link href={`/p/${p.id}`} className="underline">{p.title}</Link> <span className="text-dim">· {p.status} · {p.project_members.length} crew</span></li>)
-                : mine.map((p) => <li key={p.id}><Link href={`/p/${p.id}`} className="underline">{p.title}</Link> <span className="text-dim">· {p.roles.join(", ")}</span></li>)}
+                ? (projects ?? []).map((p) => <li key={p.id}><Link href={`/p/${p.slug}`} className="underline">{p.title}</Link> <span className="text-dim">· {p.status} · {p.project_members.length} crew</span></li>)
+                : mine.map((p) => <li key={p.id}><Link href={projectHref(nav, p.id)} className="underline">{p.title}</Link> <span className="text-dim">· {p.roles.join(", ")}</span></li>)}
             </ul>
           )}
         </section>

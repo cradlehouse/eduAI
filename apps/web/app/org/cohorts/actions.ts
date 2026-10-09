@@ -16,7 +16,8 @@ export async function createCohort(formData: FormData) {
   if (!name || !courseId) redirect(`/org/cohorts?error=${encodeURIComponent("Name and course are required.")}`);
   const supabase = await createClient();
   const { data: cohort, error } = await supabase.from("cohorts").insert({
-    org_id: org.id, course_id: courseId, name, starts_on: starts || null, ends_on: ends || null,
+    // slug "" → the database names the link from the cohort's name (eduai.fill_slug, migration 0135).
+    org_id: org.id, course_id: courseId, name, slug: "", starts_on: starts || null, ends_on: ends || null,
   }).select("id").single();
   if (error) redirect(`/org/cohorts?error=${encodeURIComponent(error.message)}`);
 

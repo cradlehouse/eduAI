@@ -25,7 +25,8 @@ export async function postProject(formData: FormData) {
   const { data: cohort } = await supabase.from("cohorts").select("org_id").eq("id", cohortId).maybeSingle();
   if (!cohort) back(cohortId, { error: "Cohort not found." });
   let slug = slugify(title);
-  const { data: clash } = await supabase.from("projects").select("id").eq("cohort_id", cohortId).eq("slug", slug).maybeSingle();
+  // Links use the slug across the school (migration 0135), so check the whole org, not just the cohort.
+  const { data: clash } = await supabase.from("projects").select("id").eq("org_id", cohort!.org_id).eq("slug", slug).maybeSingle();
   if (clash) slug = `${slug}-${Math.random().toString(36).slice(2, 6)}`;
   const cap = Number(formData.get("crew_cap") ?? 0);
   const { data: project, error } = await supabase.from("projects").insert({

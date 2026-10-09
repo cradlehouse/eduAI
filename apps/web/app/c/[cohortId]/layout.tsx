@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getNav } from "@/lib/auth/nav";
+import { cohortHref, getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { Shell } from "@/components/Shell";
 
@@ -17,8 +17,8 @@ export default async function CohortLayout({ children, params }: { children: Rea
     supabase.from("personal_tokens").select("total_tokens, spent_tokens").eq("cohort_id", cohortId).eq("user_id", nav.userId).maybeSingle(),
   ]);
   if (!cohort) notFound();
-  const base = `/c/${cohortId}`;
-  const siblings = nav.cohorts.map((c) => ({ id: c.id, label: c.name, href: `/c/${c.id}` }));
+  const base = cohortHref(nav, cohortId);
+  const siblings = nav.cohorts.map((c) => ({ id: c.id, label: c.name, href: `/c/${c.slug}` }));
 
   return (
     <Shell nav={nav}

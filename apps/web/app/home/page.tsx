@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getNav } from "@/lib/auth/nav";
+import { cohortHref, getNav } from "@/lib/auth/nav";
 import { createClient } from "@/lib/supabase/server";
 import { loadReadiness } from "@/lib/project/load";
 import { loadSignoffs } from "@/lib/signoff/load";
@@ -49,7 +49,7 @@ export default async function Home() {
       {(cohorts ?? []).length === 0 && <p className="text-sm text-dim">No cohorts yet.</p>}
       <div className="grid gap-4 sm:grid-cols-2">
         {(cohorts ?? []).map((c) => (
-          <Link key={c.id} href={`/c/${c.id}`} className="card block p-4 hover:bg-glass">
+          <Link key={c.id} href={cohortHref(nav, c.id)} className="card block p-4 hover:bg-glass">
             <div className="display text-lg">{c.name}</div>
             <div className="text-sm text-dim">{c.courses?.title}{c.starts_on ? ` · from ${c.starts_on}` : ""}</div>
             <div className="mt-2 text-sm">{c.enrolments?.[0]?.count ?? 0} apprentices · {c.projects.length} project(s)</div>

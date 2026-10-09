@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { Nav } from "@/lib/auth/nav";
+import { cohortHref, type Nav } from "@/lib/auth/nav";
 import { Crumb, type CrumbSeg } from "./Crumb";
 import type { Budget } from "./TokenMeter";
 import { Sidebar } from "./Sidebar";
@@ -23,10 +23,10 @@ export function Shell({ nav, crumbs, base, sections, scope = {}, note, budget, p
       <div className="flex min-h-screen flex-col">
         <SessionGuard userId={nav.userId} />
         <Header nav={nav} crumbs={crumbs} base={base} sections={sections} />
-        <div className="glass m-3 mb-0 rounded-[10px] p-1.5 md:hidden"><StepRail base={base} steps={steps} cohortHref={`/c/${scope.cohortId}`} row /></div>
+        <div className="glass m-3 mb-0 rounded-[10px] p-1.5 md:hidden"><StepRail base={base} steps={steps} cohortHref={cohortHref(nav, scope.cohortId)} row /></div>
         {note && <div className="mx-3 mt-2 text-[11px] text-dim">{note}</div>}
         <div className="flex flex-1">
-          <div className="hidden md:flex"><StepRail base={base} steps={steps} budget={budget} cohortHref={`/c/${scope.cohortId}`} /></div>
+          <div className="hidden md:flex"><StepRail base={base} steps={steps} budget={budget} cohortHref={cohortHref(nav, scope.cohortId)} /></div>
           <main className={`min-w-0 flex-1 ${flush ? "canvas m-3 rounded-[10px] border border-glass-edge p-3 md:p-5" : "p-4 md:p-8"}`}>{children}</main>
         </div>
       </div>

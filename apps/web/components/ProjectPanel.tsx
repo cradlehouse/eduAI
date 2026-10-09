@@ -1,4 +1,4 @@
-import type { Nav } from "@/lib/auth/nav";
+import { cohortHref, type Nav } from "@/lib/auth/nav";
 import { NavGroup, NavItem } from "./NavItem";
 import { TokenBar, TokenRing, type Budget } from "./TokenMeter";
 
@@ -16,21 +16,21 @@ export function ProjectPanel({ nav, cohortId, projectId, budget, note, inline, c
           const cur = p.id === projectId;
           return (
             <div key={p.id}>
-              {cur ? <div className="flex items-center gap-2 px-3 py-1 text-sm text-ink"><span className="nav-label truncate font-medium">{p.title}</span></div> : <NavItem href={`/p/${p.id}`} icon="Film">{p.title}</NavItem>}
+              {cur ? <div className="flex items-center gap-2 px-3 py-1 text-sm text-ink"><span className="nav-label truncate font-medium">{p.title}</span></div> : <NavItem href={`/p/${p.slug}`} icon="Film">{p.title}</NavItem>}
               {cur && (
                 <div>
-                  <NavItem href={`/p/${p.id}`} exact depth={1} icon="BookOpen" mark={counts?.script}>Script</NavItem>
-                  <NavItem href={`/p/${p.id}/cast`} depth={1} icon="UserRound" mark={counts?.cast}>Cast</NavItem>
-                  <NavItem href={`/p/${p.id}/locations`} depth={1} icon="Building2" mark={counts?.locations}>Locations</NavItem>
-                  <NavItem href={`/p/${p.id}/props`} depth={1} icon="KeyRound" mark={counts?.props}>Props</NavItem>
-                  <NavItem href={`/p/${p.id}/scenes`} depth={1} icon="LayoutGrid" mark={counts?.scenes}>Scenes</NavItem>
-                  <NavItem href={`/p/${p.id}/members`} depth={1} icon="Users">Crew</NavItem>
+                  <NavItem href={`/p/${p.slug}`} exact depth={1} icon="BookOpen" mark={counts?.script}>Script</NavItem>
+                  <NavItem href={`/p/${p.slug}/cast`} depth={1} icon="UserRound" mark={counts?.cast}>Cast</NavItem>
+                  <NavItem href={`/p/${p.slug}/locations`} depth={1} icon="Building2" mark={counts?.locations}>Locations</NavItem>
+                  <NavItem href={`/p/${p.slug}/props`} depth={1} icon="KeyRound" mark={counts?.props}>Props</NavItem>
+                  <NavItem href={`/p/${p.slug}/scenes`} depth={1} icon="LayoutGrid" mark={counts?.scenes}>Scenes</NavItem>
+                  <NavItem href={`/p/${p.slug}/members`} depth={1} icon="Users">Crew</NavItem>
                 </div>
               )}
             </div>
           );
         })}
-        <NavItem href={`/c/${cohortId}/projects`} icon="Clapperboard">All projects</NavItem>
+        <NavItem href={`${cohortHref(nav, cohortId)}/projects`} icon="Clapperboard">All projects</NavItem>
       </NavGroup>
       {children}
       {note}
