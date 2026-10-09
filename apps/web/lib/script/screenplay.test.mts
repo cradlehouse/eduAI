@@ -77,3 +77,27 @@ import { diffLines, changedHunks } from "./diff.ts";
   assert.deepStrictEqual(h.shown.map((l) => l.kind), ["removed", "added", "gap", "added"]);
   assert.deepStrictEqual(diffLines("same\n", "same"), [{ kind: "same", text: "same" }]);
 }
+
+// Recognising the same thing under another name (breakdown merge).
+import { likelyMatch, nameWords } from "./match.ts";
+{
+  const have = [
+    { kind: "location", name: "DINER EXTERIOR" }, { kind: "location", name: "ROSIE'S DINER" }, { kind: "location", name: "ROSIE'S DINER KITCHEN" },
+    { kind: "prop", name: "RAG / CLOTH (counter wipe)" }, { kind: "prop", name: "SLICE OF CHERRY PIE" },
+    { kind: "character", name: "BOB" }, { kind: "character", name: "ANGIE" },
+  ];
+  assert.deepStrictEqual([...nameWords("INT. ROSIE'S DINER")], ["ROSIE", "DINER"]);
+  assert.equal(likelyMatch("location", "EXT. DINER", have)?.name, "DINER EXTERIOR");
+  assert.equal(likelyMatch("location", "INT. ROSIE'S DINER", have)?.name, "ROSIE'S DINER");
+  assert.equal(likelyMatch("location", "ROSIE'S DINER KITCHEN", have)?.exact, true);
+  assert.equal(likelyMatch("prop", "RAG", have)?.name, "RAG / CLOTH (counter wipe)");
+  assert.equal(likelyMatch("prop", "RAG", have)?.strong, true);
+  const wiping = likelyMatch("prop", "WIPING RAG", have);
+  assert.equal(wiping?.name, "RAG / CLOTH (counter wipe)", "offered…");
+  assert.equal(wiping?.strong, false, "…but defaulting to new");
+  assert.equal(likelyMatch("character", "BOB SMITH JR", [{ kind: "character", name: "BOB JONES" }]), null, "characters need a clear match");
+  assert.equal(likelyMatch("prop", "CHERRY PIES", have)?.name, "SLICE OF CHERRY PIE");
+  assert.equal(likelyMatch("character", "BOB THE TRUCKER", have)?.name, "BOB");
+  assert.equal(likelyMatch("character", "MARLA", have), null);
+  assert.equal(likelyMatch("character", "BOB", [{ kind: "location", name: "BOB" }]), null, "kinds never mix");
+}

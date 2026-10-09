@@ -2,6 +2,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { BreakdownT } from "@/lib/script/breakdown";
+import { likelyMatch } from "@/lib/script/match";
 import { applyBreakdown, runBreakdown, saveScript } from "./script/actions";
 
 type Existing = { kind: string; name: string };
@@ -18,6 +19,8 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
   useEffect(() => { if (!dirty) setScript(initial); }, [initial, dirty]);
   const [b, setB] = useState<BreakdownT | null>(null);
   const [keep, setKeep] = useState<Record<string, boolean>>({});
+  // "Same one as …?" answers, by breakdown key. Unanswered: a clear match counts as the same one.
+  const [sameAs, setSameAs] = useState<Record<string, boolean>>({});
   const [msg, setMsg] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [pending, start] = useTransition();
   const [phase, setPhase] = useState<"idle" | "reading" | "saving">("idle");
@@ -35,16 +38,25 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
       const r = await runBreakdown(projectId, script);
       setPhase("idle"); setDirty(false);
       if ("error" in r && r.error) { setMsg({ kind: "error", text: r.error }); return; }
-      if ("breakdown" in r) { setB(r.breakdown); setKeep({}); }
+      if ("breakdown" in r) { setB(r.breakdown); setKeep({}); setSameAs({}); }
     });
   }
   function apply() {
     if (!b) return;
+    // Where the student said "same one", use the existing name everywhere (items and scenes), so it's
+    // filled in rather than made twice.
+    const rename = new Map<string, string>();
+    const to = (kind: string, name: string) => { const m = matchOf(kind, name); return m && !m.exact && isSame(kind, name) ? m.name : name; };
+    for (const c of b.characters) rename.set(k("character", c.name), to("character", c.name));
+    for (const l of b.locations) rename.set(k("location", l.name), to("location", l.name));
+    for (const p of b.props) rename.set(k("prop", p.name), to("prop", p.name));
+    const rn = (kind: string, name: string) => rename.get(k(kind, name)) ?? name;
     const kept: BreakdownT = {
       ...b,
-      characters: b.characters.filter((c) => on(k("character", c.name))),
-      locations: b.locations.filter((l) => on(k("location", l.name))),
-      props: b.props.filter((p) => on(k("prop", p.name))),
+      characters: b.characters.filter((c) => on(k("character", c.name))).map((c) => ({ ...c, name: rn("character", c.name) })),
+      locations: b.locations.filter((l) => on(k("location", l.name))).map((l) => ({ ...l, name: rn("location", l.name) })),
+      props: b.props.filter((p) => on(k("prop", p.name))).map((p) => ({ ...p, name: rn("prop", p.name) })),
+      scenes: b.scenes.map((sc) => ({ ...sc, location: rn("location", sc.location), characters: sc.characters.map((n) => rn("character", n)), props: sc.props.map((n) => rn("prop", n)) })),
     };
     setMsg(null); setPhase("saving");
     start(async () => {
@@ -58,13 +70,27 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
   const edit = <T extends "characters" | "locations" | "props">(list: T, i: number, field: string, v: string) =>
     setB((cur) => cur && ({ ...cur, [list]: cur[list].map((row, j) => (j === i ? { ...row, [field]: v } : row)) }));
 
-  const tick = (key: string, label: string) => (
-    <label className="flex items-center gap-1.5 text-[12px]">
-      <input type="checkbox" checked={on(key)} onChange={(e) => setKeep((m) => ({ ...m, [key]: e.target.checked }))} />
-      <span className="font-medium">{label}</span>
-      {have.has(key) && <span className="text-[10px] text-mute">already in the bible · blanks get filled</span>}
-    </label>
-  );
+  const matchOf = (kind: string, name: string) => likelyMatch(kind, name, existing);
+  const isSame = (kind: string, name: string) => { const key = k(kind, name); return sameAs[key] ?? !!matchOf(kind, name)?.strong; };
+  const tick = (key: string, label: string, kind?: string, name?: string) => {
+    const m = kind && name ? matchOf(kind, name) : null;
+    return (
+      <span className="flex flex-col gap-0.5">
+        <label className="flex items-center gap-1.5 text-[12px]">
+          <input type="checkbox" checked={on(key)} onChange={(e) => setKeep((mm) => ({ ...mm, [key]: e.target.checked }))} />
+          <span className="font-medium">{label}</span>
+          {have.has(key) && <span className="text-[10px] text-mute">already in this film · empty fields get filled</span>}
+        </label>
+        {m && !m.exact && kind && name && (
+          <span className="flex flex-wrap items-center gap-2 pl-5 text-[11px] text-gold">
+            Looks like {m.name}, already in this film.
+            <label className="flex items-center gap-1 text-dim"><input type="radio" checked={isSame(kind, name)} onChange={() => setSameAs((x) => ({ ...x, [key]: true }))} /> Same one</label>
+            <label className="flex items-center gap-1 text-dim"><input type="radio" checked={!isSame(kind, name)} onChange={() => setSameAs((x) => ({ ...x, [key]: false }))} /> New</label>
+          </span>
+        )}
+      </span>
+    );
+  };
 
   return (
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -113,7 +139,7 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
               <div className="mt-2 flex flex-col gap-3">
                 {b.characters.map((c, i) => (
                   <div key={i} className="rounded-[8px] border border-glass-edge p-2">
-                    <div className="flex items-center justify-between">{tick(k("character", c.name), c.name)}<span className="text-[10px] text-mute">{c.importance} · scenes {c.scenes.join(", ")}</span></div>
+                    <div className="flex items-center justify-between">{tick(k("character", c.name), c.name, "character", c.name)}<span className="text-[10px] text-mute">{c.importance} · scenes {c.scenes.join(", ")}</span></div>
                     <label className="label mt-1 block">Who they are<textarea rows={2} value={c.who} onChange={(e) => edit("characters", i, "who", e.target.value)} className="input mt-0.5 w-full" /></label>
                     <label className="label mt-1 block">What they look like <span className="text-mute">(used in every shot)</span>
                       <textarea rows={2} value={c.appearance} onChange={(e) => edit("characters", i, "appearance", e.target.value)} className={`input mt-0.5 w-full ${c.appearance ? "" : "border-gold"}`}
@@ -127,7 +153,7 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
               <div className="mt-2 flex flex-col gap-3">
                 {b.locations.map((l, i) => (
                   <div key={i} className="rounded-[8px] border border-glass-edge p-2">
-                    <div className="flex items-center justify-between">{tick(k("location", l.name), `${l.int_ext}. ${l.name}`)}<span className="text-[10px] text-mute">{l.times.join(", ")} · scenes {l.scenes.join(", ")}</span></div>
+                    <div className="flex items-center justify-between">{tick(k("location", l.name), `${l.name} (${l.int_ext === "EXT" ? "outside" : l.int_ext === "INT" ? "inside" : "inside and out"})`, "location", l.name)}<span className="text-[10px] text-mute">{l.times.join(", ")} · scenes {l.scenes.join(", ")}</span></div>
                     <label className="label mt-1 block">What it looks like
                       <textarea rows={2} value={l.appearance} onChange={(e) => edit("locations", i, "appearance", e.target.value)} className={`input mt-0.5 w-full ${l.appearance ? "" : "border-gold"}`}
                                 placeholder="empty brick warehouse, one high window, concrete floor, dusk light" /></label>
@@ -141,7 +167,7 @@ export function ScriptStudio({ projectId, initial, existing, canEdit }: { projec
                 <div className="mt-2 flex flex-col gap-2">
                   {b.props.map((p, i) => (
                     <div key={i} className="flex flex-col gap-1">
-                      <div className="flex items-center justify-between">{tick(k("prop", p.name), p.name)}<span className="text-[10px] text-mute">scenes {p.scenes.join(", ")}</span></div>
+                      <div className="flex items-center justify-between">{tick(k("prop", p.name), p.name, "prop", p.name)}<span className="text-[10px] text-mute">scenes {p.scenes.join(", ")}</span></div>
                       <input value={p.appearance} onChange={(e) => edit("props", i, "appearance", e.target.value)} className="input w-full" placeholder="what it looks like" />
                     </div>
                   ))}
