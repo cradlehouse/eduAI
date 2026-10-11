@@ -39,6 +39,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      alpha_signups: {
+        Row: {
+          adult: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string
+          note: string
+          organisation: string
+          role: string
+          source: string
+          students: string
+        }
+        Insert: {
+          adult: boolean
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          note?: string
+          organisation?: string
+          role: string
+          source?: string
+          students?: string
+        }
+        Update: {
+          adult?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          note?: string
+          organisation?: string
+          role?: string
+          source?: string
+          students?: string
+        }
+        Relationships: []
+      }
       assets: {
         Row: {
           bytes: number
@@ -3582,6 +3621,18 @@ export type Database = {
           p_org: string
           p_provider: string
           p_secret: string
+        }
+        Returns: string
+      }
+      alpha_signup: {
+        Args: {
+          p_adult: boolean
+          p_email: string
+          p_name: string
+          p_note: string
+          p_organisation: string
+          p_role: string
+          p_students: string
         }
         Returns: string
       }
