@@ -137,6 +137,7 @@ export function Landing() {
         <Link href="/how-it-works" className="hover:text-ink">How it works</Link>
         <Link href="/mission" className="hover:text-ink">Mission</Link>
         <Link href="/login" className="hover:text-ink">Sign in</Link>
+        <Link href="/privacy" className="hover:text-ink">Privacy</Link>
         <span className="ml-auto text-mute">© 2026 Imaje</span>
       </footer>
     </div>

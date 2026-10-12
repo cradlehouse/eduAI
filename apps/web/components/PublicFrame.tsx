@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 
 // The signed-out frame: two public pages and a way in. Same paper, same type, no sidebar.
-export function PublicFrame({ current, children }: { current: "mission" | "how"; children: React.ReactNode }) {
+export function PublicFrame({ current, children }: { current: "mission" | "how" | "privacy"; children: React.ReactNode }) {
   const tab = (href: string, label: string, on: boolean) => <Link href={href} className={`rounded-full px-3 py-1 text-sm ${on ? "bg-field text-gold" : "text-dim hover:bg-field"}`}>{label}</Link>;
   return (
     <div className="min-h-screen">
@@ -16,6 +16,7 @@ export function PublicFrame({ current, children }: { current: "mission" | "how";
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/orgs/pegasus-media-project/mark.png" alt="Pegasus Media Project" className="h-8 w-8" />
         <span>Built with Pegasus Media Project, Dallas. Students see tokens, never money; every take carries a receipt.</span>
+        <Link href="/privacy" className="ml-auto hover:text-ink">Privacy</Link>
       </footer>
     </div>
   );

@@ -29,7 +29,7 @@ export function AlphaForm() {
       <input name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 opacity-0" />
       <label className="flex items-start gap-2 text-[13px] text-dim sm:col-span-2">
         <input type="checkbox" name="adult" required className="mt-0.5" />
-        <span>I&apos;m 18 or over. Imaje may email me about the alpha; my details aren&apos;t used for anything else or shared.</span>
+        <span>I&apos;m 18 or over. Imaje may email me about the alpha; my details aren&apos;t used for anything else or shared. <a href="/privacy" target="_blank" className="underline hover:text-ink">Privacy</a></span>
       </label>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <button disabled={pending} className="btn-primary px-5 py-2.5 text-[14px]">{pending ? "Sending…" : "Join the alpha"}</button>
