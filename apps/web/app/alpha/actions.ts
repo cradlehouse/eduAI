@@ -1,5 +1,7 @@
 "use server";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export type AlphaState = { ok: boolean; message: string } | null;
 
@@ -17,6 +19,8 @@ export async function joinAlpha(_prev: AlphaState, form: FormData): Promise<Alph
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { ok: false, message: "That email doesn't look right." };
   if (!ROLES.has(role)) return { ok: false, message: "Choose what you do." };
   if (form.get("adult") !== "on") return { ok: false, message: "The alpha is for adults: tick to confirm you're 18 or over." };
+  const ip = (await headers()).get("cf-connecting-ip");
+  if (!(await verifyTurnstile(String(form.get("cf-turnstile-response") ?? ""), ip))) return { ok: false, message: "We couldn't confirm you're a person. Wait for the check above the button, then try again." };
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("alpha_signup", {
     p_name: name.slice(0, 120), p_email: email.slice(0, 200), p_organisation: String(form.get("organisation") ?? "").slice(0, 200),

@@ -1,8 +1,11 @@
 "use client";
+import Script from "next/script";
 import { useActionState } from "react";
 import { joinAlpha, type AlphaState } from "./actions";
 
 const field = "input w-full text-[14px] py-2";
+// Cloudflare Turnstile, when its site key is set (see lib/turnstile.ts); otherwise the honeypot alone.
+const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
 // The alpha sign-up form on the landing page. Plain fields, one honest line about what we do with them.
 export function AlphaForm() {
@@ -31,6 +34,10 @@ export function AlphaForm() {
         <input type="checkbox" name="adult" required className="mt-0.5" />
         <span>I&apos;m 18 or over. Imaje may email me about the alpha; my details aren&apos;t used for anything else or shared. <a href="/privacy" target="_blank" className="underline hover:text-ink">Privacy</a></span>
       </label>
+      {SITE_KEY && <>
+        <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+        <div className="cf-turnstile sm:col-span-2" data-sitekey={SITE_KEY} data-theme="dark" />
+      </>}
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <button disabled={pending} className="btn-primary px-5 py-2.5 text-[14px]">{pending ? "Sending…" : "Join the alpha"}</button>
         {state && !state.ok && <span className="text-[13px] text-drift" role="alert">{state.message}</span>}
